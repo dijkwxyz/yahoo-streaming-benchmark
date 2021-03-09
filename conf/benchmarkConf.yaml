@@ -1,12 +1,12 @@
 # Copyright 2015, Yahoo Inc.
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
-#kafka.brokers:
-#    - "localhost"
-#kafka.port: 9092
-#kafka.topic: "ads"
-#kafka.partitions: 20
-#kafka.zookeeper.path: /
+kafka.brokers:
+    - "hadoop100"
+kafka.port: 9092
+kafka.topic: "ads"
+kafka.partitions: 1
+kafka.zookeeper.path: /
 
 #akka.zookeeper.path: /akkaQuery
 
@@ -14,7 +14,7 @@ zookeeper.servers:
     - "hadoop100"
 zookeeper.port: 2181
 
-redis.host: "hadoop100"
+redis.host: "192.168.154.100"
 
 process.hosts: 1
 process.cores: 1
