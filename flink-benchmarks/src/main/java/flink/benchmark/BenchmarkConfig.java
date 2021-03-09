@@ -32,8 +32,8 @@ public class BenchmarkConfig implements Serializable{
   public final int numRedisThreads;
 
   // Akka
-  public final String akkaZookeeperQuorum;
-  public final String akkaZookeeperPath;
+//  public final String akkaZookeeperQuorum;
+//  public final String akkaZookeeperPath;
 
   // Application
   public final long windowSize;
@@ -70,8 +70,8 @@ public class BenchmarkConfig implements Serializable{
     this.numRedisThreads = parameterTool.getInt("redis.threads", 20);
 
     // Akka
-    this.akkaZookeeperQuorum = parameterTool.get("akka.zookeeper.quorum", "localhost");
-    this.akkaZookeeperPath = parameterTool.get("akka.zookeeper.path", "/akkaQuery");
+//    this.akkaZookeeperQuorum = parameterTool.get("akka.zookeeper.quorum", "localhost");
+//    this.akkaZookeeperPath = parameterTool.get("akka.zookeeper.path", "/akkaQuery");
 
     // Application
     this.windowSize = parameterTool.getLong("window.size", 10_000);
@@ -115,14 +115,14 @@ public class BenchmarkConfig implements Serializable{
     Map<String, String> ymlMap = (Map) yml.load(new FileInputStream(yamlFile));
 
     String kafkaZookeeperConnect = getZookeeperServers(ymlMap, String.valueOf(ymlMap.get("kafka.zookeeper.path")));
-    String akkaZookeeperQuorum = getZookeeperServers(ymlMap, "");
+//    String akkaZookeeperQuorum = getZookeeperServers(ymlMap, "");
 
     // We need to add these values as "parameters"
     // -- This is a bit of a hack but the Kafka consumers and producers
     //    expect these values to be there
     ymlMap.put("zookeeper.connect", kafkaZookeeperConnect); // set ZK connect for Kafka
     ymlMap.put("bootstrap.servers", getKafkaBrokers(ymlMap));
-    ymlMap.put("akka.zookeeper.quorum", akkaZookeeperQuorum);
+//    ymlMap.put("akka.zookeeper.quorum", akkaZookeeperQuorum);
     ymlMap.put("auto.offset.reset", "latest");
     ymlMap.put("group.id", UUID.randomUUID().toString());
 

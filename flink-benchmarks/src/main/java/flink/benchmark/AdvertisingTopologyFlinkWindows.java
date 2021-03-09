@@ -10,18 +10,16 @@ import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.ThroughputLogger;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.*;
-import org.apache.flink.api.common.state.OperatorState;
-import org.apache.flink.api.java.tuple.Tuple;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple7;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.TimestampExtractor;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
@@ -29,7 +27,7 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.Trigger;
 import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer082;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
@@ -65,13 +63,13 @@ public class AdvertisingTopologyFlinkWindows {
 
     DataStream<Tuple2<String, String>> joinedAdImpressions = rawMessageStream
       .flatMap(new DeserializeBolt())
-      .filter(new EventFilterBolt())
+      .filter(tuple -> tuple.getField(4).equals("view"))
       .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
       .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
-      .assignTimestamps(new AdTimestampExtractor()); // extract timestamps and generate watermarks from event_time
+      .assignTimestampsAndWatermarks(WatermarkStrategy.forMonotonousTimestamps()); // extract timestamps and generate watermarks from event_time
 
     WindowedStream<Tuple3<String, String, Long>, Tuple, TimeWindow> windowStream = joinedAdImpressions
-      .map(new MapToImpressionCount())
+      .map(t3 -> new Tuple3<>(t3.f0, t3.f1, 1L))
       .keyBy(0) // campaign_id
       .timeWindow(Time.of(config.windowSize, TimeUnit.MILLISECONDS));
 
@@ -80,7 +78,7 @@ public class AdvertisingTopologyFlinkWindows {
 
     // campaign_id, window end time, count
     DataStream<Tuple3<String, String, Long>> result =
-      windowStream.apply(sumReduceFunction(), sumWindowFunction());
+      windowStream.reduce(sumReduceFunction(), sumWindowFunction());
 
     // write result to redis
     if (config.getParameters().has("add.result.sink.optimized")) {
@@ -166,8 +164,8 @@ public class AdvertisingTopologyFlinkWindows {
   /**
    * Configure Kafka source
    */
-  private static FlinkKafkaConsumer082<String> kafkaSource(BenchmarkConfig config) {
-    return new FlinkKafkaConsumer082<>(
+  private static FlinkKafkaConsumer011<String> kafkaSource(BenchmarkConfig config) {
+    return new FlinkKafkaConsumer011<String>(
       config.kafkaTopic,
       new SimpleStringSchema(),
       config.getParameters().getProperties());
@@ -182,7 +180,7 @@ public class AdvertisingTopologyFlinkWindows {
     public TriggerResult onElement(Object element, long timestamp, TimeWindow window, TriggerContext ctx) throws Exception {
       ctx.registerEventTimeTimer(window.maxTimestamp());
       // register system timer only for the first time
-      OperatorState<Boolean> firstTimerSet = ctx.getKeyValueState("firstTimerSet", Boolean.class, false);
+      ValueState<Boolean> firstTimerSet = ctx.getPartitionedState(new ValueStateDescriptor<>("firstTimerSet", Boolean.class));
       if (!firstTimerSet.value()) {
         ctx.registerProcessingTimeTimer(System.currentTimeMillis() + 1000L);
         firstTimerSet.update(true);
@@ -195,7 +193,12 @@ public class AdvertisingTopologyFlinkWindows {
       return TriggerResult.FIRE_AND_PURGE;
     }
 
-    @Override
+      @Override
+      public void clear(TimeWindow window, TriggerContext ctx) throws Exception {
+
+      }
+
+      @Override
     public TriggerResult onProcessingTime(long time, TimeWindow window, TriggerContext ctx) throws Exception {
       // schedule next timer
       ctx.registerProcessingTimeTimer(System.currentTimeMillis() + 1000L);
@@ -233,17 +236,6 @@ public class AdvertisingTopologyFlinkWindows {
   }
 
   /**
-   * Filter out all but "view" events
-   */
-  public static class EventFilterBolt implements
-    FilterFunction<Tuple7<String, String, String, String, String, String, String>> {
-    @Override
-    public boolean filter(Tuple7<String, String, String, String, String, String, String> tuple) throws Exception {
-      return tuple.getField(4).equals("view");
-    }
-  }
-
-  /**
    * Map ad ids to campaigns using cached data from Redis
    */
   private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple2<String, String>> {
@@ -277,42 +269,6 @@ public class AdvertisingTopologyFlinkWindows {
     }
   }
 
-
-  /**
-   * Generate timestamp and watermarks for data stream
-   */
-  private static class AdTimestampExtractor implements TimestampExtractor<Tuple2<String, String>> {
-
-    long maxTimestampSeen = 0;
-
-    @Override
-    public long extractTimestamp(Tuple2<String, String> element, long currentTimestamp) {
-      long timestamp = Long.parseLong(element.f1);
-      maxTimestampSeen = Math.max(timestamp, maxTimestampSeen);
-      return timestamp;
-    }
-
-    @Override
-    public long extractWatermark(Tuple2<String, String> element, long currentTimestamp) {
-      return Long.MIN_VALUE;
-    }
-
-    @Override
-    public long getCurrentWatermark() {
-      long watermark = maxTimestampSeen - 1L;
-      return watermark;
-    }
-  }
-
-  /**
-   *
-   */
-  private static class MapToImpressionCount implements MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>> {
-    @Override
-    public Tuple3<String, String, Long> map(Tuple2<String, String> t3) throws Exception {
-      return new Tuple3<>(t3.f0, t3.f1, 1L);
-    }
-  }
 
   /**
    * Sink computed windows to Redis
