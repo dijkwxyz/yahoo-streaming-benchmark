@@ -5,3 +5,6 @@ download-cache/**
 download-cache
 .idea/
 *.iml
+*.out
+*.txt
+*.log

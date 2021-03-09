@@ -210,7 +210,8 @@ run() {
     create_kafka_topic
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
-    stop_if_needed kafka\.Kafka Kafka
+#    stop_if_needed kafka\.Kafka Kafka
+    $KAFKA_DIR/bin/kafka-server-stop.sh
     rm -rf /tmp/kafka-logs/
   elif [ "START_FLINK" = "$OPERATION" ];
   then
@@ -255,7 +256,7 @@ run() {
 #    stop_if_needed spark.benchmark.KafkaRedisAdvertisingStream "Spark Client Process"
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
-    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyNative ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
     sleep 3
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
