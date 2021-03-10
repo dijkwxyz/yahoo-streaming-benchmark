@@ -44,4 +44,5 @@ public class ThroughputLogger<T> implements FlatMapFunction<T, Integer> {
       }
     }
   }
+
 }
