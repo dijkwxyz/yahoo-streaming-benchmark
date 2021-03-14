@@ -151,6 +151,11 @@ run() {
 
   elif [ "INSTALL" = "$OPERATION" ];
   then
+
+    #Fetch ZooKeeper
+    ZK_FILE="$ZK_DIR.tar.gz"
+    fetch_untar_file "$ZK_FILE" "https://archive.apache.org/dist/zookeeper/$ZK_DIR/$ZK_FILE"
+
     #Fetch and build Redis
     REDIS_FILE="$REDIS_DIR.tar.gz"
     fetch_untar_file "$REDIS_FILE" "http://download.redis.io/releases/$REDIS_FILE"
@@ -162,10 +167,6 @@ run() {
     #Fetch Kafka
     KAFKA_FILE="$KAFKA_DIR.tgz"
     fetch_untar_file "$KAFKA_FILE" "https://archive.apache.org/dist/kafka/$KAFKA_VERSION/$KAFKA_FILE"
-
-    #Fetch ZooKeeper
-    ZK_FILE="apache-$ZK_DIR-bin.tar.gz"
-    fetch_untar_file "$ZK_FILE" "https://downloads.apache.org/zookeeper/$ZK_DIR/$ZK_FILE"
 
     #Fetch Storm
 #    STORM_FILE="$STORM_DIR.tar.gz"
