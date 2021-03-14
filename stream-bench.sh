@@ -24,7 +24,7 @@ ZK_VERSION=${ZK_VERSION:-"3.4.10"}
 REDIS_DIR="/opt/module/redis-$REDIS_VERSION"
 KAFKA_DIR="/opt/module/kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="/opt/module/zookeeper-$ZK_VERSION"
-FLINK_DIR="/opt/module/flink-$FLINK_HOME"
+FLINK_DIR="/opt/module/flink-$FLINK_VERSION"
 #SPARK_DIR="/opt/module/spark-$SPARK_VERSION-bin-hadoop2.6"
 
 ZK_HOST="localhost"
