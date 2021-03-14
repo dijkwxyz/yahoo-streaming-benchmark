@@ -24,7 +24,7 @@ ZK_VERSION=${ZK_VERSION:-"3.4.10"}
 REDIS_DIR="/opt/module/redis-$REDIS_VERSION"
 KAFKA_DIR="/opt/module/kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="/opt/module/zookeeper-$ZK_VERSION"
-FLINK_DIR="$FLINK_HOME"
+FLINK_DIR="/opt/module/flink-$FLINK_HOME"
 #SPARK_DIR="/opt/module/spark-$SPARK_VERSION-bin-hadoop2.6"
 
 ZK_HOST="localhost"
@@ -84,8 +84,8 @@ fetch_untar_file() {
   then
     echo "Using cached File $FILE"
   else
-	mkdir -p download-cache/
-    wget -O "$FILE" "$URL"
+	  mkdir -p download-cache/
+    sudo wget -O "$FILE" "$URL"
   fi
   tar -xzvf "$FILE"
 }
@@ -149,6 +149,8 @@ run() {
 #    $MVN clean install -Dspark.version="$SPARK_VERSION" -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dstorm.version="$STORM_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
     $MVN clean install -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
 
+  elif [ "INSTALL" = "$OPERATION" ];
+  then
     #Fetch and build Redis
     REDIS_FILE="$REDIS_DIR.tar.gz"
     fetch_untar_file "$REDIS_FILE" "http://download.redis.io/releases/$REDIS_FILE"
