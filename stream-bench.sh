@@ -161,15 +161,16 @@ run() {
 
     #Fetch Kafka
     KAFKA_FILE="$KAFKA_DIR.tgz"
-    fetch_untar_file "$KAFKA_FILE" "http://mirrors.advancedhosters.com/apache/kafka/$KAFKA_VERSION/$KAFKA_FILE"
+    fetch_untar_file "$KAFKA_FILE" "https://archive.apache.org/dist/kafka/$KAFKA_VERSION/$KAFKA_FILE"
 
     #Fetch Storm
 #    STORM_FILE="$STORM_DIR.tar.gz"
 #    fetch_untar_file "$STORM_FILE" "http://www.interior-dsgn.com/apache/storm/$STORM_DIR/$STORM_FILE"
 
     #Fetch Flink
-    FLINK_FILE="$FLINK_DIR-bin-hadoop27-scala_${SCALA_BIN_VERSION}.tgz"
-    fetch_untar_file "$FLINK_FILE" "http://mirror.nexcess.net/apache/flink/flink-$FLINK_VERSION/$FLINK_FILE"
+    FLINK_FILE="$FLINK_DIR-bin-scala_${SCALA_BIN_VERSION}.tgz"
+    fetch_untar_file "$FLINK_FILE" "https://archive.apache.org/dist/flink/flink-$FLINK_VERSION/$FLINK_FILE"
+#    fetch_untar_file "$FLINK_FILE" "http://mirror.nexcess.net/apache/flink/flink-$FLINK_VERSION/$FLINK_FILE"
 
     #Fetch Spark
 #    SPARK_FILE="$SPARK_DIR.tgz"

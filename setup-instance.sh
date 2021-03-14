@@ -7,6 +7,9 @@ sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lei
 sudo chmod a+x ~/bin/lein
 lein
 
+#install gcc
+sudo yum -y install gcc
+
 #setup benchmark environment
 ./stream-bench.sh SETUP
 
