@@ -30,11 +30,12 @@
 # automatically configure the host name based on the hostname of the node where the
 # JobManager runs.
 
-jobmanager.rpc.address: hadoop100
+jobmanager.rpc.address: test001
 
 # The RPC port where the JobManager is reachable.
 
-jobmanager.rpc.port: 6123
+#jobmanager.rpc.port: 6123
+jobmanager.rpc.port: 6700
 
 
 # The total process memory size for the JobManager.
@@ -141,7 +142,7 @@ jobmanager.execution.failover-strategy: region
 # The port to which the REST client connects to. If rest.bind-port has
 # not been specified, then the server will bind to this port as well.
 #
-#rest.port: 8081
+rest.port: 8080
 
 # The address to which the REST client will connect to
 #
@@ -253,6 +254,6 @@ jobmanager.execution.failover-strategy: region
 
 # Interval in milliseconds for refreshing the monitored directories.
 #historyserver.archive.fs.refresh-interval: 10000
-env.java.home: /opt/module/jdk1.8.0_261
+# env.java.home: /opt/module/jdk1.8.0_261
 env.java.opts.jobmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006

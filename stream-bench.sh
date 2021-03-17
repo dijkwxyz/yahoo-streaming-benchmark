@@ -155,7 +155,6 @@ run() {
     #Fetch ZooKeeper
     ZK_FILE="$ZK_DIR.tar.gz"
     fetch_untar_file "$ZK_FILE" "https://archive.apache.org/dist/zookeeper/$ZK_DIR/$ZK_FILE"
-    cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
 
 
     #Fetch and build Redis
@@ -177,12 +176,16 @@ run() {
     #Fetch Flink
     FLINK_FILE="$FLINK_DIR-bin-scala_${SCALA_BIN_VERSION}.tgz"
     fetch_untar_file "$FLINK_FILE" "https://archive.apache.org/dist/flink/flink-$FLINK_VERSION/$FLINK_FILE"
-    cp conf/flink/* $FLINK_DIR/conf/
 
     #Fetch Spark
 #    SPARK_FILE="$SPARK_DIR.tgz"
 #    fetch_untar_file "$SPARK_FILE" "http://mirror.nexcess.net/apache/spark/spark-$SPARK_VERSION/$SPARK_FILE"
+    run "CONFIG"
 
+  elif [ "CONFIG" = "$OPERATION" ];
+  then
+    cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
+    cp conf/flink/* $FLINK_DIR/conf/
   elif [ "START_ZK" = "$OPERATION" ];
   then
 #    start_if_needed dev_zookeeper ZooKeeper 10 "$STORM_DIR/bin/storm" dev-zookeeper
@@ -358,7 +361,9 @@ then
       echo
     fi
     echo "Supported Operations:"
-    echo "SETUP: download and setup dependencies for running a single node test"
+    echo "SETUP: generate executable jars with \"maven package\""
+    echo "INSTALL: install specified version of flink, redis, zookeeper, kafka"
+    echo "CONFIG: copy config file under conf/ to corresponding software"
     echo "START_ZK: run a single node ZooKeeper instance on local host in the background"
     echo "STOP_ZK: kill the ZooKeeper instance"
     echo "START_REDIS: run a redis instance in the background"
