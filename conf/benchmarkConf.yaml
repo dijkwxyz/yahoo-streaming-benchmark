@@ -2,7 +2,7 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 kafka.brokers:
-    - "hadoop100"
+    - "test001"
 kafka.port: 9092
 kafka.topic: "ads"
 kafka.partitions: 1
@@ -14,7 +14,7 @@ zookeeper.servers:
     - "hadoop100"
 zookeeper.port: 2181
 
-redis.host: "192.168.154.100"
+redis.host: "test001"
 
 process.hosts: 1
 process.cores: 1
