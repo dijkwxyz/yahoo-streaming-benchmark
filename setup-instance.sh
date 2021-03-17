@@ -2,15 +2,14 @@ sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-mav
 # will install java 1.8
 sudo yum -y install apache-maven
 
-#install lein
-sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -P ~/bin
-sudo chmod a+x ~/bin/lein
-lein
-
 #install gcc
 sudo yum -y install gcc
 
 #setup benchmark environment
-./stream-bench.sh SETUP
+./stream-bench.sh INSTALL
 
 
+#install lein
+sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -P ~/bin
+sudo chmod a+x ~/bin/lein
+lein
