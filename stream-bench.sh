@@ -155,6 +155,8 @@ run() {
     #Fetch ZooKeeper
     ZK_FILE="$ZK_DIR.tar.gz"
     fetch_untar_file "$ZK_FILE" "https://archive.apache.org/dist/zookeeper/$ZK_DIR/$ZK_FILE"
+    cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
+
 
     #Fetch and build Redis
     REDIS_FILE="$REDIS_DIR.tar.gz"
@@ -175,7 +177,7 @@ run() {
     #Fetch Flink
     FLINK_FILE="$FLINK_DIR-bin-scala_${SCALA_BIN_VERSION}.tgz"
     fetch_untar_file "$FLINK_FILE" "https://archive.apache.org/dist/flink/flink-$FLINK_VERSION/$FLINK_FILE"
-#    fetch_untar_file "$FLINK_FILE" "http://mirror.nexcess.net/apache/flink/flink-$FLINK_VERSION/$FLINK_FILE"
+    cp conf/flink/* $FLINK_DIR/conf/
 
     #Fetch Spark
 #    SPARK_FILE="$SPARK_DIR.tgz"
