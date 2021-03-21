@@ -1,0 +1,17 @@
+#! /bin/bash
+
+# get abs path
+# cd -P track abs path
+pdir=`cd -P $(dirname $p1); pwd`
+echo pdir=$pdir
+
+cmd=$*
+
+prefix=test
+# get curr username
+user=`whoami`
+
+for((host=1; host <=3; host++)); do
+        echo ------------ $prefix$host ------------
+        ssh $user@$prefix$host "$cmd"
+done

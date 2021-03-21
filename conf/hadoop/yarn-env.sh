@@ -173,5 +173,6 @@
 # Directory containing service examples
 # export YARN_SERVICE_EXAMPLES_DIR = $HADOOP_YARN_HOME/share/hadoop/yarn/yarn-service-examples
 # export YARN_CONTAINER_RUNTIME_DOCKER_RUN_OVERRIDE_DISABLE=true
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64
+export JAVA_HOME=/home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
+
 

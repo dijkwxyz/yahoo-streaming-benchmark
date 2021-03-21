@@ -19,6 +19,9 @@ SCALA_SUB_VERSION=${SCALA_SUB_VERSION:-"12"}
 FLINK_VERSION=${FLINK_VERSION:-"1.11.2"}
 #SPARK_VERSION=${SPARK_VERSION:-"1.5.1"}
 ZK_VERSION=${ZK_VERSION:-"3.4.10"}
+JAVA_VERSSION=8u261
+# download java from 
+# https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html#license-lightbox
 
 #STORM_DIR="/opt/module/apache-storm-$STORM_VERSION"
 REDIS_DIR="redis-$REDIS_VERSION"
@@ -185,7 +188,7 @@ run() {
   elif [ "CONFIG" = "$OPERATION" ];
   then
     cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
-    cp conf/flink/* $FLINK_DIR/conf/
+    cp conf/flink/* $FLINK_DIR/
   elif [ "START_ZK" = "$OPERATION" ];
   then
 #    start_if_needed dev_zookeeper ZooKeeper 10 "$STORM_DIR/bin/storm" dev-zookeeper

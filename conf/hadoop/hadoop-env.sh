@@ -415,5 +415,5 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 #
 # For example, to limit who can execute the namenode command,
 # export HDFS_NAMENODE_USER=hdfs
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64
+export JAVA_HOME=/home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
 

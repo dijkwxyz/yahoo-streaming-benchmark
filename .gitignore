@@ -10,6 +10,7 @@ download-cache
 *.log
 
 tmp-*/**
+jdk*/**
 flink-*/**
 kafka_*/**
 redis-*/**
