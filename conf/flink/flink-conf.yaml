@@ -30,7 +30,7 @@
 # automatically configure the host name based on the hostname of the node where the
 # JobManager runs.
 
-jobmanager.rpc.address: test001
+jobmanager.rpc.address: test1
 
 # The RPC port where the JobManager is reachable.
 
@@ -257,3 +257,5 @@ rest.port: 8080
 # env.java.home: /opt/module/jdk1.8.0_261
 env.java.opts.jobmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
+
+state.checkpoints.num-retained: 20

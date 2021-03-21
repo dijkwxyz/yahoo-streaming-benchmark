@@ -1,3 +1,5 @@
+#!/bin/bash
+
 sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
 # will install java 1.8
 sudo yum -y install apache-maven

@@ -9,7 +9,9 @@ download-cache
 *.txt
 *.log
 
+tmp-*/**
 flink-*/**
 kafka_*/**
 redis-*/**
 zookeeper-*/**
+hadoop-*/**
