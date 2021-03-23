@@ -5,8 +5,10 @@
 package flink.benchmark;
 
 import benchmark.common.advertising.RedisAdCampaignCache;
+import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
+import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLogger;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -19,6 +21,9 @@ import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.StateBackend;
+import org.apache.flink.runtime.state.filesystem.FsStateBackend;
+import org.apache.flink.runtime.state.memory.MemoryStateBackend;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
@@ -60,7 +65,7 @@ public class AdvertisingTopologyFlinkWindows {
         StreamExecutionEnvironment env = setupEnvironment(config);
 
         DataStream<String> rawMessageStream = streamSource(config, env);
-        rawMessageStream.print();
+//        rawMessageStream.print();
 
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
@@ -131,10 +136,49 @@ public class AdvertisingTopologyFlinkWindows {
 
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);
+
+            String[] patternString = config.multilevelPattern.split(",");
+            int[] pattern = new int[patternString.length];
+            for (int i = 0; i < pattern.length; i++) {
+                pattern[i] = Integer.parseInt(patternString[i]);
+            }
+
+            if (config.multilevelEnable) {
+                PatternBasedMultilevelStateBackend
+                        patternBasedMultilevelBackend = new PatternBasedMultilevelStateBackend(
+                        StateBackendFactory.create(config.multilevelLevel1Type, config.multilevelLevel1Path),
+                        StateBackendFactory.create(config.multilevelLevel2Type, config.multilevelLevel2Path),
+                        StateBackendFactory.create(config.multilevelLevel3Type, config.multilevelLevel3Path),
+                        //new FsStateBackend("hdfs://192.168.154.100:9000/flink/checkpoints"),
+                        //new RocksDBStateBackend("file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/RDB"),
+                        pattern
+                );
+
+                //env.setStateBackend(new FsStateBackend("hdfs://115.146.92.102:9000/flink/checkpoints"))
+                //env.setStateBackend(new FsStateBackend("file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"))
+                env.setStateBackend(patternBasedMultilevelBackend);
+            }
+            else {
+                env.setStateBackend(StateBackendFactory.create(
+                        config.singlelevelStateBackend,config.singlelevelPath));
+            }
+
         }
 
         // use event time
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+        env.setParallelism(1);
+        //env.disableOperatorChaining()
+        //env.getCheckpointConfig.setCheckpointTimeout(10000);
+        //multilevel backend
+        //    val patternBasedMultilevelBackend = new PatternBasedMultilevelStateBackend(
+        //      new MemoryStateBackend(false),
+        //      new FsStateBackend("ftp://worker@hadoop101:21/opt/software/flink-1.11.2/data/flink/checkpoints"),
+        //      new FsStateBackend("file:///data/flink/checkpoints/fakeRDB"),
+        //      Array[Int](0, 1, 2)
+        //    )
+
         return env;
     }
 
