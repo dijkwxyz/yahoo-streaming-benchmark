@@ -37,7 +37,8 @@ TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-1000}
 CONF_FILE=./conf/benchmarkConf.yaml
-TEST_TIME=${TEST_TIME:-240}
+#test time in seconds
+TEST_TIME=${TEST_TIME:-30}
 
 pid_match() {
    local VAL=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
@@ -276,7 +277,7 @@ run() {
     sleep 3
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
-    FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'Flink Streaming Job' | awk '{print $4}'; true`
+    FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
     if [ "$FLINK_ID" == "" ];
 	then
 	  echo "Could not find streaming job to kill"

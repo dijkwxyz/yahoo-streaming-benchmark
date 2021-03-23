@@ -2,7 +2,7 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 kafka.brokers:
-    - "test001"
+    - "test1"
 kafka.port: 9092
 kafka.topic: "ads"
 kafka.partitions: 1
@@ -11,10 +11,10 @@ kafka.zookeeper.path: /
 #akka.zookeeper.path: /akkaQuery
 
 zookeeper.servers:
-    - "hadoop100"
+    - "hadoop1"
 zookeeper.port: 2181
 
-redis.host: "test001"
+redis.host: "test1"
 
 process.hosts: 1
 process.cores: 1
