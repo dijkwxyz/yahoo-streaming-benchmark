@@ -19,6 +19,8 @@ SCALA_SUB_VERSION=${SCALA_SUB_VERSION:-"12"}
 FLINK_VERSION=${FLINK_VERSION:-"1.11.2"}
 #SPARK_VERSION=${SPARK_VERSION:-"1.5.1"}
 ZK_VERSION=${ZK_VERSION:-"3.4.10"}
+HADOOP_VERSION=2.10.1
+
 JAVA_VERSSION=8u261
 # download java from 
 # https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html#license-lightbox
@@ -28,6 +30,7 @@ REDIS_DIR="redis-$REDIS_VERSION"
 KAFKA_DIR="kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="zookeeper-$ZK_VERSION"
 FLINK_DIR="flink-$FLINK_VERSION"
+HADOOP_DIR=hadoop-$HADOOP_VERSION
 #SPARK_DIR="/opt/module/spark-$SPARK_VERSION-bin-hadoop2.6"
 
 ZK_HOST="localhost"
@@ -236,6 +239,13 @@ run() {
   elif [ "STOP_FLINK" = "$OPERATION" ];
   then
     $FLINK_DIR/bin/stop-cluster.sh
+  elif [ "CLEAR_LOGS" = "$OPERATION" ];
+  then
+    rm $FLINK_DIR/log/*
+    rm $KAFKA_DIR/logs/*
+    rm zookeeper.out
+    rm -r $HADOOP_DIR/logs/*
+
 #  elif [ "START_SPARK" = "$OPERATION" ];
 #  then
 #    start_if_needed org.apache.spark.deploy.master.Master SparkMaster 5 $SPARK_DIR/sbin/start-master.sh -h localhost -p 7077
