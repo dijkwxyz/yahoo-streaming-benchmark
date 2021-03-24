@@ -1,0 +1,60 @@
+# Copyright 2015, Yahoo Inc.
+# Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
+
+kafka.brokers:
+    - "test1"
+kafka.port: 9092
+kafka.topic: "ads"
+kafka.partitions: 1
+kafka.zookeeper.path: /
+
+#akka.zookeeper.path: /akkaQuery
+
+zookeeper.servers:
+    - "hadoop1"
+zookeeper.port: 2181
+
+redis.host: "test1"
+
+process.hosts: 1
+process.cores: 1
+
+##STORM Specific
+#storm.workers: 1
+#storm.ackers: 2
+#storm.highcard.redisthreads: 20
+#
+##Spark Specific
+#spark.batchtime: 2000
+
+#Flink specific
+group.id: "flink_yahoo_benchmark"
+flink.checkpoint.interval: 10000
+add.result.sink: 1
+flink.highcard.checkpointURI: "file:///tmp/checkpoints"
+redis.threads: 2
+
+
+# The following is for when running the EventGenerator directly rather than reading from Kafka
+use.local.event.generator: 1
+redis.flush: 1
+redis.db: 0
+load.target.hz: 10000000
+num.campaigns: 1000000
+
+
+#multilevel
+multilevel.enable: false
+multilevel.level1.statebackend: "memory"
+#  level1.path: ""
+multilevel.level2.statebackend: "fs"
+multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+multilevel.level3.statebackend: "fs"
+multilevel.level3.path: "hdfs://115.146.92.102:9000/flink/checkpoints"
+multilevel.pattern: "0,1,2"
+#  multilevel.enable: false
+singlelevel.statebackend: "fs"
+singlelevel.path: "hdfs://115.146.92.102:9000/flink/checkpoints"
+
+
+

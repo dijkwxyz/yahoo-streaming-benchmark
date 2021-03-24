@@ -37,6 +37,7 @@ TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-1000}
 CONF_FILE=./conf/benchmarkConf.yaml
+SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
 TEST_TIME=${TEST_TIME:-30}
 
@@ -196,7 +197,8 @@ run() {
     start_if_needed zookeeper ZooKeeper 10 "$ZK_DIR/bin/zkServer.sh" start
   elif [ "STOP_ZK" = "$OPERATION" ];
   then
-    stop_if_needed zookeeper ZooKeeper
+    $ZK_DIR/bin/zkServer.sh stop
+#    stop_if_needed zookeeper ZooKeeper
     rm -rf /tmp/zookeeper
   elif [ "START_REDIS" = "$OPERATION" ];
   then
@@ -275,6 +277,10 @@ run() {
   then
     "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
     sleep 3
+  elif [ "START_FLINK_SINGLELEVEL" = "$OPERATION" ];
+  then
+    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $SINGLELEVEL_CONF_FILE &
+    sleep 3
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
     FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
@@ -300,6 +306,15 @@ run() {
 #    run "STOP_KAFKA"
 #    run "STOP_REDIS"
 #    run "STOP_ZK"
+
+elif [ "FLINK_DEBUG_SINGLELEVEL" = "$OPERATION" ];
+then
+    run "START_ZK"
+    run "START_REDIS"
+    run "START_KAFKA"
+    run "START_FLINK"
+    run "START_FLINK_SINGLELEVEL"
+    run "START_LOAD"
 elif [ "FLINK_DEBUG" = "$OPERATION" ];
 then
     run "START_ZK"
