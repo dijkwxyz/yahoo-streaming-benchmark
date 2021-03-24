@@ -109,7 +109,7 @@ public class BenchmarkConfig implements Serializable {
         this.multilevelLevel3Type = parameterTool.get("multilevel.level3.statebackend", null);
         this.multilevelLevel3Path = parameterTool.get("multilevel.level3.path", null);
         this.multilevelPattern = parameterTool.get("multilevel.pattern", "");
-        this.singlelevelPath = parameterTool.get("singlelevel.statebackend", "");
+        this.singlelevelPath = parameterTool.get("singlelevel.path", "");
         this.singlelevelStateBackend = parameterTool.get("singlelevel.statebackend", "fs");
 
     }
