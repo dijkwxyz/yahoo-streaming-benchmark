@@ -30,6 +30,7 @@ import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.Trigger;
@@ -65,11 +66,12 @@ public class AdvertisingTopologyFlinkWindows {
         StreamExecutionEnvironment env = setupEnvironment(config);
 
         DataStream<String> rawMessageStream = streamSource(config, env);
-//        rawMessageStream.print();
-
+        rawMessageStream.print("raw");
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
 
+
+        //out: (campaign id, event time)
         DataStream<Tuple2<String, String>> joinedAdImpressions = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
@@ -81,6 +83,7 @@ public class AdvertisingTopologyFlinkWindows {
                                 (Tuple2<String, String> event, long timestamp) ->
                                         Long.parseLong(event.f1))); // extract timestamps and generate watermarks from event_time
 
+        //out: (campaign id, event time, 1)
         WindowedStream<Tuple3<String, String, Long>, Tuple, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
                 .keyBy(0) // campaign_id
@@ -91,8 +94,12 @@ public class AdvertisingTopologyFlinkWindows {
 
         // campaign_id, window end time, count
         DataStream<Tuple3<String, String, Long>> result =
-                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
+                windowStream.process(sumProcessFunction());
+//        DataStream<Tuple3<String, String, Long>> result2 =
+//                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
 
+//        result.print("process");
+//        result2.print("reduce");
         // write result to redis
         if (config.getParameters().has("add.result.sink.optimized")) {
             result.addSink(new RedisResultSinkOptimized(config));
@@ -157,10 +164,9 @@ public class AdvertisingTopologyFlinkWindows {
                 //env.setStateBackend(new FsStateBackend("hdfs://115.146.92.102:9000/flink/checkpoints"))
                 //env.setStateBackend(new FsStateBackend("file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"))
                 env.setStateBackend(patternBasedMultilevelBackend);
-            }
-            else {
+            } else {
                 env.setStateBackend(StateBackendFactory.create(
-                        config.singlelevelStateBackend,config.singlelevelPath));
+                        config.singlelevelStateBackend, config.singlelevelPath));
             }
 
         }
@@ -180,6 +186,25 @@ public class AdvertisingTopologyFlinkWindows {
         //    )
 
         return env;
+    }
+
+    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple3<String, String, Long>, Tuple, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple3<String, String, Long>, Tuple, TimeWindow>() {
+            @Override
+            public void process(Tuple tuple, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple3<String, String, Long>> out) throws Exception {
+                long sum = 0;
+                Tuple3<String, String, Long> res = new Tuple3<>();
+                for (Tuple3<String, String, Long> e : elements) {
+                    if (sum == 0) {
+                        res.f0 = e.f0;
+                    }
+                    sum += e.f2;
+                }
+                res.f1 = Long.toString(context.window().getEnd());
+                res.f2 = sum;
+                out.collect(res);
+            }
+        };
     }
 
     /**
