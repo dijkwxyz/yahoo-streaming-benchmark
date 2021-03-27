@@ -193,7 +193,7 @@ run() {
   elif [ "CONFIG" = "$OPERATION" ];
   then
     cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
-    cp conf/flink/* $FLINK_DIR/
+    cp conf/flink/* $FLINK_DIR/ -r
   elif [ "START_ZK" = "$OPERATION" ];
   then
 #    start_if_needed dev_zookeeper ZooKeeper 10 "$STORM_DIR/bin/storm" dev-zookeeper
@@ -411,7 +411,8 @@ then
 #    echo "START_STORM_TOPOLOGY: run the storm test topology"
 #    echo "STOP_STORM_TOPOLOGY: kill the storm test topology"
     echo "START_FLINK_PROCESSING: run the flink test processing"
-    echo "STOP_FLINK_PROCESSSING: kill the flink test processing"
+    echo "START_FLINK_SINGLELEVEL: run flink process with single level config"
+    echo "STOP_FLINK_PROCESSSING: kill the flink test processing or single level test"
 #    echo "START_SPARK_PROCESSING: run the spark test processing"
 #    echo "STOP_SPARK_PROCESSSING: kill the spark test processing"
     echo

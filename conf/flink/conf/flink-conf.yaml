@@ -37,12 +37,12 @@ jobmanager.rpc.address: test1
 #jobmanager.rpc.port: 6123
 jobmanager.rpc.port: 6700
 
-
+jobmanager.memory.heap.size: 1000m
 # The total process memory size for the JobManager.
 #
 # Note this accounts for all memory usage within the JobManager process, including JVM metaspace and other overhead.
 
-jobmanager.memory.process.size: 1600m
+jobmanager.memory.process.size: 2000m
 
 
 # The total process memory size for the TaskManager.
@@ -259,4 +259,4 @@ env.java.opts.jobmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,
 env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
 env.java.home: /home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
 
-state.checkpoints.num-retained: 20
+#state.checkpoints.num-retained: 20
