@@ -191,7 +191,8 @@ run() {
     cp ~/yahoo-streaming-benchmark/conf/zookeeper/zoo.cfg zoo.cfg 
     cp conf/flink/* $FLINK_DIR/ -r
     cp conf/hadoop/* $HADOOP_DIR/etc/hadoop/
-    cp conf/kafka/* $KAFKA_DIR/config/
+    echo "config copied"
+#    cp conf/kafka/* $KAFKA_DIR/config/
   elif [ "START_ZK" = "$OPERATION" ];
   then
     start_if_needed zookeeper ZooKeeper 10 "$ZK_DIR/bin/zkServer.sh" start
