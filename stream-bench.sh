@@ -57,8 +57,9 @@ pid_match() {
 
 remote_operation() {
   local host="$1"
+  shift
   local cmd="$@"
-  ssh ec2-user@$host $BASE_DIR/stream-bench.sh "$cmd" &
+  ssh ec2-user@$host cd $BASE_DIR; ./stream-bench.sh "$cmd" &
 }
 
 start_if_needed() {
