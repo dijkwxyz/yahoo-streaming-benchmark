@@ -21,7 +21,7 @@
 
 	<property>
 		<name>yarn.resourcemanager.hostname</name>
-		<value>hadoop2</value>
+		<value>hadoop4</value>
 	</property>
 
 

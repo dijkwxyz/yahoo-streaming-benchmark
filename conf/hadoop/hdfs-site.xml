@@ -19,12 +19,12 @@
 <configuration>
 	<property>
 		<name>dfs.replication</name>
-		<value>3</value>
+		<value>2</value>
 	</property>
 
 	<property>
 		<name>dfs.namenode.secondary.http-address</name>
-		<value>hadoop3:50090</value>
+		<value>hadoop4:50090</value>
 	</property>
 
 </configuration>
