@@ -11,7 +11,7 @@ prefix=test
 # get curr username
 user=`whoami`
 
-for((host=1; host <=3; host++)); do
+for((host=1; host <=12; host++)); do
         echo ------------ $prefix$host ------------
         ssh $user@$prefix$host "$cmd"
 done
