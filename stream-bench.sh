@@ -25,7 +25,7 @@ JAVA_VERSSION=8u261
 # download java from 
 # https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html#license-lightbox
 
-#STORM_DIR="/opt/module/apache-storm-$STORM_VERSION"
+BASE_DIR="~/yahoo-streaming-benchmark"
 REDIS_DIR="redis-$REDIS_VERSION"
 KAFKA_DIR="kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="zookeeper-$ZK_VERSION"
@@ -33,9 +33,15 @@ FLINK_DIR="flink-$FLINK_VERSION"
 HADOOP_DIR=hadoop-$HADOOP_VERSION
 #SPARK_DIR="/opt/module/spark-$SPARK_VERSION-bin-hadoop2.6"
 
-ZK_HOST="localhost"
+ZK_HOST="zk1"
 ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
+KAFKA_HOST="kafka1"
+HADOOP_HOST="hadoop1"
+FLINK_HOST="flink1"
+REDIS_HOST="redis1"
+
+
 TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-1000}
@@ -47,6 +53,12 @@ TEST_TIME=${TEST_TIME:-30}
 pid_match() {
    local VAL=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
    echo $VAL
+}
+
+remote_operation() {
+  local host="$1"
+  local cmd="$@"
+  ssh ec2-user@host $BASE_DIR/stream-bench.sh "cmd" &
 }
 
 start_if_needed() {
@@ -281,6 +293,21 @@ then
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+  elif [ "CLUSTER_TEST" = "$OPERATION" ];
+  then
+    remote_operation "START_ZK"
+    remote_operation  "START_REDIS"
+    remote_operation  "START_KAFKA"
+    remote_operation  "START_FLINK"
+    remote_operation  "START_FLINK_PROCESSING"
+    remote_operation  "START_LOAD"
+    sleep $TEST_TIME
+    remote_operation  "STOP_LOAD"
+    remote_operation  "STOP_FLINK_PROCESSING"
+    remote_operation  "STOP_FLINK"
+    remote_operation  "STOP_KAFKA"
+    remote_operation  "STOP_REDIS"
+    remote_operation  "STOP_ZK"
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
     run "STOP_LOAD"
@@ -317,8 +344,8 @@ then
     echo "FLINK_TEST: run flink test (assumes SETUP is done)"
     echo "FLINK_DEBUG: run flink, without stopping"
     echo "FLINK_DEBUG_STOP: stop debugging flink test"
-#    echo "SPARK_TEST: run spark test (assumes SETUP is done)"
     echo "STOP_ALL: stop everything"
+    echo "CLUSTER_TEST: start test on cluster (start components remotely on configured hosts)"
     echo
     echo "CLEAR_LOGS: clear logs of Flink, Kafka, Zookeeper, Redis"
     echo "HELP: print out this message"
