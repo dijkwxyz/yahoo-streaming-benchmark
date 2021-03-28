@@ -315,8 +315,8 @@ run() {
     remote_operation $YARN_HOST "START_YARN"
   elif [ "CLUSTER_HDFS_STOP" = "$OPERATION" ];
   then
-    remote_operation $HADOOP_HOST "START_HDFS"
-    remote_operation $YARN_HOST "START_YARN"
+    remote_operation $HADOOP_HOST "STOP_HDFS"
+    remote_operation $YARN_HOST "STOP_YARN"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     remote_operation $ZK_HOST "START_ZK"
