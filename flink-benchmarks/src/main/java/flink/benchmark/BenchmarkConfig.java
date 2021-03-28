@@ -57,6 +57,7 @@ public class BenchmarkConfig implements Serializable {
     public final String multilevelPattern;
     public final String singlelevelPath;
     public final String singlelevelStateBackend;
+    public final int maxMemStateSize;
 
     /**
      * Create a config starting with an instance of ParameterTool
@@ -108,9 +109,11 @@ public class BenchmarkConfig implements Serializable {
         this.multilevelLevel2Path = parameterTool.get("multilevel.level2.path", null);
         this.multilevelLevel3Type = parameterTool.get("multilevel.level3.statebackend", null);
         this.multilevelLevel3Path = parameterTool.get("multilevel.level3.path", null);
-        this.multilevelPattern = parameterTool.get("multilevel.pattern", "");
-        this.singlelevelPath = parameterTool.get("singlelevel.path", "");
+        this.multilevelPattern = parameterTool.get("multilevel.pattern", null);
+        this.singlelevelPath = parameterTool.get("singlelevel.path", "/tmp/data");
         this.singlelevelStateBackend = parameterTool.get("singlelevel.statebackend", "fs");
+
+        this.maxMemStateSize = parameterTool.getInt("max.memory.state.size", 5242880);
 
     }
 

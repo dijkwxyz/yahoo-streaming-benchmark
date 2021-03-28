@@ -260,3 +260,8 @@ env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 env.java.home: /home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
 
 #state.checkpoints.num-retained: 20
+
+### heap based state backend
+# 50M
+akka.framesize: "52428800b"
+taskmanager.memory.managed.size: 0
