@@ -36,7 +36,8 @@ HADOOP_DIR=hadoop-$HADOOP_VERSION
 ZK_HOST="zk1"
 ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
-KAFKA_HOST="kafka1"
+KAFKA_HOST_PREFIX="kafka"
+KAFKA_HOST_NUM=2
 HADOOP_HOST="hadoop1"
 YARN_HOST="hadoop4"
 FLINK_HOST="flink1"
@@ -322,7 +323,9 @@ run() {
   then
     remote_operation $ZK_HOST "START_ZK"
     remote_operation $REDIS_HOST "START_REDIS"
-    remote_operation $KAFKA_HOST "START_KAFKA"
+    for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
+      remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
+    done
     remote_operation $FLINK_HOST "START_FLINK"
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     remote_operation $KAFKA_HOST "START_LOAD"
