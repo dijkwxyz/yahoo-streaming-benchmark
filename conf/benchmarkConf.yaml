@@ -56,5 +56,4 @@ multilevel.pattern: "0,1,2"
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
 
-
-
+max.memory.state.size: 52428800
