@@ -270,16 +270,16 @@ run() {
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
       sleep 3
     fi
-elif [ "FLINK_DEBUG_SINGLELEVEL" = "$OPERATION" ];
-then
+  elif [ "FLINK_DEBUG_SINGLELEVEL" = "$OPERATION" ];
+  then
     run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
     run "START_FLINK"
     run "START_FLINK_SINGLELEVEL"
     run "START_LOAD"
-elif [ "FLINK_DEBUG" = "$OPERATION" ];
-then
+  elif [ "FLINK_DEBUG" = "$OPERATION" ];
+  then
     run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
@@ -310,9 +310,11 @@ then
     run "STOP_REDIS"
     run "STOP_ZK"
   elif [ "CLUSTER_HDFS" = "$OPERATION" ];
+  then
     remote_operation $HADOOP_HOST "START_HDFS"
     remote_operation $YARN_HOST "START_YARN"
   elif [ "CLUSTER_HDFS_STOP" = "$OPERATION" ];
+  then
     remote_operation $HADOOP_HOST "START_HDFS"
     remote_operation $YARN_HOST "START_YARN"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
