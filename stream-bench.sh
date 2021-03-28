@@ -38,6 +38,7 @@ ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
 KAFKA_HOST="kafka1"
 HADOOP_HOST="hadoop1"
+YARN_HOST="hadoop4"
 FLINK_HOST="flink1"
 REDIS_HOST="redis1"
 
@@ -198,6 +199,18 @@ run() {
   then
     $ZK_DIR/bin/zkServer.sh stop
     rm -rf /tmp/zookeeper
+  elif [ "START_HDFS" = "$OPERATION" ];
+  then
+    $HADOOP_DIR/sbin/start-dfs.sh
+  elif [ "STOP_HDFS" = "$OPERATION" ];
+  then
+    $HADOOP_DIR/sbin/stop-dfs.sh
+  elif [ "START_YARN" = "$OPERATION" ];
+  then
+    $HADOOP_DIR/sbin/start-yarn.sh
+  elif [ "STOP_YARN" = "$OPERATION" ];
+  then
+    $HADOOP_DIR/sbin/stop-yarn.sh
   elif [ "START_REDIS" = "$OPERATION" ];
   then
     start_if_needed redis-server Redis 1 "$REDIS_DIR/src/redis-server" --protected-mode no
@@ -296,6 +309,12 @@ then
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+  elif [ "CLUSTER_HDFS" = "$OPERATION" ];
+    remote_operation $HADOOP_HOST "START_HDFS"
+    remote_operation $YARN_HOST "START_YARN"
+  elif [ "CLUSTER_HDFS_STOP" = "$OPERATION" ];
+    remote_operation $HADOOP_HOST "START_HDFS"
+    remote_operation $YARN_HOST "START_YARN"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     remote_operation $ZK_HOST "START_ZK"
@@ -348,7 +367,10 @@ then
     echo "FLINK_DEBUG: run flink, without stopping"
     echo "FLINK_DEBUG_STOP: stop debugging flink test"
     echo "STOP_ALL: stop everything"
+    echo
     echo "CLUSTER_TEST: start test on cluster (start components remotely on configured hosts)"
+    echo "CLUSTER_HDFS: start HDFS on cluster"
+    echo "CLUSTER_HDFS_STOP: stop HDFS on cluster"
     echo
     echo "CLEAR_LOGS: clear logs of Flink, Kafka, Zookeeper, Redis"
     echo "HELP: print out this message"
