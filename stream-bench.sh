@@ -328,9 +328,9 @@ run() {
     done
     remote_operation $FLINK_HOST "START_FLINK"
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
-    remote_operation $KAFKA_HOST "START_LOAD"
+    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
     sleep $TEST_TIME
-    remote_operation $KAFKA_HOST "STOP_LOAD"
+    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
@@ -340,7 +340,7 @@ run() {
     remote_operation $ZK_HOST "STOP_ZK"
   elif [ "STOP_CLUSTER" = "$OPERATION" ];
   then
-    remote_operation $KAFKA_HOST "STOP_LOAD"
+    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
