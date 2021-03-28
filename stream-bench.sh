@@ -58,7 +58,7 @@ pid_match() {
 remote_operation() {
   local host="$1"
   local cmd="$@"
-  ssh ec2-user@host $BASE_DIR/stream-bench.sh "cmd" &
+  ssh ec2-user@$host $BASE_DIR/stream-bench.sh "$cmd" &
 }
 
 start_if_needed() {
@@ -295,19 +295,19 @@ then
     run "STOP_ZK"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
-    remote_operation "START_ZK"
-    remote_operation  "START_REDIS"
-    remote_operation  "START_KAFKA"
-    remote_operation  "START_FLINK"
-    remote_operation  "START_FLINK_PROCESSING"
-    remote_operation  "START_LOAD"
+    remote_operation $ZK_HOST "START_ZK"
+    remote_operation $REDIS_HOST "START_REDIS"
+    remote_operation $KAFKA_HOST "START_KAFKA"
+    remote_operation $FLINK_HOST "START_FLINK"
+    remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
+    remote_operation $KAFKA_HOST "START_LOAD"
     sleep $TEST_TIME
-    remote_operation  "STOP_LOAD"
-    remote_operation  "STOP_FLINK_PROCESSING"
-    remote_operation  "STOP_FLINK"
-    remote_operation  "STOP_KAFKA"
-    remote_operation  "STOP_REDIS"
-    remote_operation  "STOP_ZK"
+    remote_operation $KAFKA_HOST "STOP_LOAD"
+    remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
+    remote_operation $FLINK_HOST "STOP_FLINK"
+    remote_operation $KAFKA_HOST "STOP_KAFKA"
+    remote_operation $REDIS_HOST "STOP_REDIS"
+    remote_operation $ZK_HOST "STOP_ZK"
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
     run "STOP_LOAD"
