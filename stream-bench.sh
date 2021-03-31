@@ -50,7 +50,7 @@ LOAD=${LOAD:-1000}
 CONF_FILE=./conf/benchmarkConf.yaml
 SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
-TEST_TIME=${TEST_TIME:-30}
+TEST_TIME=${TEST_TIME:-240}
 
 pid_match() {
    local VAL=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
