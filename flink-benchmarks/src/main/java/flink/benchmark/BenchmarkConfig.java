@@ -37,6 +37,7 @@ public class BenchmarkConfig implements Serializable {
 
     // Application
     public final long windowSize;
+    public final long windowSlide;
 
     // Flink
     public final long checkpointInterval;
@@ -85,7 +86,8 @@ public class BenchmarkConfig implements Serializable {
 //    this.akkaZookeeperPath = parameterTool.get("akka.zookeeper.path", "/akkaQuery");
 
         // Application
-        this.windowSize = parameterTool.getLong("window.size", 10_000);
+        this.windowSize = parameterTool.getLong("window.size", 10);
+        this.windowSlide = parameterTool.getLong("window.slide", 5);
 
         // Flink
         this.checkpointInterval = parameterTool.getLong("flink.checkpoint.interval", 0);

@@ -87,7 +87,7 @@ public class AdvertisingTopologyFlinkWindows {
         WindowedStream<Tuple3<String, String, Long>, Tuple, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
                 .keyBy(0) // campaign_id
-                .timeWindow(Time.of(config.windowSize, TimeUnit.MILLISECONDS));
+                .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
         // set a custom trigger
         windowStream.trigger(new EventAndProcessingTimeTrigger());
