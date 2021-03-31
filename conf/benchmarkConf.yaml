@@ -41,9 +41,9 @@ num.campaigns: 1000000
 #multilevel
 multilevel.enable: true
 #multilevel.level1.statebackend: "memory"
-#  level1.path: ""
+#multilevel.level1.path: ""
 multilevel.level1.statebackend: "fs"
-  level1.path: "file:///dev/shm/flink/"
+multilevel.level1.path: "file:///dev/shm/flink/"
 multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.level3.statebackend: "fs"
