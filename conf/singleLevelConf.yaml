@@ -27,6 +27,8 @@ add.result.sink: 1
 flink.highcard.checkpointURI: "file:///tmp/checkpoints"
 redis.threads: 2
 
+window.size: 10
+window.slide: 1
 
 # The following is for when running the EventGenerator directly rather than reading from Kafka
 use.local.event.generator: 1
@@ -38,8 +40,10 @@ num.campaigns: 1000000
 
 #multilevel
 multilevel.enable: false
-multilevel.level1.statebackend: "memory"
-#  level1.path: ""
+#multilevel.level1.statebackend: "memory"
+#multilevel.level1.path: ""
+multilevel.level1.statebackend: "fs"
+multilevel.level1.path: "file:///dev/shm/flink/"
 multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.level3.statebackend: "fs"
@@ -49,5 +53,4 @@ multilevel.pattern: "0,1,2"
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
 
-
-
+#max.memory.state.size: 52428800

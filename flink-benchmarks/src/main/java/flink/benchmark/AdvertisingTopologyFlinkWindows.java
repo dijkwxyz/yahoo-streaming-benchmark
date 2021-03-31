@@ -174,7 +174,7 @@ public class AdvertisingTopologyFlinkWindows {
         // use event time
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        env.setParallelism(1);
+//        env.setParallelism(1);
         //env.disableOperatorChaining()
         //env.getCheckpointConfig.setCheckpointTimeout(10000);
         //multilevel backend
