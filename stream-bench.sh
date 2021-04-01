@@ -339,7 +339,7 @@ run() {
     done
     remote_operation $REDIS_HOST "STOP_REDIS"
     remote_operation $ZK_HOST "STOP_ZK"
-  elif [ "START_CLUSTER" = "$OPERATION" ];
+  elif [ "CLUSTER_START" = "$OPERATION" ];
   then
     remote_operation $ZK_HOST "START_ZK"
     remote_operation $REDIS_HOST "START_REDIS"
@@ -349,7 +349,7 @@ run() {
     remote_operation $FLINK_HOST "START_FLINK"
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
-  elif [ "STOP_CLUSTER" = "$OPERATION" ];
+  elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
     remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
@@ -398,8 +398,8 @@ run() {
     echo "STOP_ALL: stop everything"
     echo
     echo "CLUSTER_TEST: start test on cluster (start components remotely on configured hosts)"
-    echo "START_CLUSTER: start test on cluster, call STOP_CLUSTER to stop"
-    echo "STOP_CLUSTER: stop the cluster"
+    echo "CLUSTER_START: start test on cluster, call CLUSTER_STOP to stop"
+    echo "CLUSTER_STOP: stop the cluster"
     echo "CLUSTER_HDFS: start HDFS on cluster"
     echo "CLUSTER_HDFS_STOP: stop HDFS on cluster"
     echo
