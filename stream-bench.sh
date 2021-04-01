@@ -49,6 +49,7 @@ PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-1000}
 CONF_FILE=./conf/benchmarkConf.yaml
 SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
+FLINK_PARALLELISM=2
 #test time in seconds
 TEST_TIME=${TEST_TIME:-240}
 
@@ -256,7 +257,7 @@ run() {
     cd ..
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
-    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+    "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
     sleep 3
   elif [ "START_FLINK_SINGLELEVEL" = "$OPERATION" ];
   then
