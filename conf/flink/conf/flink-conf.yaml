@@ -265,3 +265,6 @@ state.checkpoints.num-retained: 10
 # 50M
 #akka.framesize: "52428800b"
 taskmanager.memory.managed.size: 0
+
+metrics.reporter.slf4j.factory.class: org.apache.flink.metrics.slf4j.Slf4jReporterFactory
+metrics.reporter.slf4j.interval: 30 SECONDS
