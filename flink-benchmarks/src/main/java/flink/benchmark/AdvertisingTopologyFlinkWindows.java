@@ -107,7 +107,8 @@ public class AdvertisingTopologyFlinkWindows {
             result.addSink(new RedisResultSink(config));
         }
 
-        env.execute("AdvertisingTopologyFlinkWindows " + config.parameters.toMap().toString());
+        env.execute("AdvertisingTopologyFlinkWindows");
+//        env.execute("AdvertisingTopologyFlinkWindows " + config.parameters.toMap().toString());
     }
 
     /**

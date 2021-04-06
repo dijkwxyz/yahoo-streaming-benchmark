@@ -39,9 +39,7 @@ num.campaigns: 1000000
 
 
 #multilevel
-multilevel.enable: false
-#multilevel.level1.statebackend: "memory"
-#multilevel.level1.path: ""
+#multilevel.enable: true
 multilevel.level1.statebackend: "fs"
 multilevel.level1.path: "file:///dev/shm/flink/"
 multilevel.level2.statebackend: "fs"
@@ -49,7 +47,8 @@ multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1
 multilevel.level3.statebackend: "fs"
 multilevel.level3.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "0,1,2"
-#  multilevel.enable: false
+
+multilevel.enable: false
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
 

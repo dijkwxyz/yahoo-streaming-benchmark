@@ -244,6 +244,10 @@ run() {
     rm $KAFKA_DIR/logs/*
     rm zookeeper.out
     rm -r $HADOOP_DIR/logs/*
+  elif [ "CLEAR_CP" = "$OPERATION" ];
+  then
+    rm -r $FLINK_DIR/data/
+    rm -r /dev/shm/flink/
   elif [ "START_LOAD" = "$OPERATION" ];
   then
     cd data
@@ -266,8 +270,6 @@ run() {
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
     FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
-    rm -r $FLINK_DIR/data/
-    rm -r /dev/shm/flink/
     if [ "$FLINK_ID" == "" ];
 	  then
 	  echo "Could not find streaming job to kill"
@@ -406,6 +408,7 @@ run() {
     echo "CLUSTER_HDFS_STOP: stop HDFS on cluster"
     echo
     echo "CLEAR_LOGS: clear logs of Flink, Kafka, Zookeeper, Redis"
+    echo "CLEAR_CP: clear checkpoint files of Flink"
     echo "HELP: print out this message"
     echo
     exit 1
