@@ -241,7 +241,6 @@ run() {
   elif [ "CLEAR_LOGS" = "$OPERATION" ];
   then
     rm $FLINK_DIR/log/*
-    rm -r $FLINK_DIR/data/*
     rm $KAFKA_DIR/logs/*
     rm zookeeper.out
     rm -r $HADOOP_DIR/logs/*
@@ -267,8 +266,10 @@ run() {
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
     FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
+    rm -r $FLINK_DIR/data/
+    rm -r /dev/shm/flink/
     if [ "$FLINK_ID" == "" ];
-	then
+	  then
 	  echo "Could not find streaming job to kill"
     else
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
