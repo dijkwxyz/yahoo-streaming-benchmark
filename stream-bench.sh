@@ -241,6 +241,7 @@ run() {
   elif [ "CLEAR_LOGS" = "$OPERATION" ];
   then
     rm $FLINK_DIR/log/*
+    rm -r $FLINK_DIR/data/*
     rm $KAFKA_DIR/logs/*
     rm zookeeper.out
     rm -r $HADOOP_DIR/logs/*
