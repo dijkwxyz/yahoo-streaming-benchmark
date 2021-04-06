@@ -22,7 +22,7 @@ process.cores: 4
 
 #Flink specific
 group.id: "flink_yahoo_benchmark"
-flink.checkpoint.interval: 10000
+flink.checkpoint.interval: 30000
 add.result.sink: 1
 flink.highcard.checkpointURI: "file:///tmp/checkpoints"
 redis.threads: 2
