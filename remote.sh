@@ -1,5 +1,6 @@
 #!/bin/bash
 
+BASE_DIR=~/yahoo-streaming-benchmark/
 ZK_HOST="zk1"
 ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
@@ -80,6 +81,8 @@ run_command() {
 #    echo "START_FLINK_SINGLELEVEL: run_command flink process with single level config"
     echo "STOP_FLINK_PROCESSSING: kill the flink test processing or single level test"
     echo
+    echo "START_LOAD"
+    echo "STOP_LOAD"
     echo "HELP: print out this message"
     echo
     exit 1
