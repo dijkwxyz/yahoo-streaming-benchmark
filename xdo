@@ -1,4 +1,5 @@
 #! /bin/bash
+BASE_DIR=~/yahoo-streaming-benchmark/
 
 # get abs path
 # cd -P track abs path
@@ -13,5 +14,5 @@ user=`whoami`
 
 for((host=1; host <=12; host++)); do
         echo ------------ $prefix$host ------------
-        ssh $user@$prefix$host "$cmd"
+        ssh $user@$prefix$host "cd $BASE_DIR; $cmd"
 done
