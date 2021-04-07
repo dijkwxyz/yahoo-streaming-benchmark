@@ -1,6 +1,7 @@
 package flink.benchmark.generator;
 
 import flink.benchmark.BenchmarkConfig;
+import org.apache.flink.runtime.rest.handler.legacy.backpressure.BackPressureRequestCoordinator;
 
 import java.util.*;
 
@@ -58,7 +59,13 @@ public class EventGeneratorSource extends LoadGeneratorSource<String> {
     return sb.toString();
   }
 
-  /**
+    @Override
+    public int adjustLoad(int load) {
+
+        return load;
+    }
+
+    /**
    * Generate a random list of ads and campaigns
    */
   private Map<String, List<String>> generateCampaigns() {

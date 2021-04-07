@@ -5,7 +5,7 @@ kafka.brokers:
     - "kafka1"
     - "kafka2"
 kafka.port: 9092
-kafka.topic: "ads"
+kafka.topic: "ad-events"
 kafka.partitions: 2
 kafka.zookeeper.path: /
 
@@ -31,9 +31,10 @@ window.size: 10
 window.slide: 1
 
 # The following is for when running the EventGenerator directly rather than reading from Kafka
-use.local.event.generator: 1
+#use.local.event.generator: 1
 redis.flush: 1
 redis.db: 0
+# number of events per second, per source node
 load.target.hz: 10000000
 num.campaigns: 1000000
 
