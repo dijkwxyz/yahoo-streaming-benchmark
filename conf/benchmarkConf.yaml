@@ -31,10 +31,10 @@ window.size: 10
 window.slide: 1
 
 # The following is for when running the EventGenerator directly rather than reading from Kafka
-use.local.event.generator: 1
+#use.local.event.generator: 1
 redis.flush: 1
 redis.db: 0
-load.target.hz: 10000000
+load.target.hz: 5000000
 num.campaigns: 1000000
 
 
@@ -48,7 +48,7 @@ multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.level3.statebackend: "fs"
 multilevel.level3.path: "hdfs://hadoop1:9000/flink/checkpoints"
-multilevel.pattern: "0,1,2"
+multilevel.pattern: "1,1,2"
 #  multilevel.enable: false
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
