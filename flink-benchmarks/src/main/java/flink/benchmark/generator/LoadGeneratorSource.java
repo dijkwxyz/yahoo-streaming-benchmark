@@ -24,13 +24,16 @@ public abstract class LoadGeneratorSource<T> extends RichParallelSourceFunction<
    */
   public abstract T generateElement();
 
+  public abstract int adjustLoad(int load);
 
   /**
    * The main loop
    */
   @Override
   public void run(SourceContext<T> sourceContext) throws Exception {
-    int elements = loadPerTimeslice();
+    int elements = adjustLoad(loadPerTimeslice());
+
+
 
     while (running) {
       long emitStartTime = System.currentTimeMillis();
