@@ -24,7 +24,9 @@ public abstract class LoadGeneratorSource<T> extends RichParallelSourceFunction<
    */
   public abstract T generateElement();
 
-  public abstract int adjustLoad(int load);
+  public int adjustLoad(int load) {
+      return load;
+  }
 
   /**
    * The main loop
