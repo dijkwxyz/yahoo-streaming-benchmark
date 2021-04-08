@@ -36,7 +36,7 @@ window.slide: 1
 redis.flush: 1
 redis.db: 0
 # number of events per second, per source node
-load.target.hz: 5000000
+load.target.hz: 1000000
 num.campaigns: 1000000
 
 

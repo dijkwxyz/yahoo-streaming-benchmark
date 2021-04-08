@@ -25,7 +25,7 @@ JAVA_VERSSION=8u261
 # download java from 
 # https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html#license-lightbox
 
-BASE_DIR="~/yahoo-streaming-benchmark"
+BASE_DIR=/home/ec2-user/yahoo-streaming-benchmark
 REDIS_DIR="redis-$REDIS_VERSION"
 KAFKA_DIR="kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="zookeeper-$ZK_VERSION"
@@ -47,7 +47,7 @@ REDIS_HOST="redis1"
 TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-5000000}
-CONF_FILE=./conf/benchmarkConf.yaml
+CONF_FILE=conf/benchmarkConf.yaml
 SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 FLINK_PARALLELISM=8
 #test time in seconds
