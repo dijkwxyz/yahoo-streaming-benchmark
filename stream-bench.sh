@@ -250,12 +250,14 @@ run() {
     rm -r /dev/shm/flink/
   elif [ "START_LOAD" = "$OPERATION" ];
   then
-    cd data
-    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
+#    cd data
+    start_if_needed java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE
+#    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
     cd ..
   elif [ "STOP_LOAD" = "$OPERATION" ];
   then
-    stop_if_needed leiningen.core.main "Load Generation"
+    stop_if_needed KafkaDataGenerator "Load Generation"
+#    stop_if_needed leiningen.core.main "Load Generation"
     cd data
     $LEIN run -g --configPath ../$CONF_FILE || true
     cd ..
