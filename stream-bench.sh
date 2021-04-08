@@ -46,7 +46,7 @@ REDIS_HOST="redis1"
 
 TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${PARTITIONS:-1}
-LOAD=${LOAD:-4000}
+LOAD=${LOAD:-5000000}
 CONF_FILE=./conf/benchmarkConf.yaml
 SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 FLINK_PARALLELISM=8

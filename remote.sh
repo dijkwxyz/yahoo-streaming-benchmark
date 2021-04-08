@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR=~/yahoo-streaming-benchmark/
+BASE_DIR=/home/ec2-user/yahoo-streaming-benchmark/
 ZK_HOST="zk1"
 ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
@@ -38,7 +38,7 @@ run_command() {
   elif [ "START_FLINK" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "START_FLINK"
-  elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
+  elif [ "START_JOB" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
   elif [ "START_LOAD" = "$OPERATION" ];
@@ -47,7 +47,7 @@ run_command() {
   elif [ "STOP_LOAD" = "$OPERATION" ];
   then
     remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
-  elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
+  elif [ "STOP_JOB" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
   elif [ "STOP_FLINK" = "$OPERATION" ];
@@ -77,7 +77,7 @@ run_command() {
     echo "START_FLINK: run_command flink processes"
     echo "STOP_FLINK: kill flink processes"
     echo
-    echo "START_FLINK_PROCESSING: run_command the flink test processing"
+    echo "START_JOB: run_command the flink test processing"
 #    echo "START_FLINK_SINGLELEVEL: run_command flink process with single level config"
     echo "STOP_FLINK_PROCESSSING: kill the flink test processing or single level test"
     echo
