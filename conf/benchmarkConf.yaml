@@ -8,6 +8,7 @@ kafka.port: 9092
 kafka.topic: "ad-events"
 kafka.partitions: 2
 kafka.zookeeper.path: /
+bootstrap.servers: "kafka1:9092, kafka2:9092"
 
 #akka.zookeeper.path: /akkaQuery
 

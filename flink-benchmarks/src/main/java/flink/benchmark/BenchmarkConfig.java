@@ -18,6 +18,8 @@ public class BenchmarkConfig implements Serializable {
 
     // Kafka
     public final String kafkaTopic;
+    public final String bootstrapServer;
+    public final String groupId;
 
     // Load Generator
     public final int loadTargetHz;
@@ -74,6 +76,8 @@ public class BenchmarkConfig implements Serializable {
 
         // Kafka
         this.kafkaTopic = parameterTool.getRequired("kafka.topic");
+        this.bootstrapServer = parameterTool.getRequired("bootstrap.servers");
+        this.groupId = parameterTool.getRequired("group.id");
 
         // Redis
         this.redisHost = parameterTool.get("redis.host", "localhost");

@@ -47,7 +47,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
@@ -243,10 +242,13 @@ public class AdvertisingTopologyFlinkWindows {
      * Configure Kafka source
      */
     private static FlinkKafkaConsumer011<String> kafkaSource(BenchmarkConfig config) {
+        Properties properties = new Properties();
+        properties.setProperty("bootstrap.servers", config.bootstrapServer);
+        properties.setProperty("group.id", config.bootstrapServer);
         return new FlinkKafkaConsumer011<String>(
                 config.kafkaTopic,
                 new SimpleStringSchema(),
-                config.getParameters().getProperties());
+                properties);
     }
 
     /**
