@@ -56,7 +56,7 @@ public class AdvertisingTopologyFlinkWindows {
         StreamExecutionEnvironment env = setupEnvironment(config);
 
         DataStream<String> rawMessageStream = streamSource(config, env);
-        rawMessageStream.print("raw");
+//        rawMessageStream.print("raw");
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
 
@@ -361,64 +361,64 @@ public class AdvertisingTopologyFlinkWindows {
         }
     }
 
-    /**
-     * Sink computed windows to Redis
-     */
-    private static class RedisResultSink extends RichSinkFunction<Tuple3<String, String, Long>> {
-        private Jedis flushJedis;
-
-        private BenchmarkConfig config;
-
-        public RedisResultSink(BenchmarkConfig config) {
-            this.config = config;
-        }
-
-        @Override
-        public void open(Configuration parameters) throws Exception {
-            super.open(parameters);
-            flushJedis = new Jedis(config.redisHost);
-        }
-
-        @Override
-        public void invoke(Tuple3<String, String, Long> result) throws Exception {
-            // set (campaign, count)
-            //    flushJedis.hset("campaign-counts", result.f0, Long.toString(result.f2));
-
-            String campaign = result.f0;
-            String timestamp = result.f1;
-            String windowUUID = getOrCreateWindow(campaign, timestamp);
-
-            flushJedis.hset(windowUUID, "seen_count", Long.toString(result.f2));
-            flushJedis.hset(windowUUID, "time_updated", Long.toString(System.currentTimeMillis()));
-            flushJedis.hset(windowUUID, "subtask", Integer.toString(getRuntimeContext().getIndexOfThisSubtask() + 1));
-            flushJedis.lpush("time_updated", Long.toString(System.currentTimeMillis()));
-        }
-
-        private String getOrCreateWindow(String campaign, String timestamp) {
-            String windowUUID = flushJedis.hmget(campaign, timestamp).get(0);
-            if (windowUUID == null) {
-                windowUUID = UUID.randomUUID().toString();
-                flushJedis.hset(campaign, timestamp, windowUUID);
-                getOrCreateWindowList(campaign, timestamp);
-            }
-            return windowUUID;
-        }
-
-        private void getOrCreateWindowList(String campaign, String timestamp) {
-            String windowListUUID = flushJedis.hmget(campaign, "windows").get(0);
-            if (windowListUUID == null) {
-                windowListUUID = UUID.randomUUID().toString();
-                flushJedis.hset(campaign, "windows", windowListUUID);
-            }
-            flushJedis.lpush(windowListUUID, timestamp);
-        }
-
-        @Override
-        public void close() throws Exception {
-            super.close();
-            flushJedis.close();
-        }
-    }
+//    /**
+//     * Sink computed windows to Redis
+//     */
+//    private static class RedisResultSink extends RichSinkFunction<Tuple3<String, String, Long>> {
+//        private Jedis flushJedis;
+//
+//        private BenchmarkConfig config;
+//
+//        public RedisResultSink(BenchmarkConfig config) {
+//            this.config = config;
+//        }
+//
+//        @Override
+//        public void open(Configuration parameters) throws Exception {
+//            super.open(parameters);
+//            flushJedis = new Jedis(config.redisHost);
+//        }
+//
+//        @Override
+//        public void invoke(Tuple3<String, String, Long> result) throws Exception {
+//            // set (campaign, count)
+//            //    flushJedis.hset("campaign-counts", result.f0, Long.toString(result.f2));
+//
+//            String campaign = result.f0;
+//            String timestamp = result.f1;
+//            String windowUUID = getOrCreateWindow(campaign, timestamp);
+//
+//            flushJedis.hset(windowUUID, "seen_count", Long.toString(result.f2));
+//            flushJedis.hset(windowUUID, "time_updated", Long.toString(System.currentTimeMillis()));
+//            flushJedis.hset(windowUUID, "subtask", Integer.toString(getRuntimeContext().getIndexOfThisSubtask() + 1));
+//            flushJedis.lpush("time_updated", Long.toString(System.currentTimeMillis()));
+//        }
+//
+//        private String getOrCreateWindow(String campaign, String timestamp) {
+//            String windowUUID = flushJedis.hmget(campaign, timestamp).get(0);
+//            if (windowUUID == null) {
+//                windowUUID = UUID.randomUUID().toString();
+//                flushJedis.hset(campaign, timestamp, windowUUID);
+//                getOrCreateWindowList(campaign, timestamp);
+//            }
+//            return windowUUID;
+//        }
+//
+//        private void getOrCreateWindowList(String campaign, String timestamp) {
+//            String windowListUUID = flushJedis.hmget(campaign, "windows").get(0);
+//            if (windowListUUID == null) {
+//                windowListUUID = UUID.randomUUID().toString();
+//                flushJedis.hset(campaign, "windows", windowListUUID);
+//            }
+//            flushJedis.lpush(windowListUUID, timestamp);
+//        }
+//
+//        @Override
+//        public void close() throws Exception {
+//            super.close();
+//            flushJedis.close();
+//        }
+//    }
 
     /**
      * Simplified version of Redis data structure
