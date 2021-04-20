@@ -128,10 +128,11 @@
                  (line-seq kafkas)))))
 
 (defn get-stats [redis-host]
-  (with-open [seen-file (clojure.java.io/writer "seen.txt")
-              updated-file (clojure.java.io/writer "updated.txt")]
+  (with-open [seen-file (clojure.java.io/writer "seen-updated-subtask.txt")]
+;  (with-open [seen-file (clojure.java.io/writer "seen.txt")
+;              updated-file (clojure.java.io/writer "updated.txt")]
     (letfn [(data-printer [[seen updated subtask]]
-              (.write seen-file (str seen " " updated " " subtask))
+              (.write seen-file (str seen " " updated " " subtask "\n"))
               (.flush seen-file))]
 ;              (.write seen-file (str seen "\n"))
 ;              (.write updated-file (str updated "\n"))
