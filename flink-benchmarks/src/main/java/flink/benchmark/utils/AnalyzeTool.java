@@ -70,11 +70,11 @@ public class AnalyzeTool {
          path prefix
          hostname
          */
-        args = new String[]{
-                "C:\\Users\\joinp\\Downloads\\",
-                "flink2"
+//        args = new String[]{
+//                "C:\\Users\\joinp\\Downloads\\",
+//                "flink2"
 //                "flink3"
-        };
+//        };
         String prefix = args[0];
         Result result = new Result();
         for (int i = 1; i < args.length; i++) {

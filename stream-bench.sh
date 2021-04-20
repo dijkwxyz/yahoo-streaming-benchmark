@@ -244,6 +244,7 @@ run() {
   elif [ "STOP_FLINK" = "$OPERATION" ];
   then
     $FLINK_DIR/bin/stop-cluster.sh
+    scp $FLINK_DIR/log/*.log ec2-user@$ZK_HOST:/home/ec2-user/data/
   elif [ "CLEAR_LOGS" = "$OPERATION" ];
   then
     rm $FLINK_DIR/log/*
