@@ -79,7 +79,8 @@ run_command() {
     echo
     echo "START_JOB: run_command the flink test processing"
 #    echo "START_FLINK_SINGLELEVEL: run_command flink process with single level config"
-    echo "STOP_FLINK_PROCESSSING: kill the flink test processing or single level test"
+    echo "STOP_JOB: kill the flink test processing or single level test"
+    #echo "STOP_FLINK_PROCESSSING: kill the flink test processing or single level test"
     echo
     echo "START_LOAD"
     echo "STOP_LOAD"
