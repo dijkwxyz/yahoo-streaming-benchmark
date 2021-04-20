@@ -38,6 +38,8 @@ public class ThroughputLogger<T> implements FlatMapFunction<T, Integer> {
         double ex = (1000/(double)timeDiff);
         LOG.info("From {} to {} ({} ms), we received {} elements. That's {} elements/second/core. {} MB/sec/core. GB received {}",
                 lastLogTimeMs, now, timeDiff, elementDiff, elementDiff*ex, elementDiff*ex*elementSize / 1024 / 1024, (totalReceived * elementSize) / 1024 / 1024 / 1024);
+          LOG.info("#####{},{},{},{},{},,{},{}&&&&&",
+                  lastLogTimeMs, now, timeDiff, elementDiff, elementDiff*ex, elementDiff*ex*elementSize / 1024 / 1024, (totalReceived * elementSize) / 1024 / 1024 / 1024);
         // reinit
         lastLogTimeMs = now;
         lastTotalReceived = totalReceived;
