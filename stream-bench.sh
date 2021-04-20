@@ -244,7 +244,6 @@ run() {
   elif [ "STOP_FLINK" = "$OPERATION" ];
   then
     $FLINK_DIR/bin/stop-cluster.sh
-    scp $FLINK_DIR/log/*.log ec2-user@$ZK_HOST:/home/ec2-user/data/
   elif [ "CLEAR_LOGS" = "$OPERATION" ];
   then
     rm $FLINK_DIR/log/*
@@ -269,7 +268,6 @@ run() {
     java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
 #    $LEIN run -g --configPath ../$CONF_FILE || true
     cd ..
-    scp $BASE_DIR/data/seen-updated-subtask.txt ec2-user@$ZK_HOST:$BASE_DIR/data/seen-updated-subtask.txt
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
     "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
