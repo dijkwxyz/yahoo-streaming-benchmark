@@ -8,7 +8,6 @@ import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
-import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLogger;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
