@@ -390,7 +390,7 @@ public class AdvertisingTopologyFlinkWindows {
 
             flushJedis.hset(windowUUID, "seen_count", Long.toString(result.f2));
             flushJedis.hset(windowUUID, "time_updated", Long.toString(System.currentTimeMillis()));
-            flushJedis.hset(windowUUID, "subtask", getRuntimeContext().getTaskNameWithSubtasks());
+            flushJedis.hset(windowUUID, "subtask", Integer.toString(getRuntimeContext().getIndexOfThisSubtask() + 1));
             flushJedis.lpush("time_updated", Long.toString(System.currentTimeMillis()));
         }
 
