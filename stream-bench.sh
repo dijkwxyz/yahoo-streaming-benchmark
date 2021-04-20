@@ -65,6 +65,13 @@ remote_operation() {
   ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd" &
 }
 
+remote_operation_sync() {
+  local host="$1"
+  shift
+  local cmd="$@"
+  ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd"
+}
+
 start_if_needed() {
   local match="$1"
   shift
@@ -337,7 +344,7 @@ run() {
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
     sleep $TEST_TIME
-    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
@@ -357,7 +364,7 @@ run() {
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
-    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
