@@ -11,7 +11,7 @@ download-cache
 
 tmp-*/**
 jdk*/**
-flink-1.*/**
+flink-*/**
 !flink-benchmarks/src/*
 kafka_*/**
 redis-*/**
