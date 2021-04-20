@@ -56,7 +56,7 @@ public class AdvertisingTopologyFlinkWindows {
         StreamExecutionEnvironment env = setupEnvironment(config);
 
         DataStream<String> rawMessageStream = streamSource(config, env);
-//        rawMessageStream.print("raw");
+        rawMessageStream.print("raw");
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
 
@@ -235,7 +235,7 @@ public class AdvertisingTopologyFlinkWindows {
     private static FlinkKafkaConsumer011<String> kafkaSource(BenchmarkConfig config) {
         Properties properties = new Properties();
         properties.setProperty("bootstrap.servers", config.bootstrapServers);
-        properties.setProperty("group.id", config.bootstrapServers);
+        properties.setProperty("group.id", config.groupId);
         return new FlinkKafkaConsumer011<String>(
                 config.kafkaTopic,
                 new SimpleStringSchema(),
