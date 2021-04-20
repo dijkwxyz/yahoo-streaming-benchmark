@@ -6,7 +6,7 @@ set -o errtrace
 set -o nounset
 set -o errexit
 
-LEIN=${LEIN:-lein}
+LEIN=${LEIN:-~/bin/lein}
 MVN=${MVN:-mvn}
 GIT=${GIT:-git}
 MAKE=${MAKE:-make}
