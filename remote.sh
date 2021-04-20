@@ -65,7 +65,7 @@ run_command() {
   then
     scp ec2-user@kafka1:$BASE_DIR/data/seen-updated-subtask.txt ec2-user@zk1:$BASE_DIR/data/
     scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/data/flink2.log
-    scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/data/flink3.log
+    scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/data/flink3.log
     java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/data/ flink2 flink3
   else
     if [ "HELP" != "$OPERATION" ];
