@@ -91,11 +91,11 @@ public class AdvertisingTopologyFlinkWindows {
 //        result.print("process");
 //        result2.print("reduce");
         // write result to redis
-        if (config.getParameters().has("add.result.sink.optimized")) {
+//        if (config.getParameters().has("add.result.sink.optimized")) {
             result.addSink(new RedisResultSinkOptimized(config));
-        } else {
-            result.addSink(new RedisResultSink(config));
-        }
+//        } else {
+//            result.addSink(new RedisResultSink(config));
+//        }
 
         env.execute("AdvertisingTopologyFlinkWindows");
 //        env.execute("AdvertisingTopologyFlinkWindows " + config.parameters.toMap().toString());
@@ -440,8 +440,13 @@ public class AdvertisingTopologyFlinkWindows {
 
         @Override
         public void invoke(Tuple3<String, String, Long> result) throws Exception {
-            // set campaign id -> (window-timestamp, count)
-            flushJedis.hset(result.f0, result.f1, Long.toString(result.f2));
+            // set campaign id -> (window-timestamp, count + latency + subtask)
+            long latency = System.currentTimeMillis() - result.f2;
+            flushJedis.hset(result.f0, result.f1,
+                    result.f2 + " " +
+                            latency + " " +
+                            (getRuntimeContext().getIndexOfThisSubtask() + 1)
+            );
         }
 
         @Override

@@ -46,19 +46,21 @@ public class AnalyzeTool {
         return result;
     }
 
-    public static Result analyzeLatency(String path, String host, Result result) throws FileNotFoundException {
-        Scanner sc = new Scanner(new File(path, host+"-data"));
-
-        String l;
-
+    public static Result analyzeLatency(String path, Result result) throws FileNotFoundException {
+        Scanner sc = new Scanner(new File(path, "seen-updated-subtask.txt"));
         DescriptiveStatistics latencies = new DescriptiveStatistics();
         while (sc.hasNextLine()) {
-            l = sc.nextLine();
-            int latency = Integer.parseInt(l);
+            String[] l = sc.nextLine().split(" ");
+            int count = Integer.parseInt(l[0]);
+            int latency = Integer.parseInt(l[1]);
+            String subtask = String.valueOf(Integer.parseInt(l[2]));
             latencies.addValue(latency);
             result.latencies.addValue(latency);
+
+            if (!result.perHostLat.containsKey(subtask)) {
+                result.perHostLat.put(subtask, latencies);
+            }
         }
-        result.perHostLat.put(host, latencies);
 
         return result;
     }
@@ -77,7 +79,7 @@ public class AnalyzeTool {
         Result result = new Result();
         for (int i = 1; i < args.length; i++) {
             analyzeThroughput(prefix, args[i], result);
-            analyzeLatency(prefix, args[i], result);
+            analyzeLatency(prefix, result);
         }
 
         SummaryStatistics throughputs = result.throughputs;
