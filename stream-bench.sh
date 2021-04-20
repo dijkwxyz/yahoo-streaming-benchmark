@@ -208,7 +208,7 @@ run() {
   elif [ "STOP_ZK" = "$OPERATION" ];
   then
     $ZK_DIR/bin/zkServer.sh stop
-    rm -rf /tmp/zookeeper
+    rm -r /tmp/zookeeper
   elif [ "START_HDFS" = "$OPERATION" ];
   then
     $HADOOP_DIR/sbin/start-dfs.sh
@@ -238,7 +238,7 @@ run() {
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
     $KAFKA_DIR/bin/kafka-server-stop.sh
-    rm -rf /tmp/kafka-logs/
+    rm -r /tmp/kafka-logs/
   elif [ "START_FLINK" = "$OPERATION" ];
   then
     start_if_needed org.apache.flink.runtime.jobmanager.JobManager Flink 1 $FLINK_DIR/bin/start-cluster.sh
@@ -268,6 +268,7 @@ run() {
     cd data
     $LEIN run -g --configPath ../$CONF_FILE || true
     cd ..
+    scp $BASE_DIR/data/seen-updated-subtask.txt ec2-user@115.146.94.215:$BASE_DIR/data/seen-updated-subtask.txt
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
     "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
