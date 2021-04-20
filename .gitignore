@@ -12,6 +12,7 @@ download-cache
 tmp-*/**
 jdk*/**
 flink-*/**
+!flink-benchmarks/src/**
 kafka_*/**
 redis-*/**
 zookeeper-*/**
