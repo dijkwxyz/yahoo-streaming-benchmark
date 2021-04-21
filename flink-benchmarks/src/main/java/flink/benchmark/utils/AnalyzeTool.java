@@ -149,33 +149,42 @@ public class AnalyzeTool {
         SummaryStatistics throughputs = result.throughputs;
         DescriptiveStatistics latencies = result.latencies;
         FileWriter fw = new FileWriter(new File(path, fileName));
-        fw.write("====== " + "all-machines" + " =======");
-        fw.write('\n');
-        fw.write("lat-mean;lat-median;lat-90percentile;lat-95percentile;lat-99percentile;throughput-mean;throughput-max;latencies;throughputs;");
-        fw.write('\n');
-        fw.write(latencies.getMean() + ";" + latencies.getPercentile(50) + ";" + latencies.getPercentile(90) + ";" + latencies.getPercentile(95) + ";" + latencies.getPercentile(99) + ";" + throughputs.getMean() + ";" + throughputs.getMax() + ";" + latencies.getN() + ";" + throughputs.getN());
-        fw.write('\n');
+        StringBuilder sb = new StringBuilder();
+        sb.append("====== " + "all-machines" + " =======");
+        sb.append('\n');
+        sb.append("lat-mean;lat-median;lat-90percentile;lat-95percentile;lat-99percentile;throughput-mean;throughput-max;latencies;throughputs;");
+        sb.append('\n');
+        sb.append(latencies.getMean() + ";" + latencies.getPercentile(50) + ";" + latencies.getPercentile(90) + ";" + latencies.getPercentile(95) + ";" + latencies.getPercentile(99) + ";" + throughputs.getMean() + ";" + throughputs.getMax() + ";" + latencies.getN() + ";" + throughputs.getN());
+        sb.append('\n');
+        fw.write(sb.toString());
 
         for (Map.Entry<String, DescriptiveStatistics> entry : result.perHostLat.entrySet()) {
-            fw.write("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ") =======");
-            fw.write('\n');
-            fw.write("Mean latency " + entry.getValue().getMean());
-            fw.write('\n');
-            fw.write("Median latency " + entry.getValue().getPercentile(50));
-            fw.write('\n');
+            sb = new StringBuilder();
+            sb.append("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ") =======");
+            sb.append('\n');
+            sb.append("Mean latency " + entry.getValue().getMean());
+            sb.append('\n');
+            sb.append("Median latency " + entry.getValue().getPercentile(50));
+            sb.append('\n');
+            fw.write(sb.toString());
+
         }
 
-        fw.write("================= Throughput (in total " + result.perHostThr.size() + " reports ) =====================");
-        fw.write('\n');
+        sb = new StringBuilder();
+        sb.append("================= Throughput (in total " + result.perHostThr.size() + " reports ) =====================");
+        sb.append('\n');
+        fw.write(sb.toString());
+
         for (Map.Entry<String, SummaryStatistics> entry : result.perHostThr.entrySet()) {
-            fw.write("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ")=======");
-            fw.write('\n');
-            fw.write("Mean throughput " + entry.getValue().getMean());
-            fw.write('\n');
+            sb = new StringBuilder();
+            sb.append("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ")=======");
+            sb.append('\n');
+            sb.append("Mean throughput " + entry.getValue().getMean());
+            sb.append('\n');
+            fw.write(sb.toString());
         }
 
         fw.close();
-
     }
 
     public static void writeLoadInfo(String path, String dstDir) throws IOException {
