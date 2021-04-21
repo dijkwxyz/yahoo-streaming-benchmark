@@ -20,7 +20,6 @@ import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
@@ -61,18 +60,7 @@ public class AdvertisingTopologyFlinkWindows {
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
 
-        //out: (campaign id, event time)
-        SingleOutputStreamOperator<Tuple2<String, String>> project = rawMessageStream
-                .flatMap(new DeserializeBolt())
-                .filter(new EventFilterBolt())
-                .<Tuple2<String, String>>project(2, 5);
-         //ad_id, event_time
-        project.print("raw");
 
-        project
-                .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
-                .map((a) -> System.currentTimeMillis() - Long.parseLong(a.f1))
-        .print("Redis");
         //out: (campaign id, event time)
         DataStream<Tuple2<String, String>> joinedAdImpressions = rawMessageStream
                 .flatMap(new DeserializeBolt())
