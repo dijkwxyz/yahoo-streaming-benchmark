@@ -83,10 +83,10 @@ public class AdvertisingTopologyFlinkWindows {
         windowStream.trigger(new EventAndProcessingTimeTrigger());
 
         // campaign_id, window end time, count
-//        DataStream<Tuple3<String, String, Long>> result =
-//                windowStream.process(sumProcessFunction());
         DataStream<Tuple3<String, String, Long>> result =
-                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
+                windowStream.process(sumProcessFunction());
+//        DataStream<Tuple3<String, String, Long>> result =
+//                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
 
 //        result.print("process");
 //        result2.print("reduce");
@@ -381,7 +381,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         @Override
         public void invoke(Tuple3<String, String, Long> result) throws Exception {
-            // set campaign id -> (window-timestamp, count + latency + subtask)
+            // redis set: campaign id -> (window-timestamp, count + latency + subtask)
             long latency = System.currentTimeMillis() - Long.parseLong(result.f1);
             flushJedis.hset(result.f0, result.f1,
                     result.f2 + " " +
