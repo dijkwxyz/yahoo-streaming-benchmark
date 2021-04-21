@@ -168,7 +168,9 @@ run() {
 #    echo 'load.target.hz: 10000000' >> $CONF_FILE
 #    echo 'num.campaigns: 1000000' >> $CONF_FILE
 	
-    $MVN clean package -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
+    #$MVN clean package -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
+    $MVN clean package 
+    xsync ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
 
   elif [ "INSTALL" = "$OPERATION" ];
   then
