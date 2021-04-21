@@ -223,9 +223,9 @@ run() {
   elif [ "START_REDIS" = "$OPERATION" ];
   then
     start_if_needed redis-server Redis 1 "$REDIS_DIR/src/redis-server" --protected-mode no
-    cd data
-    $LEIN run -n --configPath ../conf/benchmarkConf.yaml
-    cd ..
+#    cd data
+#    $LEIN run -n --configPath ../conf/benchmarkConf.yaml
+#    cd ..
   elif [ "STOP_REDIS" = "$OPERATION" ];
   then
     stop_if_needed redis-server Redis
