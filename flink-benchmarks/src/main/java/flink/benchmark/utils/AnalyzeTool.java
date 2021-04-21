@@ -181,10 +181,10 @@ public class AnalyzeTool {
          path prefix
          hostname
          */
-        args = new String[]{
-                "C:\\Users\\joinp\\Downloads\\",
-                "flink3"
-        };
+//        args = new String[]{
+//                "C:\\Users\\joinp\\Downloads\\",
+//                "flink3"
+//        };
         String prefix = args[0];
         String generatedPrefix = "/generated/";
         File generatedDir = new File(prefix, generatedPrefix);
