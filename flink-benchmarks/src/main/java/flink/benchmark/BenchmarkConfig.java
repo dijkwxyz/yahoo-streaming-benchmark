@@ -18,6 +18,7 @@ public class BenchmarkConfig implements Serializable {
 
     // Kafka
     public final String kafkaTopic;
+//    public final int kafkaPartition;
     public final String bootstrapServers;
     public final String groupId;
 
@@ -76,6 +77,7 @@ public class BenchmarkConfig implements Serializable {
 
         // Kafka
         this.kafkaTopic = parameterTool.getRequired("kafka.topic");
+//        this.kafkaPartition = parameterTool.getInt("kafka.partitions", 1);
         this.bootstrapServers = parameterTool.getRequired("bootstrap.servers");
         this.groupId = parameterTool.getRequired("group.id");
 

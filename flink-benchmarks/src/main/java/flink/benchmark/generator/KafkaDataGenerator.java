@@ -1,7 +1,6 @@
 package flink.benchmark.generator;
 
 import flink.benchmark.BenchmarkConfig;
-import org.apache.flink.util.Collector;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -23,6 +22,8 @@ public class KafkaDataGenerator {
     private final int timeSliceLengthMs;
     private final String topic;
     private boolean running = true;
+    private final int totalPartitions;
+    private int currPartition = 0;
 
     public Map<String, List<String>> getCampaigns() {
         return campaigns;
@@ -45,8 +46,9 @@ public class KafkaDataGenerator {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //key 序列化
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //value 序列化
         kafkaProducer = new KafkaProducer<>(properties);
+        totalPartitions = kafkaProducer.partitionsFor(topic).size();
 
-        // register campaigns to redis
+//        // register campaigns to redis
         Map<String, List<String>> campaigns = getCampaigns();
         RedisHelper redisHelper = new RedisHelper(config);
         redisHelper.prepareRedis(campaigns);
@@ -173,7 +175,8 @@ public class KafkaDataGenerator {
     }
 
     public void collect(String element) {
-        kafkaProducer.send(new ProducerRecord<>(topic, element));
+        kafkaProducer.send(new ProducerRecord<>(topic, currPartition, String.valueOf(currPartition), element));
+        currPartition = (currPartition + 1) % totalPartitions;
     }
 
     private int loadPerTimeslice() {

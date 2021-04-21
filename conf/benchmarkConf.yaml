@@ -6,7 +6,8 @@ kafka.brokers:
     - "kafka2"
 kafka.port: 9092
 kafka.topic: "ad-events"
-kafka.partitions: 2
+#parallelism of kafka consumer
+#kafka.partitions: 8
 kafka.zookeeper.path: /
 bootstrap.servers: "kafka1:9092, kafka2:9092"
 
