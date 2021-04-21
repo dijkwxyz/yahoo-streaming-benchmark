@@ -156,33 +156,37 @@ public class AnalyzeTool {
         sb.append('\n');
         sb.append(latencies.getMean() + ";" + latencies.getPercentile(50) + ";" + latencies.getPercentile(90) + ";" + latencies.getPercentile(95) + ";" + latencies.getPercentile(99) + ";" + throughputs.getMean() + ";" + throughputs.getMax() + ";" + latencies.getN() + ";" + throughputs.getN());
         sb.append('\n');
-        fw.write(sb.toString());
+        String str = sb.toString();
+        fw.write(str);
+        System.out.println(str);
 
+        sb = new StringBuilder();
         for (Map.Entry<String, DescriptiveStatistics> entry : result.perHostLat.entrySet()) {
-            sb = new StringBuilder();
             sb.append("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ") =======");
             sb.append('\n');
             sb.append("Mean latency " + entry.getValue().getMean());
             sb.append('\n');
             sb.append("Median latency " + entry.getValue().getPercentile(50));
             sb.append('\n');
-            fw.write(sb.toString());
-
         }
+        str = sb.toString();
+        fw.write(str);
+        System.out.println(str);
 
         sb = new StringBuilder();
         sb.append("================= Throughput (in total " + result.perHostThr.size() + " reports ) =====================");
         sb.append('\n');
-        fw.write(sb.toString());
-
         for (Map.Entry<String, SummaryStatistics> entry : result.perHostThr.entrySet()) {
             sb = new StringBuilder();
             sb.append("====== " + entry.getKey() + " (entries: " + entry.getValue().getN() + ")=======");
             sb.append('\n');
             sb.append("Mean throughput " + entry.getValue().getMean());
             sb.append('\n');
-            fw.write(sb.toString());
         }
+        str = sb.toString();
+        fw.write(str);
+        System.out.println(str);
+
 
         fw.close();
     }
@@ -202,10 +206,10 @@ public class AnalyzeTool {
          path prefix
          hostname
          */
-//        args = new String[]{
-//                "C:\\Users\\joinp\\Downloads\\",
-//                "flink3"
-//        };
+        args = new String[]{
+                "C:\\Users\\joinp\\Downloads\\",
+                "flink3"
+        };
         String prefix = args[0];
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
         String generatedPrefix = date + "/";
