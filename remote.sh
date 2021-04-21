@@ -63,12 +63,12 @@ run_command() {
     remote_operation $REDIS_HOST "STOP_REDIS"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    scp ec2-user@kafka1:$BASE_DIR/data/seen-updated-subtask.txt ec2-user@zk1:$BASE_DIR/data/
-    scp ec2-user@kafka1:$BASE_DIR/load.log ec2-user@zk1:$BASE_DIR/data/
-    scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/data/jm.log
-    scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/data/flink2.log
-    scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/data/flink3.log
-    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/data/ flink2 flink3
+    scp ec2-user@kafka1:$BASE_DIR/results/seen-updated-subtask.txt ec2-user@zk1:$BASE_DIR/results/
+    scp ec2-user@kafka1:$BASE_DIR/load.log ec2-user@zk1:$BASE_DIR/results/
+    scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/results/jm.log
+    scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink2.log
+    scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink3.log
+    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3
   else
     if [ "HELP" != "$OPERATION" ];
     then
