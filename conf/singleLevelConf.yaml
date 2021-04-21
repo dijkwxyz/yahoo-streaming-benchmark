@@ -5,9 +5,11 @@ kafka.brokers:
   - "kafka1"
   - "kafka2"
 kafka.port: 9092
-kafka.topic: "ads"
-kafka.partitions: 2
+kafka.topic: "ad-events"
+#parallelism of kafka consumer
+#kafka.partitions: 8
 kafka.zookeeper.path: /
+bootstrap.servers: "kafka1:9092, kafka2:9092"
 
 #akka.zookeeper.path: /akkaQuery
 
@@ -28,26 +30,28 @@ flink.highcard.checkpointURI: "file:///tmp/checkpoints"
 redis.threads: 2
 
 window.size: 10
-window.slide: 1
+window.slide: 2
 
 # The following is for when running the EventGenerator directly rather than reading from Kafka
-use.local.event.generator: 1
+#use.local.event.generator: 1
 redis.flush: 1
 redis.db: 0
-load.target.hz: 10000000
+# number of events per second, per source node
+load.target.hz: 1000000
 num.campaigns: 1000000
 
 
 #multilevel
 #multilevel.enable: true
+#multilevel.level1.statebackend: "memory"
+#multilevel.level1.path: ""
 multilevel.level1.statebackend: "fs"
 multilevel.level1.path: "file:///dev/shm/flink/"
 multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.level3.statebackend: "fs"
 multilevel.level3.path: "hdfs://hadoop1:9000/flink/checkpoints"
-multilevel.pattern: "0,1,2"
-
+multilevel.pattern: "1,1,2"
 multilevel.enable: false
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"

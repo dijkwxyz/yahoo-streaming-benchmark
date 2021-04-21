@@ -30,7 +30,7 @@ flink.highcard.checkpointURI: "file:///tmp/checkpoints"
 redis.threads: 2
 
 window.size: 10
-window.slide: 1
+window.slide: 2
 
 # The following is for when running the EventGenerator directly rather than reading from Kafka
 #use.local.event.generator: 1
