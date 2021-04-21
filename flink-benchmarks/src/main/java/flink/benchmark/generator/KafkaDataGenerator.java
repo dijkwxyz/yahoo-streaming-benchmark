@@ -35,7 +35,6 @@ public class KafkaDataGenerator {
         this.loadTargetHz = config.loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
 
-        System.out.println("load-" + loadTargetHz);
         this.campaigns = generateCampaigns();
         this.ads = flattenCampaigns();
 
@@ -188,6 +187,8 @@ public class KafkaDataGenerator {
 //        String path = "conf/benchmarkConf.yaml";
 //        args = new String[]{path};
         BenchmarkConfig config = BenchmarkConfig.fromArgs(args);
+        System.out.println("load-" + config.loadTargetHz);
+
         KafkaDataGenerator k = new KafkaDataGenerator(config);
         k.run();
 
