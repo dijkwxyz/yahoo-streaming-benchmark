@@ -35,6 +35,7 @@ public class KafkaDataGenerator {
         this.loadTargetHz = config.loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
 
+        System.out.println("load-" + loadTargetHz);
         this.campaigns = generateCampaigns();
         this.ads = flattenCampaigns();
 

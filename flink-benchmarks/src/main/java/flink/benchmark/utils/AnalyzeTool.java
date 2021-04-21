@@ -4,6 +4,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -176,21 +178,34 @@ public class AnalyzeTool {
 
     }
 
+    public static void writeLoadInfo(String path, String dstDir) throws IOException {
+        Scanner sc = new Scanner(new File(path, "load.log"));
+        if (sc.hasNextLine()) {
+            String l = sc.nextLine().trim();
+            FileWriter fw = new FileWriter(new File(path, dstDir + l));
+            fw.close();
+        }
+    }
+
+
     public static void main(String[] args) throws IOException {
         /*
          path prefix
          hostname
          */
-//        args = new String[]{
-//                "C:\\Users\\joinp\\Downloads\\",
-//                "flink3"
-//        };
+        args = new String[]{
+                "C:\\Users\\joinp\\Downloads\\",
+                "flink3"
+        };
         String prefix = args[0];
-        String generatedPrefix = "/generated/";
+        String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
+        String generatedPrefix = date + "/";
         File generatedDir = new File(prefix, generatedPrefix);
         if (!generatedDir.exists()) {
             generatedDir.mkdir();
         }
+
+        writeLoadInfo(prefix, generatedPrefix);
 
         parseCheckpoint(prefix, "jm.log",  generatedPrefix + "checkpoint.txt");
 
@@ -198,7 +213,7 @@ public class AnalyzeTool {
         analyzeLatency(prefix, result);
         for (int i = 1; i < args.length; i++) {
             analyzeThroughput(prefix, args[i], result);
-            gatherThroughputData(prefix, args[i], args[i] + "_throughput.txt");
+            gatherThroughputData(prefix, args[i], generatedPrefix + args[i] + "_throughput.txt");
         }
 
         writeLatencyThroughput(result, prefix, generatedPrefix + "latency_throughput.txt");
