@@ -24,9 +24,9 @@ public class RedisDataGetter {
         FileWriter fileWriter = new FileWriter("seen-updated-subtask.txt");
         Set<String> keys = jedis.keys("*");
         for (String campaignId : keys) {
-            if ("campaign".equals(campaignId)) {
-                continue;
-            }
+//            if ("campaign".equals(campaignId)) {
+//                continue;
+//            }
             // campaign id -> (window-timestamp, count + latency + subtask)
             Map<String, String> data = jedis.hgetAll(campaignId);
             for (String windowEnd : data.keySet()) {

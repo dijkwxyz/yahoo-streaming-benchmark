@@ -441,7 +441,7 @@ public class AdvertisingTopologyFlinkWindows {
         @Override
         public void invoke(Tuple3<String, String, Long> result) throws Exception {
             // set campaign id -> (window-timestamp, count + latency + subtask)
-            long latency = System.currentTimeMillis() - result.f2;
+            long latency = System.currentTimeMillis() - Long.parseLong(result.f1);
             flushJedis.hset(result.f0, result.f1,
                     result.f2 + " " +
                             latency + " " +
