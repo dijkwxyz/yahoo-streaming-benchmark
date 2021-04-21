@@ -206,10 +206,10 @@ public class AnalyzeTool {
          path prefix
          hostname
          */
-        args = new String[]{
-                "C:\\Users\\joinp\\Downloads\\",
-                "flink3"
-        };
+//        args = new String[]{
+//                "C:\\Users\\joinp\\Downloads\\",
+//                "flink3"
+//        };
         String prefix = args[0];
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
         String generatedPrefix = date + "/";
