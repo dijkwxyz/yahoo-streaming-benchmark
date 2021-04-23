@@ -289,10 +289,6 @@ public class AnalyzeTool {
          path prefix
          hostname
          */
-        args = new String[]{
-                "C:\\Users\\joinp\\Downloads\\",
-                "flink3"
-        };
         String dir = args[0];
         String load = readLoadInfo(dir);
 
