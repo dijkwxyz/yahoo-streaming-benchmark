@@ -14,9 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AnalyzeTool {
-    static NumberFormat nf = NumberFormat.getIntegerInstance();
+    static NumberFormat nf = NumberFormat.getNumberInstance();
     static {
-//        nf.setMaximumFractionDigits(2);
+        nf.setMaximumFractionDigits(0);
     }
     public static class LatencyResult {
         DescriptiveStatistics eventTimeLatencies = new DescriptiveStatistics();
