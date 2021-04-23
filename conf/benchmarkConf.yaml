@@ -61,6 +61,6 @@ multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "1,1,2"
 singlelevel.statebackend: "fs"
-#singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
-singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
+#singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 
