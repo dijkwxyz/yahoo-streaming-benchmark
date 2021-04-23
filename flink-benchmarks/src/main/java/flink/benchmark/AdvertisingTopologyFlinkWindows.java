@@ -65,7 +65,7 @@ public class AdvertisingTopologyFlinkWindows {
         DataStream<Tuple3<String, String, String>> joinedAdImpressions = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
-                .<Tuple3<String, String, String>>project(2, 5, 6) //ad_id, event_time
+                .<Tuple3<String, String, String>>project(2, 5) //ad_id, event_time
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple3<String, String, String>>forMonotonousTimestamps().
@@ -74,15 +74,15 @@ public class AdvertisingTopologyFlinkWindows {
                                         Long.parseLong(event.f1))); // extract timestamps and generate watermarks from event_time
 
         //out: (campaign id, event time, 1)
-        WindowedStream<Tuple4<String, String, Long, String>, Tuple, TimeWindow> windowStream = joinedAdImpressions
+        WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
-                .keyBy(0) // campaign_id
+                .keyBy((a) -> a.f0) // campaign_id
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
         // set a custom trigger
         windowStream.trigger(new EventAndProcessingTimeTrigger());
 
-        // campaign_id, window end time, count
+        // campaign_id, window-end, count, trigger-time
         DataStream<Tuple4<String, String, Long, String>> result =
                 windowStream.process(sumProcessFunction());
 //        DataStream<Tuple4<String, String, Long, String>> result =
@@ -92,7 +92,7 @@ public class AdvertisingTopologyFlinkWindows {
 //        result2.print("reduce");
         // write result to redis
 //        if (config.getParameters().has("add.result.sink.optimized")) {
-            result.addSink(new RedisResultSinkOptimized(config));
+        result.addSink(new RedisResultSinkOptimized(config));
 //        } else {
 //            result.addSink(new RedisResultSink(config));
 //        }
@@ -179,23 +179,23 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, Tuple, TimeWindow> sumProcessFunction() {
-        return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, Tuple, TimeWindow>() {
+    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
-            public void process(Tuple tuple, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
+                // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
                 for (Tuple4<String, String, Long, String> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
-                    max = Math.max(max, Long.parseLong(e.f3));
                 }
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
-                res.f3 = String.valueOf(max);
+                res.f3 = String.valueOf(System.currentTimeMillis());
                 out.collect(res);
             }
         };
@@ -217,10 +217,10 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Sum - Window function, summing already happened in reduce function
      */
-    private static WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, Tuple, TimeWindow> sumWindowFunction() {
-        return new WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, Tuple, TimeWindow>() {
+    private static WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumWindowFunction() {
+        return new WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
-            public void apply(Tuple keyTuple, TimeWindow window, Iterable<Tuple4<String, String, Long, String>> values, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void apply(String keyTuple, TimeWindow window, Iterable<Tuple4<String, String, Long, String>> values, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
                 Iterator<Tuple4<String, String, Long, String>> valIter = values.iterator();
                 Tuple4<String, String, Long, String> tuple = valIter.next();
                 if (valIter.hasNext()) {
@@ -305,8 +305,7 @@ public class AdvertisingTopologyFlinkWindows {
                             obj.getAsString("ad_type"),
                             obj.getAsString("event_type"),
                             obj.getAsString("event_time"),
-                            Long.toString(System.currentTimeMillis()));
-//                            obj.getAsString("ip_address"));
+                            obj.getAsString("ip_address"));
             out.collect(tuple);
         }
     }
@@ -387,7 +386,8 @@ public class AdvertisingTopologyFlinkWindows {
 
         @Override
         public void invoke(Tuple4<String, String, Long, String> result) throws Exception {
-            // redis set: campaign id -> (window-timestamp, count + latency + subtask)
+            // redis set: key: campaign id, field: window-timestamp,
+            // data: count event-time-latency processing-time-latency subtask
             long currTime = System.currentTimeMillis();
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
             long processingTimeLatency = currTime - Long.parseLong(result.f3);
@@ -402,7 +402,7 @@ public class AdvertisingTopologyFlinkWindows {
             flushJedis.hset(result.f0, result.f1,
                     sb.toString()
             );
-            System.out.println("mysink: "+sb.toString());
+            System.out.println("mysink: " + sb.toString());
         }
 
         @Override

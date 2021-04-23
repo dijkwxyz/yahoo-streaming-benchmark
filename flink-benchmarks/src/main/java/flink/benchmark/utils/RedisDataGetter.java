@@ -21,7 +21,7 @@ public class RedisDataGetter {
     }
 
     public void execute() throws IOException {
-        FileWriter fileWriter = new FileWriter("seen-updated-subtask.txt");
+        FileWriter fileWriter = new FileWriter("count-latency.txt");
         Set<String> keys = jedis.keys("*");
         for (String campaignId : keys) {
 //            if ("campaign".equals(campaignId)) {

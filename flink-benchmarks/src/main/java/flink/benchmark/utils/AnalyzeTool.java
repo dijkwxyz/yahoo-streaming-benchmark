@@ -144,7 +144,7 @@ public class AnalyzeTool {
     }
 
     public static LatencyResult analyzeLatency(String path, LatencyResult latencyResult) throws FileNotFoundException {
-        Scanner sc = new Scanner(new File(path, "seen-updated-subtask.txt"));
+        Scanner sc = new Scanner(new File(path, "count-latency.txt"));
         while (sc.hasNextLine()) {
             String[] l = sc.nextLine().split(" ");
             int count = Integer.parseInt(l[0]);
@@ -168,7 +168,7 @@ public class AnalyzeTool {
         return latencyResult;
     }
 
-    public static void writeLatency(LatencyResult latencyResult, FileWriter fw) throws IOException {
+    public static void writeLatency(LatencyResult latencyResult, FileWriter statisticsWriter) throws IOException {
         DescriptiveStatistics eventTimeLatencies = latencyResult.eventTimeLatencies;
         DescriptiveStatistics processingTimeLatencies = latencyResult.processingTimeLatencies;
 
@@ -196,7 +196,7 @@ public class AnalyzeTool {
         sb.append(nf.format(processingTimeLatencies.getN()));
         sb.append('\n');
         String str = sb.toString();
-        fw.write(str);
+        statisticsWriter.write(str);
         System.out.println(str);
 
 
@@ -216,7 +216,7 @@ public class AnalyzeTool {
             sb.append('\n');
         }
         str = sb.toString();
-        fw.write(str);
+        statisticsWriter.write(str);
         System.out.println(str);
 
     }
@@ -270,14 +270,14 @@ public class AnalyzeTool {
         return l;
     }
 
-    public static void copyConf(String path, String generatedPrefix) throws IOException {
+    public static void copyFile(String srcDir, String dstDir, String fileName) throws IOException {
         FileChannel inputChannel = null;
         FileChannel outputChannel = null;
         inputChannel = new FileInputStream(
-                new File(path, "conf-copy.yaml"))
+                new File(srcDir, fileName))
                 .getChannel();
         outputChannel = new FileOutputStream(
-                new File(path, generatedPrefix + "conf-copy.yaml"))
+                new File(dstDir, fileName))
                 .getChannel();
         outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
         inputChannel.close();
@@ -299,7 +299,8 @@ public class AnalyzeTool {
             generatedDir.mkdir();
         }
 
-        copyConf(dir, generatedPrefix);
+        copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
+        copyFile(dir, generatedDir.getAbsolutePath(), "");
 
         parseCheckpoint(dir, "jm.log", generatedPrefix + "checkpoint.txt");
 

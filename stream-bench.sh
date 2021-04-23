@@ -260,6 +260,7 @@ run() {
   then
 #    cd data
     start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE > load.log
+    echo "start load ..."
 #    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
 #    cd ..
   elif [ "STOP_LOAD" = "$OPERATION" ];
