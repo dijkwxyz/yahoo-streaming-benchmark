@@ -62,19 +62,19 @@ public class AdvertisingTopologyFlinkWindows {
 
 
         //out: (campaign id, event time)
-        DataStream<Tuple3<String, String, String>> joinedAdImpressions = rawMessageStream
+        DataStream<Tuple2<String, String>> joinedAdImpressions = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
-                .<Tuple3<String, String, String>>project(2, 5) //ad_id, event_time
+                .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
-                        <Tuple3<String, String, String>>forMonotonousTimestamps().
+                        <Tuple2<String, String>>forMonotonousTimestamps().
                         withTimestampAssigner(
-                                (Tuple3<String, String, String> event, long timestamp) ->
+                                (Tuple2<String, String> event, long timestamp) ->
                                         Long.parseLong(event.f1))); // extract timestamps and generate watermarks from event_time
 
         //out: (campaign id, event time, 1)
-        WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
+        WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0) // campaign_id
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
@@ -179,15 +179,15 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
-        return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
+    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
-            public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
-                for (Tuple4<String, String, Long, String> e : elements) {
+                for (Tuple3<String, String, Long> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
@@ -204,10 +204,10 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Sum - window reduce function
      */
-    private static ReduceFunction<Tuple4<String, String, Long, String>> sumReduceFunction() {
-        return new ReduceFunction<Tuple4<String, String, Long, String>>() {
+    private static ReduceFunction<Tuple3<String, String, Long>> sumReduceFunction() {
+        return new ReduceFunction<Tuple3<String, String, Long>>() {
             @Override
-            public Tuple4<String, String, Long, String> reduce(Tuple4<String, String, Long, String> t0, Tuple4<String, String, Long, String> t1) throws Exception {
+            public Tuple3<String, String, Long> reduce(Tuple3<String, String, Long> t0, Tuple3<String, String, Long> t1) throws Exception {
                 t0.f2 += t1.f2;
                 return t0;
             }
@@ -217,17 +217,22 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Sum - Window function, summing already happened in reduce function
      */
-    private static WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumWindowFunction() {
-        return new WindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
+    private static WindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow> sumWindowFunction() {
+        return new WindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
-            public void apply(String keyTuple, TimeWindow window, Iterable<Tuple4<String, String, Long, String>> values, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
-                Iterator<Tuple4<String, String, Long, String>> valIter = values.iterator();
-                Tuple4<String, String, Long, String> tuple = valIter.next();
+            public void apply(String keyTuple, TimeWindow window, Iterable<Tuple3<String, String, Long>> values, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+                Iterator<Tuple3<String, String, Long>> valIter = values.iterator();
+                Tuple3<String, String, Long> tuple = valIter.next();
                 if (valIter.hasNext()) {
                     throw new IllegalStateException("Unexpected");
                 }
-                tuple.f1 = Long.toString(window.getEnd());
-                out.collect(tuple); // collect end time here
+
+                Tuple4<String, String, Long, String> res = new Tuple4<>();
+                res.f0 = tuple.f0;
+                res.f1 = String.valueOf(window.getEnd());
+                res.f2 = tuple.f2;
+                res.f3 = String.valueOf(System.currentTimeMillis());
+                out.collect(res); // collect end time here
             }
         };
     }
@@ -324,7 +329,7 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Map ad ids to campaigns using cached data from Redis
      */
-    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple3<String, String, String>, Tuple3<String, String, String>> {
+    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple2<String, String>> {
 
         private RedisAdCampaignCache redisAdCampaignCache;
         private BenchmarkConfig config;
@@ -343,15 +348,15 @@ public class AdvertisingTopologyFlinkWindows {
         }
 
         @Override
-        public void flatMap(Tuple3<String, String, String> input, Collector<Tuple3<String, String, String>> out) throws Exception {
+        public void flatMap(Tuple2<String, String> input, Collector<Tuple2<String, String>> out) throws Exception {
             String ad_id = input.f0;
             String campaign_id = this.redisAdCampaignCache.execute(ad_id);
             if (campaign_id == null) {
                 return;
             }
 
-            // campaign_id event_time processing_time
-            Tuple3<String, String, String> tuple = new Tuple3<>(campaign_id, (String) input.f1, input.f2);
+            // campaign_id event_time
+            Tuple2<String, String> tuple = new Tuple2<>(campaign_id, input.f1);
             out.collect(tuple);
         }
     }
@@ -359,10 +364,10 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      *
      */
-    private static class MapToImpressionCount implements MapFunction<Tuple3<String, String, String>, Tuple4<String, String, Long, String>> {
+    private static class MapToImpressionCount implements MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>> {
         @Override
-        public Tuple4<String, String, Long, String> map(Tuple3<String, String, String> t3) throws Exception {
-            return new Tuple4<>(t3.f0, t3.f1, 1L, t3.f2);
+        public Tuple3<String, String, Long> map(Tuple2<String, String> t2) {
+            return new Tuple3<>(t2.f0, t2.f1, 1L);
         }
     }
 
