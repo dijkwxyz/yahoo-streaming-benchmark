@@ -195,9 +195,9 @@ public class AnalyzeTool {
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
             DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append('\n');
-            sb.append("Mean event-time latency: ").append(nf.format(eventTime.getMean()));
+            sb.append("Mean event-time latency:   ").append(nf.format(eventTime.getMean()));
             sb.append("      || ");
-            sb.append("Mean processing-time latency: ").append(nf.format(procTime.getMean()));
+            sb.append("Mean processing-time latency:   ").append(nf.format(procTime.getMean()));
             sb.append('\n');
             sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
             sb.append("      || ");
@@ -278,7 +278,6 @@ public class AnalyzeTool {
         if (!generatedDir.exists()) {
             generatedDir.mkdir();
         }
-
 
         parseCheckpoint(prefix, "jm.log", generatedPrefix + "checkpoint.txt");
 
