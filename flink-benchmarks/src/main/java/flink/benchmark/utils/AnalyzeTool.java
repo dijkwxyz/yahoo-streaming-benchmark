@@ -53,8 +53,17 @@ public class AnalyzeTool {
 
     public static class CheckpointData {
         int id;
+        /**
+         * bytes
+         */
         long size;
+        /**
+         * ms
+         */
         long startTime;
+        /**
+         * ms
+         */
         int timeCost;
 
         public CheckpointData(int id) {

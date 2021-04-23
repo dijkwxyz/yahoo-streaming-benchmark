@@ -32,7 +32,7 @@ redis.host: "redis1"
 #flink.highcard.checkpointURI: "file:///tmp/checkpoints"
 #redis.threads: 2
 window.size: 10
-window.slide: 2
+window.slide: 1
 #max.memory.state.size: 52428800
 
 # ============ java load generator ============
