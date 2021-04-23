@@ -300,7 +300,7 @@ public class AnalyzeTool {
         }
 
         copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
-        copyFile(dir, generatedDir.getAbsolutePath(), "");
+        copyFile(dir, generatedDir.getAbsolutePath(), "count-latency.txt");
 
         parseCheckpoint(dir, "jm.log", generatedPrefix + "checkpoint.txt");
 
