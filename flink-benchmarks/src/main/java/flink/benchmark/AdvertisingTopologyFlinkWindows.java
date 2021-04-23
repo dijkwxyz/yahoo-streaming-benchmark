@@ -184,15 +184,18 @@ public class AdvertisingTopologyFlinkWindows {
             @Override
             public void process(Tuple tuple, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
                 long sum = 0;
+                Long max = Long.MIN_VALUE;
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
                 for (Tuple4<String, String, Long, String> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
+                    max = Math.max(max, Long.parseLong(e.f3));
                 }
-                res.f1 = Long.toString(context.window().getEnd());
+                res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
+                res.f3 = String.valueOf(max);
                 out.collect(res);
             }
         };
@@ -236,12 +239,10 @@ public class AdvertisingTopologyFlinkWindows {
         Properties properties = new Properties();
         properties.setProperty("bootstrap.servers", config.bootstrapServers);
         properties.setProperty("group.id", config.groupId);
-        properties.setProperty("group.id", config.groupId);
         FlinkKafkaConsumer011<String> consumer = new FlinkKafkaConsumer011<>(
                 config.kafkaTopic,
                 new SimpleStringSchema(),
                 properties);
-        consumer.setStartFromEarliest();
         return consumer;
     }
 
@@ -401,6 +402,7 @@ public class AdvertisingTopologyFlinkWindows {
             flushJedis.hset(result.f0, result.f1,
                     sb.toString()
             );
+            System.out.println("mysink: "+sb.toString());
         }
 
         @Override

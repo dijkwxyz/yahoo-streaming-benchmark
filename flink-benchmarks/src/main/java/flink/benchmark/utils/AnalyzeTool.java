@@ -193,16 +193,14 @@ public class AnalyzeTool {
         for (String key : latencyResult.perHostEventLat.keySet()) {
             DescriptiveStatistics eventTime = latencyResult.perHostEventLat.get(key);
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
+            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append('\n');
             sb.append("Mean event-time latency: ").append(nf.format(eventTime.getMean()));
-            sb.append('\n');
-            sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
-            sb.append('\n');
-            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
-            sb.append("------ ").append(key).append(" (entries: ").append(procTime.getN()).append(") ------");
-            sb.append('\n');
+            sb.append("      || ");
             sb.append("Mean processing-time latency: ").append(nf.format(procTime.getMean()));
             sb.append('\n');
+            sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
+            sb.append("      || ");
             sb.append("Median processing-time latency: ").append(nf.format(procTime.getPercentile(50)));
             sb.append('\n');
         }
