@@ -395,6 +395,7 @@ public class AdvertisingTopologyFlinkWindows {
             // data: count event-time-latency processing-time-latency subtask
             long currTime = System.currentTimeMillis();
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
+            // this value is not very meaningful for windows
             long processingTimeLatency = currTime - Long.parseLong(result.f3);
             StringBuilder sb = new StringBuilder();
             sb.append(result.f2);
