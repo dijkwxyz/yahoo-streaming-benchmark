@@ -342,6 +342,7 @@ run() {
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
+    cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
     remote_operation $REDIS_HOST "START_REDIS"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do

@@ -144,9 +144,9 @@ public class AdvertisingTopologyFlinkWindows {
             if (config.multilevelEnable) {
                 PatternBasedMultilevelStateBackend
                         patternBasedMultilevelBackend = new PatternBasedMultilevelStateBackend(
+                        StateBackendFactory.create(config.multilevelLevel0Type, config.multilevelLevel0Path, config),
                         StateBackendFactory.create(config.multilevelLevel1Type, config.multilevelLevel1Path, config),
                         StateBackendFactory.create(config.multilevelLevel2Type, config.multilevelLevel2Path, config),
-                        StateBackendFactory.create(config.multilevelLevel3Type, config.multilevelLevel3Path, config),
                         //new FsStateBackend("hdfs://192.168.154.100:9000/flink/checkpoints"),
                         //new RocksDBStateBackend("file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/RDB"),
                         pattern

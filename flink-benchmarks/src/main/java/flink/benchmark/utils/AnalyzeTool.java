@@ -4,6 +4,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,9 +16,11 @@ import java.util.regex.Pattern;
 
 public class AnalyzeTool {
     static NumberFormat nf = NumberFormat.getNumberInstance();
+
     static {
         nf.setMaximumFractionDigits(0);
     }
+
     public static class LatencyResult {
         DescriptiveStatistics eventTimeLatencies = new DescriptiveStatistics();
         DescriptiveStatistics processingTimeLatencies = new DescriptiveStatistics();
@@ -188,7 +191,6 @@ public class AnalyzeTool {
         System.out.println(str);
 
 
-
         sb = new StringBuilder();
         for (String key : latencyResult.perHostEventLat.keySet()) {
             DescriptiveStatistics eventTime = latencyResult.perHostEventLat.get(key);
@@ -243,11 +245,11 @@ public class AnalyzeTool {
     public static void writeLatencyThroughput(LatencyResult latencyResult, ThroughputResult throughputResult, String path, String fileName) throws IOException {
         FileWriter fw = new FileWriter(new File(path, fileName));
         writeLatency(latencyResult, fw);
-        writeThroughput(throughputResult,fw);
+        writeThroughput(throughputResult, fw);
         fw.close();
     }
 
-    public static String writeLoadInfo(String path) throws IOException {
+    public static String readLoadInfo(String path) throws IOException {
         Scanner sc = new Scanner(new File(path, "load.log"));
         String l = "null";
         if (sc.hasNextLine()) {
@@ -259,37 +261,52 @@ public class AnalyzeTool {
         return l;
     }
 
+    public static void copyConf(String path, String generatedPrefix) throws IOException {
+        FileChannel inputChannel = null;
+        FileChannel outputChannel = null;
+        inputChannel = new FileInputStream(
+                new File(path, "conf-copy.yaml"))
+                .getChannel();
+        outputChannel = new FileOutputStream(
+                new File(path, generatedPrefix + "conf-copy.yaml"))
+                .getChannel();
+        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        inputChannel.close();
+        outputChannel.close();
+    }
 
     public static void main(String[] args) throws IOException {
         /*
          path prefix
          hostname
          */
-//        args = new String[]{
-//                "C:\\Users\\joinp\\Downloads\\",
-//                "flink3"
-//        };
-        String prefix = args[0];
-        String load = writeLoadInfo(prefix);
+        args = new String[]{
+                "C:\\Users\\joinp\\Downloads\\",
+                "flink3"
+        };
+        String dir = args[0];
+        String load = readLoadInfo(dir);
 
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
         String generatedPrefix = date + "_" + load + "/";
-        File generatedDir = new File(prefix, generatedPrefix);
+        File generatedDir = new File(dir, generatedPrefix);
         if (!generatedDir.exists()) {
             generatedDir.mkdir();
         }
 
-        parseCheckpoint(prefix, "jm.log", generatedPrefix + "checkpoint.txt");
+        copyConf(dir, generatedPrefix);
+
+        parseCheckpoint(dir, "jm.log", generatedPrefix + "checkpoint.txt");
 
         LatencyResult latencyResult = new LatencyResult();
         ThroughputResult throughputResult = new ThroughputResult();
-        analyzeLatency(prefix, latencyResult);
+        analyzeLatency(dir, latencyResult);
         for (int i = 1; i < args.length; i++) {
-            analyzeThroughput(prefix, args[i], throughputResult);
-            gatherThroughputData(prefix, args[i], generatedPrefix + args[i] + "_throughput.txt");
+            analyzeThroughput(dir, args[i], throughputResult);
+            gatherThroughputData(dir, args[i], generatedPrefix + args[i] + "_throughput.txt");
         }
 
-        writeLatencyThroughput(latencyResult, throughputResult, prefix, generatedPrefix + "latency_throughput.txt");
+        writeLatencyThroughput(latencyResult, throughputResult, dir, generatedPrefix + "latency_throughput.txt");
     }
 
 

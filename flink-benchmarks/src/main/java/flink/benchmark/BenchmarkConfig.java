@@ -52,12 +52,12 @@ public class BenchmarkConfig implements Serializable {
     public final ParameterTool parameters;
 
     public final boolean multilevelEnable;
+    public final String multilevelLevel0Type;
+    public final String multilevelLevel0Path;
     public final String multilevelLevel1Type;
     public final String multilevelLevel1Path;
     public final String multilevelLevel2Type;
     public final String multilevelLevel2Path;
-    public final String multilevelLevel3Type;
-    public final String multilevelLevel3Path;
     public final String multilevelPattern;
     public final String singlelevelPath;
     public final String singlelevelStateBackend;
@@ -103,20 +103,20 @@ public class BenchmarkConfig implements Serializable {
 
         /*
         multilevel.enable: true
-        multilevel.level1.type: memory
+        multilevel.level0.type: memory
+        multilevel.level1.type: fs
+        multilevel.level1.path: file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs
         multilevel.level2.type: fs
-        multilevel.level2.path: file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs
-        multilevel.level3.type: fs
-        multilevel.level3.path: hdfs://115.146.92.102:9000/flink/checkpoints
+        multilevel.level2.path: hdfs://115.146.92.102:9000/flink/checkpoints
         multilevel.pattern: 1,2,3
         */
         this.multilevelEnable = parameterTool.getBoolean("multilevel.enable", false);
+        this.multilevelLevel0Type = parameterTool.get("multilevel.level0.statebackend", null);
+        this.multilevelLevel0Path = parameterTool.get("multilevel.level0.path", null);
         this.multilevelLevel1Type = parameterTool.get("multilevel.level1.statebackend", null);
         this.multilevelLevel1Path = parameterTool.get("multilevel.level1.path", null);
         this.multilevelLevel2Type = parameterTool.get("multilevel.level2.statebackend", null);
         this.multilevelLevel2Path = parameterTool.get("multilevel.level2.path", null);
-        this.multilevelLevel3Type = parameterTool.get("multilevel.level3.statebackend", null);
-        this.multilevelLevel3Path = parameterTool.get("multilevel.level3.path", null);
         this.multilevelPattern = parameterTool.get("multilevel.pattern", null);
         this.singlelevelPath = parameterTool.get("singlelevel.path", "/tmp/data");
         this.singlelevelStateBackend = parameterTool.get("singlelevel.statebackend", "fs");
