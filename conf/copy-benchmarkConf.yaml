@@ -1,0 +1,66 @@
+# Copyright 2015, Yahoo Inc.
+# Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
+
+# ============ kafka ============
+kafka.brokers:
+    - "kafka1"
+    - "kafka2"
+kafka.port: 9092
+kafka.topic: "ad-events"
+#consumer group
+group.id: "flink_yahoo_benchmark"
+#parallelism of kafka consumer
+#kafka.partitions: 8
+kafka.zookeeper.path: /
+bootstrap.servers: "kafka1:9092, kafka2:9092"
+
+#akka.zookeeper.path: /akkaQuery
+
+# ============ zookeeper ============
+zookeeper.servers:
+    - "zk1"
+zookeeper.port: 2181
+
+# ============ redis ============
+redis.host: "redis1"
+
+#process.hosts: 1
+#process.cores: 4
+
+# ============ Flink ============
+#add.result.sink: 1
+#flink.highcard.checkpointURI: "file:///tmp/checkpoints"
+#redis.threads: 2
+window.size: 10
+window.slide: 2
+#max.memory.state.size: 52428800
+
+# ============ java load generator ============
+# set if running the EventGenerator directly rather than reading from Kafka
+use.local.event.generator: 1
+# flush redis before starting load, turn of if using EventGenerator due to parallelism
+#redis.flush: 1
+# do not change. default: use 0 for campaign_id and 1 for results
+#redis.db: 0
+# number of events per second, per source node
+load.target.hz: 100000
+num.campaigns: 1000000
+
+
+# ============ checkpointing ============
+flink.checkpoint.interval: 10000
+#multilevel.enable: true
+multilevel.enable: false
+#multilevel.level0.statebackend: "memory"
+#multilevel.level0.path: ""
+multilevel.level0.statebackend: "fs"
+multilevel.level0.path: "file:///dev/shm/flink/"
+multilevel.level1.statebackend: "fs"
+multilevel.level1.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+multilevel.level2.statebackend: "fs"
+multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
+multilevel.pattern: "1,1,2"
+singlelevel.statebackend: "fs"
+singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
+#singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+

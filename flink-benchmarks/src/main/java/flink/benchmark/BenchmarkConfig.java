@@ -72,7 +72,7 @@ public class BenchmarkConfig implements Serializable {
         // load generator
         this.loadTargetHz = parameterTool.getInt("load.target.hz", 400_000);
         this.timeSliceLengthMs = parameterTool.getInt("load.time.slice.length.ms", 100);
-        this.useLocalEventGenerator = parameters.has("use.local.event.generator");
+        this.useLocalEventGenerator = parameters.getBoolean("use.local.event.generator", false);
         this.numCampaigns = parameterTool.getInt("num.campaigns", 1_000_000);
 
         // Kafka
@@ -84,7 +84,7 @@ public class BenchmarkConfig implements Serializable {
         // Redis
         this.redisHost = parameterTool.get("redis.host", "localhost");
         this.redisDb = parameterTool.getInt("redis.db", 0);
-        this.redisFlush = parameterTool.has("redis.flush");
+        this.redisFlush = parameterTool.getBoolean("redis.flush", false);
         this.numRedisThreads = parameterTool.getInt("redis.threads", 20);
 
         // Akka

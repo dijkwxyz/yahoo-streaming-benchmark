@@ -39,8 +39,10 @@ public class AnalyzeTool {
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
         Pattern dataPattern = Pattern.compile(".*#####(.+)&&&&&.*");
+        fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
         while (sc.hasNextLine()) {
-//            "2021-04-20 11:12:40,713 INFO  flink.benchmark.utils.ThroughputLogger                       [] - #####1618917151330,1618917160712,9382,1000000,106587.08164570454,24.395846934289064,0&&&&&"
+//            From 1618917151330 to 1618917160712 (9382 ms), we received 1000000 elements. That's 106587.08164570454 elements/second/core. 24.395846934289064 MB/sec/core. GB received 0
+//            "- #####1618917151330,1618917160712,9382,1000000,106587.08164570454,24.395846934289064,0&&&&&"
             String l = sc.nextLine();
             Matcher tpMatcher = dataPattern.matcher(l);
             if (tpMatcher.matches()) {
