@@ -279,10 +279,10 @@ public class AnalyzeTool {
          hostname
          */
         String dir = args[0];
-        BenchmarkConfig config = new BenchmarkConfig(dir + "/" + "conf-copy.yaml");
+        BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
 
         String load = String.valueOf(config.loadTargetHz);
-
+        System.out.println("load = " + load);
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
         String generatedPrefix = date + "_" + load + "/";
         File generatedDir = new File(dir, generatedPrefix);
