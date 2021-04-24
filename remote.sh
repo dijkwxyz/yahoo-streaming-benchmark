@@ -64,7 +64,7 @@ run_command() {
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     scp ec2-user@kafka1:$BASE_DIR/results/count-latency.txt ec2-user@zk1:$BASE_DIR/results/
-    scp ec2-user@kafka1:$BASE_DIR/load.log ec2-user@zk1:$BASE_DIR/results/
+#    scp ec2-user@kafka1:$BASE_DIR/load.log ec2-user@zk1:$BASE_DIR/results/
     scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/results/jm.log
     scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink2.log
     scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink3.log

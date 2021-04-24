@@ -1,5 +1,6 @@
 package flink.benchmark.utils;
 
+import flink.benchmark.BenchmarkConfig;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
@@ -258,18 +259,6 @@ public class AnalyzeTool {
         fw.close();
     }
 
-    public static String readLoadInfo(String path) throws IOException {
-        Scanner sc = new Scanner(new File(path, "load.log"));
-        String l = "null";
-        if (sc.hasNextLine()) {
-            l = sc.nextLine().trim();
-            System.out.println(l);
-        }
-
-        sc.close();
-        return l;
-    }
-
     public static void copyFile(String srcDir, String dstDir, String fileName) throws IOException {
         FileChannel inputChannel = null;
         FileChannel outputChannel = null;
@@ -290,7 +279,9 @@ public class AnalyzeTool {
          hostname
          */
         String dir = args[0];
-        String load = readLoadInfo(dir);
+        BenchmarkConfig config = new BenchmarkConfig(dir + "/" + "conf-copy.yaml");
+
+        String load = String.valueOf(config.loadTargetHz);
 
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
         String generatedPrefix = date + "_" + load + "/";
