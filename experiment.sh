@@ -68,8 +68,9 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 
 
 for ((LOAD=100000; LOAD <= 200000; LOAD += 20000)); do
+  echo "start experiment with LOAD = $LOAD"
   make_conf
   xsync $CONF_FILE
   ./stream-bench.sh CLUSTER_TEST
-  sleep 10
+  sleep 300
 done
