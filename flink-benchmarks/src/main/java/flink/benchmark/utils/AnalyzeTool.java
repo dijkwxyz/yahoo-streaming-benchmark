@@ -284,7 +284,7 @@ public class AnalyzeTool {
         String load = String.valueOf(config.loadTargetHz);
         System.out.println("load = " + load);
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
-        String generatedPrefix = date + "_" + load + "/";
+        String generatedPrefix = date + "_load-" + load + "/";
         File generatedDir = new File(dir, generatedPrefix);
         if (!generatedDir.exists()) {
             generatedDir.mkdir();
