@@ -5,6 +5,7 @@ CONF_FILE=conf/benchmarkConf.yaml
 WINDOW_SIZE=10
 WINDOW_SLIDE=2
 LOAD=100000
+NUM_CAMPAIGNS=100
 CHECKPOINT_INTERVAL_MS=10000
 MULTILEVEL_ENABLE=false
 USE_LOCAL_GENERATOR=false
@@ -46,7 +47,7 @@ use.local.event.generator: $USE_LOCAL_GENERATOR
 redis.flush: $REDIS_FLUSH
 # number of events per second, per source node
 load.target.hz: $LOAD
-num.campaigns: 1000000
+num.campaigns: $NUM_CAMPAIGNS
 
 
 # ============ checkpointing ============
