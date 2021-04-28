@@ -232,7 +232,7 @@ run() {
 #    cd ..
   elif [ "START_LOAD_ON_HOST" = "$OPERATION" ];
   then
-    LEADER_HOST=$1
+    LEADER_HOST=$2
     start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE $LEADER_HOST > load.log
     echo "INFO: start load on $LEADER_HOST ..."
   elif [ "STOP_LOAD" = "$OPERATION" ];
@@ -398,8 +398,17 @@ if [ $# -lt 1 ];
 then
   run "HELP"
 else
-  while [ $# -gt 0 ];
-  do
     run "$1"
-  done
 fi
+
+
+#if [ $# -lt 1 ];
+#then
+#  run "HELP"
+#else
+#  while [ $# -gt 0 ];
+#  do
+#    run "$1"
+#    shift
+#  done
+#fi
