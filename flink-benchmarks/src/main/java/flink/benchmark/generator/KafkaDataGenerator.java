@@ -38,8 +38,8 @@ public class KafkaDataGenerator {
      * @param dstHost if not "", send to partitions with dstHost as leader
      * @param numCampaigns num ber campaign ids generated
      */
-    public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns) {
-        this.loadTargetHz = config.loadTargetHz;
+    public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns, int loadTargetHz) {
+        this.loadTargetHz = loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
 
         this.campaigns = generateCampaigns(numCampaigns);
@@ -213,9 +213,11 @@ public class KafkaDataGenerator {
         BenchmarkConfig config = BenchmarkConfig.fromArgs(args);
         System.out.println("load-" + config.loadTargetHz);
 
-        int numCampaignsPerBroker = config.numCampaigns / Integer.parseInt(args[2]);
+        int numBrokers = Integer.parseInt(args[2]);
 
-        KafkaDataGenerator k = new KafkaDataGenerator(config, args[1], numCampaignsPerBroker);
+        KafkaDataGenerator k = new KafkaDataGenerator(config, args[1],
+                config.numCampaigns / numBrokers,
+                config.loadTargetHz / numBrokers);
         k.run();
 
 
