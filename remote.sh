@@ -43,10 +43,16 @@ run_command() {
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
   elif [ "START_LOAD" = "$OPERATION" ];
   then
-    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
+#    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
+    for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
+        remote_operation $KAFKA_HOST_PREFIX$num "START_LOAD_ON_HOST" $KAFKA_HOST_PREFIX$num
+    done
   elif [ "STOP_LOAD" = "$OPERATION" ];
   then
-    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+    for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
+        remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
+    done
+#    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
   elif [ "STOP_JOB" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
