@@ -398,7 +398,7 @@ if [ $# -lt 1 ];
 then
   run "HELP"
 else
-    run "$1"
+    run $@
 fi
 
 
