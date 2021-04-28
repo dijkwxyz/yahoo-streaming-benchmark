@@ -32,11 +32,17 @@ public class KafkaDataGenerator {
 
     private final KafkaProducer<String, String> kafkaProducer;
 
-    public KafkaDataGenerator(BenchmarkConfig config, String dstHost) {
+    /**
+     *
+     * @param config
+     * @param dstHost if not "", send to partitions with dstHost as leader
+     * @param numCampaigns num ber campaign ids generated
+     */
+    public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns) {
         this.loadTargetHz = config.loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
 
-        this.campaigns = generateCampaigns();
+        this.campaigns = generateCampaigns(numCampaigns);
         this.ads = flattenCampaigns();
 
         this.topic = config.kafkaTopic;
@@ -106,8 +112,7 @@ public class KafkaDataGenerator {
     /**
      * Generate a random list of ads and campaigns
      */
-    private Map<String, List<String>> generateCampaigns() {
-        int numCampaigns = 100;
+    private Map<String, List<String>> generateCampaigns(int numCampaigns) {
         int numAdsPerCampaign = 10;
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int i = 0; i < numCampaigns; i++) {
@@ -197,13 +202,20 @@ public class KafkaDataGenerator {
         return loadTargetHz / (1000 / timeSliceLengthMs);
     }
 
+    /**
+     * usage: main <yaml-path> <partition-leader-id> <num-producer>
+     */
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 //        String path = "conf/benchmarkConf.yaml";
 //        args = new String[]{path};
+
+        //take args[0]
         BenchmarkConfig config = BenchmarkConfig.fromArgs(args);
         System.out.println("load-" + config.loadTargetHz);
 
-        KafkaDataGenerator k = new KafkaDataGenerator(config, args[1]);
+        int numCampaignsPerBroker = config.numCampaigns / Integer.parseInt(args[2]);
+
+        KafkaDataGenerator k = new KafkaDataGenerator(config, args[1], numCampaignsPerBroker);
         k.run();
 
 

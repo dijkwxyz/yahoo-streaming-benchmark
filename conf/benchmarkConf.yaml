@@ -37,15 +37,14 @@ window.slide: 2
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
-use.local.event.generator: 1
+#use.local.event.generator: 1
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 #redis.flush: 1
 # do not change. default: use 0 for campaign_id and 1 for results
 #redis.db: 0
 # number of events per second, per source node
 load.target.hz: 100000
-num.campaigns: 1000000
-
+num.campaigns: 100
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 10000

@@ -226,14 +226,14 @@ run() {
   elif [ "START_LOAD" = "$OPERATION" ];
   then
 #    cd data
-    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE "" > load.log
+    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE "" 1 > load.log
     echo "INFO: start load ..."
 #    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
 #    cd ..
   elif [ "START_LOAD_ON_HOST" = "$OPERATION" ];
   then
     LEADER_HOST=$2
-    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE $LEADER_HOST > load.log
+    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE $LEADER_HOST $KAFKA_HOST_NUM > load.log
     echo "INFO: start load on $LEADER_HOST ..."
   elif [ "STOP_LOAD" = "$OPERATION" ];
   then
