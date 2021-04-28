@@ -226,10 +226,15 @@ run() {
   elif [ "START_LOAD" = "$OPERATION" ];
   then
 #    cd data
-    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE > load.log
+    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE "" > load.log
     echo "INFO: start load ..."
 #    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
 #    cd ..
+  elif [ "START_LOAD_ON_HOST" = "$OPERATION" ];
+  then
+    LEADER_HOST=$1
+    start_if_needed KafkaDataGenerator "Load Generation" 1 java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.generator.KafkaDataGenerator $BASE_DIR/$CONF_FILE $LEADER_HOST > load.log
+    echo "INFO: start load on $LEADER_HOST ..."
   elif [ "STOP_LOAD" = "$OPERATION" ];
   then
     stop_if_needed KafkaDataGenerator "Load Generation"
@@ -319,10 +324,16 @@ run() {
     remote_operation $FLINK_HOST "START_FLINK"
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     sleep 10
-    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD"
+#    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD" ${KAFKA_HOST_PREFIX}1
+    for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
+        remote_operation $KAFKA_HOST_PREFIX$num "START_LOAD_ON_HOST" $KAFKA_HOST_PREFIX$num
+    done
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
-    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+#    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+    for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
+        remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
+    done
     remote_operation_sync $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
