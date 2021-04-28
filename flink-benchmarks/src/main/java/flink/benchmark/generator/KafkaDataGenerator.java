@@ -189,7 +189,7 @@ public class KafkaDataGenerator {
 
     public void collect(String element) {
         kafkaProducer.send(new ProducerRecord<>(topic, partitions.get(currPartition), String.valueOf(currPartition), element));
-        System.out.println("send to: partitions.get(currPartition)");
+        System.out.println("send to: " + partitions.get(currPartition));
         currPartition = (currPartition + 1) % partitions.size();
     }
 
