@@ -401,6 +401,5 @@ else
   while [ $# -gt 0 ];
   do
     run "$1"
-    shift
   done
 fi
