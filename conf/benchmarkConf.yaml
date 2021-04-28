@@ -14,8 +14,6 @@ group.id: "flink_yahoo_benchmark"
 kafka.zookeeper.path: /
 bootstrap.servers: "kafka1:9092, kafka2:9092"
 
-#akka.zookeeper.path: /akkaQuery
-
 # ============ zookeeper ============
 zookeeper.servers:
     - "zk1"
@@ -24,31 +22,22 @@ zookeeper.port: 2181
 # ============ redis ============
 redis.host: "redis1"
 
-#process.hosts: 1
-#process.cores: 4
-
 # ============ Flink ============
-#add.result.sink: 1
-#flink.highcard.checkpointURI: "file:///tmp/checkpoints"
-#redis.threads: 2
 window.size: 10
 window.slide: 2
-#max.memory.state.size: 52428800
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
-#use.local.event.generator: 1
+use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
-#redis.flush: 1
-# do not change. default: use 0 for campaign_id and 1 for results
-#redis.db: 0
+redis.flush: false
 # number of events per second, per source node
 load.target.hz: 100000
 num.campaigns: 100
 
+
 # ============ checkpointing ============
 flink.checkpoint.interval: 10000
-#multilevel.enable: true
 multilevel.enable: false
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
@@ -61,5 +50,4 @@ multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "1,1,2"
 singlelevel.statebackend: "fs"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
-#singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 
