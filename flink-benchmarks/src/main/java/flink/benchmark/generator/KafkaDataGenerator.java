@@ -116,7 +116,8 @@ public class KafkaDataGenerator {
         int numAdsPerCampaign = 10;
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int i = 0; i < numCampaigns; i++) {
-            String campaign = UUID.randomUUID().toString();
+//            String campaign = UUID.randomUUID().toString();
+            String campaign = String.valueOf(i);
             ArrayList<String> ads = new ArrayList<>();
             adsByCampaign.put(campaign, ads);
             for (int j = 0; j < numAdsPerCampaign; j++) {
@@ -194,7 +195,6 @@ public class KafkaDataGenerator {
 
     public void collect(String element) {
         kafkaProducer.send(new ProducerRecord<>(topic, partitions.get(currPartition), String.valueOf(currPartition), element));
-        System.out.println("send to: " + partitions.get(currPartition));
         currPartition = (currPartition + 1) % partitions.size();
     }
 

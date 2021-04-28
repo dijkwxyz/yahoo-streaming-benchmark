@@ -52,7 +52,6 @@ run_command() {
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
     done
-#    remote_operation ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
   elif [ "STOP_JOB" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "STOP_FLINK_PROCESSING"
