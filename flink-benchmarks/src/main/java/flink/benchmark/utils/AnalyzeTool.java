@@ -3,15 +3,14 @@ package flink.benchmark.utils;
 import flink.benchmark.BenchmarkConfig;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.flink.api.java.tuple.Tuple2;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,19 +78,75 @@ public class AnalyzeTool {
         }
     }
 
-    public static void parseRestart(String path, String srcFileName, String dstFileName) throws IOException {
+    public static void parseRestartCost(String path, String srcFileName, String dstFileName) throws IOException, ParseException {
         Scanner sc = new Scanner(new File(path, srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
         //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (7/8) (2a8ccfa5cea74ecbb2481e6152acb293) switched from RUNNING to CANCELING.
         //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (1/8) (437d49840ee23e6c9405dba8ed413e59) switched from RUNNING to CANCELING.
-        Pattern cancelPattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO  .*switched from RUNNING to CANCELING.");
+        Pattern cancelPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from RUNNING to CANCELING.*");
         //2021-05-05 01:14:27,830 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
-        Pattern restartPattern = Pattern.compile(".*Completed checkpoint (\\d) for job (\\w+) \\((\\d+) bytes in (\\d+) ms\\).*");
-        //cpId -> startTime
+        Pattern restartPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from DEPLOYING to RUNNING.*");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+        ArrayList<Tuple2<Date, Integer>> arr = new ArrayList<>();
+        final int toCanceled = 0;
+        final int toRunning = 1;
+        while (sc.hasNextLine()) {
+            String l = sc.nextLine();
+            Matcher cancelMatcher = cancelPattern.matcher(l);
+            Matcher restartMatcher = restartPattern.matcher(l);
+            if (cancelMatcher.matches()) {
+                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
+                Date Date = dateFormat.parse(cancelMatcher.group(1));
+                arr.add(new Tuple2<>(Date, toCanceled));
+            } else if (restartMatcher.matches()) {
+                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
+                Date Date = dateFormat.parse(restartMatcher.group(1));
+                arr.add(new Tuple2<>(Date, toRunning));
+            }
+        }
+
+        int i = 0;
+//        ArrayList<Long> restartCosts = new ArrayList<>();
+        //skip normal start
+        while (i < arr.size() && arr.get(i).f1 == toRunning) {
+            i++;
+        }
+        while (i < arr.size()) {
+            Date cancelTime;
+            Date restartTime;
+
+            //take the first toCancel tiemstamp
+            cancelTime = arr.get(i).f0;
+            i++;
+            //skip the rest
+            while (i < arr.size() && arr.get(i).f1 == toCanceled) {
+                i++;
+            }
+            if (i >= arr.size()) {
+                break;
+            }
+
+            //take the last toRunning record
+            Tuple2<Date, Integer> prevRecord = arr.get(i);
+            i++;
+            while (i < arr.size() && arr.get(i).f1 == toRunning) {
+                prevRecord = arr.get(i);
+                i++;
+            }
+            restartTime = prevRecord.f0;
+
+//            restartCosts.add(restartTime.getTime() - cancelTime.getTime());
+            fw.write(String.valueOf(restartTime.getTime() - cancelTime.getTime()));
+            fw.write('\n');
+        }
+
+        sc.close();
+        fw.close();
+    }
 
 
-        public static void parseCheckpoint(String path, String srcFileName, String dstFileName) throws IOException {
+    public static void parseCheckpoint(String path, String srcFileName, String dstFileName) throws IOException {
         Scanner sc = new Scanner(new File(path, srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
@@ -134,6 +189,7 @@ public class AnalyzeTool {
             fw.write('\n');
         }
 
+        sc.close();
         fw.close();
     }
 
@@ -287,14 +343,13 @@ public class AnalyzeTool {
         outputChannel.close();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
         /*
          path prefix
          hostname
          */
         String dir = args[0];
         BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
-
         String load = String.valueOf(config.loadTargetHz);
         System.out.println("load = " + load);
         String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
@@ -307,6 +362,7 @@ public class AnalyzeTool {
         copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
         copyFile(dir, generatedDir.getAbsolutePath(), "count-latency.txt");
 
+        parseRestartCost(dir, "jm.log", generatedPrefix + "restart-cost.txt");
         parseCheckpoint(dir, "jm.log", generatedPrefix + "checkpoint.txt");
 
         LatencyResult latencyResult = new LatencyResult();
