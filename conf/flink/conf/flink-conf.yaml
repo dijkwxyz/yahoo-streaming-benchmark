@@ -142,7 +142,7 @@ jobmanager.execution.failover-strategy: region
 # The port to which the REST client connects to. If rest.bind-port has
 # not been specified, then the server will bind to this port as well.
 #
-rest.port: 8000
+rest.port: 8080
 
 # The address to which the REST client will connect to
 #
@@ -260,6 +260,7 @@ env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 env.java.home: /home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
 
 state.checkpoints.num-retained: 3
+web.checkpoints.history: 99999999
 
 ### heap based state backend
 # 50M
