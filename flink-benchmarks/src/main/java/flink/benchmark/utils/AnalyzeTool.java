@@ -218,7 +218,7 @@ public class AnalyzeTool {
         Scanner sc = new Scanner(new File(path, "count-latency.txt"));
         while (sc.hasNextLine()) {
             String[] l = sc.nextLine().split(" ");
-            int count = Integer.parseInt(l[0]);
+            long count = Long.parseLong(l[0]);
             long eventTimeLatency = Long.parseLong(l[1]);
             long processingTimeLatency = Long.parseLong(l[2]);
             String subtask = String.valueOf(Integer.parseInt(l[3]));
