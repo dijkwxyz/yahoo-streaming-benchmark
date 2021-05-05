@@ -79,7 +79,19 @@ public class AnalyzeTool {
         }
     }
 
-    public static void parseCheckpoint(String path, String srcFileName, String dstFileName) throws IOException {
+    public static void parseRestart(String path, String srcFileName, String dstFileName) throws IOException {
+        Scanner sc = new Scanner(new File(path, srcFileName));
+
+        FileWriter fw = new FileWriter(new File(path, dstFileName));
+        //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (7/8) (2a8ccfa5cea74ecbb2481e6152acb293) switched from RUNNING to CANCELING.
+        //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (1/8) (437d49840ee23e6c9405dba8ed413e59) switched from RUNNING to CANCELING.
+        Pattern cancelPattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO  .*switched from RUNNING to CANCELING.");
+        //2021-05-05 01:14:27,830 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
+        Pattern restartPattern = Pattern.compile(".*Completed checkpoint (\\d) for job (\\w+) \\((\\d+) bytes in (\\d+) ms\\).*");
+        //cpId -> startTime
+
+
+        public static void parseCheckpoint(String path, String srcFileName, String dstFileName) throws IOException {
         Scanner sc = new Scanner(new File(path, srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));

@@ -55,7 +55,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         StreamExecutionEnvironment env = setupEnvironment(config);
 
-        DataStream<String> rawMessageStream = streamSource(config, env);
+        DataStream<String>  rawMessageStream = streamSource(config, env);
 //        rawMessageStream.print("raw");
         // log performance
         rawMessageStream.flatMap(new ThroughputLogger<String>(240, 1_000_000));
