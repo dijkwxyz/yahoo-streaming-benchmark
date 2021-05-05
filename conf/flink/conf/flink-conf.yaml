@@ -269,3 +269,7 @@ taskmanager.memory.managed.size: 0
 
 #metrics.reporter.slf4j.factory.class: org.apache.flink.metrics.slf4j.Slf4jReporterFactory
 #metrics.reporter.slf4j.interval: 60 SECONDS
+high-availability: com.dijk.ha.MultilevelHighAvailabilityServicesFactory
+#DELEGATE_EMBEDDED 0, DELEGATE_STANDALONE 1, DELEGATE_ZK 2
+multilevel.ha.delegate: 1 
+
