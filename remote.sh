@@ -66,6 +66,18 @@ run_command() {
   elif [ "STOP_REDIS" = "$OPERATION" ];
   then
     remote_operation $REDIS_HOST "STOP_REDIS"
+  elif [ "START_APPS" = "$OPERATION" ];
+  then
+     run_command "START_ZK"
+     run_command "START_REDIS"
+     run_command "START_KAFKA"
+     run_command "START_FLINK"
+  elif [ "STOP_APPS" = "$OPERATION" ];
+  then
+     run_command "STOP_ZK"
+     run_command "STOP_REDIS"
+     run_command "STOP_KAFKA"
+     run_command "STOP_FLINK"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     scp ec2-user@kafka1:$BASE_DIR/results/count-latency.txt ec2-user@zk1:$BASE_DIR/results/
