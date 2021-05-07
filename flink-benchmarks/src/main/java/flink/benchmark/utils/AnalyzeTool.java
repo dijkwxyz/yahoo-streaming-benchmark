@@ -90,6 +90,9 @@ public class AnalyzeTool {
         //2021-05-05 01:14:24,424 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
         //2021-05-05 01:14:27,708 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
         Pattern loadCheckpointPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
+        //2021-05-07 10:46:36,209 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - No checkpoint found during restore.
+        Pattern noCheckpointPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*No checkpoint found during restore.*");
+
         //2021-05-05 01:14:27,830 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
         Pattern toRunningPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from DEPLOYING to RUNNING.*");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
@@ -98,11 +101,13 @@ public class AnalyzeTool {
         final int toRestart = 1;
         final int loadCheckpoint = 2;
         final int toRunning = 3;
+        final int noCheckpoint = 4;
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
             Matcher failedMatcher = failedPattern.matcher(l);
             Matcher restartMatcher = restartPattern.matcher(l);
             Matcher loadCheckpointMatcher = loadCheckpointPattern.matcher(l);
+            Matcher noCheckpointMatcher = noCheckpointPattern.matcher(l);
             Matcher toRunningMatcher = toRunningPattern.matcher(l);
             if (failedMatcher.matches()) {
                 //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
@@ -114,6 +119,9 @@ public class AnalyzeTool {
             } else if (loadCheckpointMatcher.matches()) {
                 Date Date = dateFormat.parse(loadCheckpointMatcher.group(1));
                 arr.add(new Tuple3<>(Date, loadCheckpoint, loadCheckpointMatcher.group(2)));
+            }else if (noCheckpointMatcher.matches()) {
+                Date Date = dateFormat.parse(noCheckpointMatcher.group(1));
+                arr.add(new Tuple3<>(Date, noCheckpoint, null));
             } else if (toRunningMatcher.matches()) {
                 //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
                 Date Date = dateFormat.parse(toRunningMatcher.group(1));
@@ -167,9 +175,9 @@ public class AnalyzeTool {
                 break;
             }
 
-            assert (arr.get(i).f1 == loadCheckpoint);
+            assert (arr.get(i).f1 == loadCheckpoint || arr.get(i).f1 == noCheckpoint);
             loadCheckpointTime = arr.get(i).f0;
-            checkpointId = arr.get(i).f2;
+            checkpointId = arr.get(i).f1 == loadCheckpoint ? arr.get(i).f2 : "-1";
             i++;
             if (i >= arr.size()) {
                 break;

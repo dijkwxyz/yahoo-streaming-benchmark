@@ -6,14 +6,27 @@ import org.apache.flink.api.common.functions.MapFunction;
 import java.util.Random;
 
 public class FailureInjectorMap<T> implements MapFunction<T, T> {
-    private double failureRatePerMs;
-    private long prevTime = System.currentTimeMillis();
+    /**
+     * failure rate at this operator
+     */
+    private double localFailureRatePerMs;
+    /**
+     * MTTI in milliseconds for the whole application
+     */
+    private long globalMttiMilliSeconds;
+    /**
+     * parallelismof application
+     */
+    private int parallelism;
+    private long prevTime = -1;
 
     /**
-     * @param mttiMilliSeconds mean time to interrupt in milliseconds
+     * @param globalMttiMs mean time to interrupt in milliseconds
      */
-    public FailureInjectorMap(double mttiMilliSeconds) {
-        this.failureRatePerMs = 1.0 / mttiMilliSeconds;
+    public FailureInjectorMap(long globalMttiMs, int parallelism) {
+        this.parallelism = parallelism;
+        this.globalMttiMilliSeconds = globalMttiMs;
+        this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
     }
 
     /**
@@ -21,7 +34,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
      * @param args
      */
     public static void main(String[] args) {
-        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100);
+        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100, 1);
         DescriptiveStatistics ds = new DescriptiveStatistics();
         long prev = System.currentTimeMillis();
         //get 100 failures and calculate MTTI
@@ -39,10 +52,14 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
      */
     public void maybeInjectFailure() {
         long currTime = System.currentTimeMillis();
+        if (prevTime < 0) {
+            prevTime = currTime;
+        }
         if (currTime - prevTime > 0) {
             double roll = new Random().nextDouble();
-            if (roll < (currTime - prevTime) * getFailureRatePerMs()) {
-                throw new RuntimeException(String.format("Injecting artificial failure at rate %f, time %d", failureRatePerMs, currTime));
+            if (roll < (currTime - prevTime) * getLocalFailureRatePerMs()) {
+                throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, time %d",
+                        globalMttiMilliSeconds, parallelism, currTime));
             }
             prevTime = currTime;
         }
@@ -53,7 +70,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         long timeDiff = currTime - prevTime;
         if (timeDiff > 0) {
             double roll = new Random().nextDouble();
-            if (roll < timeDiff * getFailureRatePerMs()) {
+            if (roll < timeDiff * getLocalFailureRatePerMs()) {
                 return true;
             }
             prevTime = currTime;
@@ -61,12 +78,12 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         return false;
     }
 
-    public double getFailureRatePerMs() {
-        return failureRatePerMs;
+    public double getLocalFailureRatePerMs() {
+        return localFailureRatePerMs;
     }
 
     public void setFailureRate(double failureRatePerMs) {
-        this.failureRatePerMs = failureRatePerMs;
+        this.localFailureRatePerMs = failureRatePerMs;
     }
 
     @Override
