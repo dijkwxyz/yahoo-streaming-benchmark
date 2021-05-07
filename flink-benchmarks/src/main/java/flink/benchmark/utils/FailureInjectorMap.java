@@ -6,7 +6,6 @@ import org.apache.flink.api.common.functions.MapFunction;
 import java.util.Random;
 
 public class FailureInjectorMap<T> implements MapFunction<T, T> {
-    private final Random random = new Random();
     private double failureRatePerMs;
     private long prevTime = System.currentTimeMillis();
 
@@ -41,7 +40,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
     public void maybeInjectFailure() {
         long currTime = System.currentTimeMillis();
         if (currTime - prevTime > 0) {
-            double roll = random.nextDouble();
+            double roll = new Random().nextDouble();
             if (roll < (currTime - prevTime) * getFailureRatePerMs()) {
                 throw new RuntimeException(String.format("Injecting artificial failure at rate %f, time %d", failureRatePerMs, currTime));
             }
@@ -53,7 +52,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         long currTime = System.currentTimeMillis();
         long timeDiff = currTime - prevTime;
         if (timeDiff > 0) {
-            double roll = random.nextDouble();
+            double roll = new Random().nextDouble();
             if (roll < timeDiff * getFailureRatePerMs()) {
                 return true;
             }
