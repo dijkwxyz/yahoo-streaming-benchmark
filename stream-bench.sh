@@ -136,7 +136,8 @@ run() {
   then
 
     #$MVN clean package -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
-    $MVN clean package 
+    xdo "rm ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar"
+    $MVN clean package
     xsync ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
 
   elif [ "INSTALL" = "$OPERATION" ];
