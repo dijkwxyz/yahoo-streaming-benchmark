@@ -67,7 +67,7 @@ public class AdvertisingTopologyFlinkWindows {
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
                 .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
-                .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism()))
+                .process(new FailureInjectorMap<>(config.mttiMs, env.getParallelism()))
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple2<String, String>>forMonotonousTimestamps().
