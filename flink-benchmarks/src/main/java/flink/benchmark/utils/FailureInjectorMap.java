@@ -1,19 +1,20 @@
 package flink.benchmark.utils;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.flink.api.common.functions.MapFunction;
 
 import java.util.Random;
 
-public class FailureInjector {
+public class FailureInjectorMap<T> implements MapFunction<T, T> {
     private final Random random = new Random();
     private double failureRatePerMs;
     private long prevTime = System.currentTimeMillis();
 
     /**
-     * @param mttiMilliSecond mean time to interrupt in milliseconds
+     * @param mttiMilliSeconds mean time to interrupt in milliseconds
      */
-    public FailureInjector(double mttiMilliSecond) {
-        this.failureRatePerMs = 1.0 / mttiMilliSecond;
+    public FailureInjectorMap(double mttiMilliSeconds) {
+        this.failureRatePerMs = 1.0 / mttiMilliSeconds;
     }
 
     /**
@@ -21,12 +22,12 @@ public class FailureInjector {
      * @param args
      */
     public static void main(String[] args) {
-        FailureInjector failureInjector = new FailureInjector(100);
+        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100);
         DescriptiveStatistics ds = new DescriptiveStatistics();
         long prev = System.currentTimeMillis();
         //get 100 failures and calculate MTTI
         while (ds.getN() < 100) {
-            if (failureInjector.test()) {
+            if (failureInjectorMap.test()) {
                 long curr = System.currentTimeMillis();
                 ds.addValue(curr - prev);
                 prev = curr;
@@ -67,5 +68,11 @@ public class FailureInjector {
 
     public void setFailureRate(double failureRatePerMs) {
         this.failureRatePerMs = failureRatePerMs;
+    }
+
+    @Override
+    public T map(T t) throws Exception {
+        maybeInjectFailure();
+        return t;
     }
 }

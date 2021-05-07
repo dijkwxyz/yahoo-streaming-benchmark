@@ -53,17 +53,20 @@
             <artifactId>json-smart</artifactId>
             <version>2.2.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>org.apache.curator</groupId>-->
             <!--<artifactId>curator-client</artifactId>-->
             <!--<version>2.5.0</version>-->
         <!--</dependency>-->
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-framework</artifactId>
-            <version>2.5.0</version>
-        </dependency>
-
+<!--        <dependency>-->
+<!--            <groupId>org.apache.curator</groupId>-->
+<!--            <artifactId>curator-framework</artifactId>-->
+<!--            <version>2.5.0</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>
