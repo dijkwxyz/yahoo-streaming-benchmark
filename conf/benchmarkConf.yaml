@@ -37,8 +37,8 @@ num.campaigns: 100
 load.even: true
 
 # ========== experiment parameters =============
-# MTTI for one operator. Devided by parallelism to get the global MTTI
-mtti.ms: 160000
+# MTTI for the application (not for each operator)
+mtti.ms: 20000
 
 
 # ============ checkpointing ============
