@@ -3,7 +3,6 @@ package flink.benchmark.generator;
 import flink.benchmark.BenchmarkConfig;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.PartitionInfo;
 
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -23,7 +22,7 @@ public class KafkaDataGenerator {
     private final int timeSliceLengthMs;
     private final String topic;
     private boolean running = true;
-    private final List<Integer> partitions = new ArrayList<>();
+    private final int totalPartitions;
     private int currPartition = 0;
 
     public Map<String, List<String>> getCampaigns() {
@@ -32,17 +31,11 @@ public class KafkaDataGenerator {
 
     private final KafkaProducer<String, String> kafkaProducer;
 
-    /**
-     *
-     * @param config
-     * @param dstHost if not "", send to partitions with dstHost as leader
-     * @param numCampaigns num ber campaign ids generated
-     */
-    public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns, int loadTargetHz) {
-        this.loadTargetHz = loadTargetHz;
+    public KafkaDataGenerator(BenchmarkConfig config) {
+        this.loadTargetHz = config.loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
 
-        this.campaigns = generateCampaigns(numCampaigns);
+        this.campaigns = generateCampaigns();
         this.ads = flattenCampaigns();
 
         this.topic = config.kafkaTopic;
@@ -53,19 +46,7 @@ public class KafkaDataGenerator {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //key 序列化
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //value 序列化
         kafkaProducer = new KafkaProducer<>(properties);
-        List<PartitionInfo> partitionInfos = kafkaProducer.partitionsFor(topic);
-        if (dstHost.isEmpty()) {
-            for (PartitionInfo p : partitionInfos) {
-                partitions.add(p.partition());
-            }
-        }
-        else {
-            for (PartitionInfo p : partitionInfos) {
-                if (dstHost.equals(p.leader().host())) {
-                    partitions.add(p.partition());
-                }
-            }
-        }
+        totalPartitions = kafkaProducer.partitionsFor(topic).size();
 
 //        // register campaigns to redis
         Map<String, List<String>> campaigns = getCampaigns();
@@ -112,12 +93,12 @@ public class KafkaDataGenerator {
     /**
      * Generate a random list of ads and campaigns
      */
-    private Map<String, List<String>> generateCampaigns(int numCampaigns) {
+    private Map<String, List<String>> generateCampaigns() {
+        int numCampaigns = 100;
         int numAdsPerCampaign = 10;
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int i = 0; i < numCampaigns; i++) {
-//            String campaign = UUID.randomUUID().toString();
-            String campaign = String.valueOf(i);
+            String campaign = UUID.randomUUID().toString();
             ArrayList<String> ads = new ArrayList<>();
             adsByCampaign.put(campaign, ads);
             for (int j = 0; j < numAdsPerCampaign; j++) {
@@ -194,30 +175,21 @@ public class KafkaDataGenerator {
     }
 
     public void collect(String element) {
-        kafkaProducer.send(new ProducerRecord<>(topic, partitions.get(currPartition), String.valueOf(currPartition), element));
-        currPartition = (currPartition + 1) % partitions.size();
+        kafkaProducer.send(new ProducerRecord<>(topic, currPartition, String.valueOf(currPartition), element));
+        currPartition = (currPartition + 1) % totalPartitions;
     }
 
     private int loadPerTimeslice() {
         return loadTargetHz / (1000 / timeSliceLengthMs);
     }
 
-    /**
-     * usage: main <yaml-path> <partition-leader-id> <num-producer>
-     */
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 //        String path = "conf/benchmarkConf.yaml";
 //        args = new String[]{path};
-
-        //take args[0]
         BenchmarkConfig config = BenchmarkConfig.fromArgs(args);
         System.out.println("load-" + config.loadTargetHz);
 
-        int numBrokers = Integer.parseInt(args[2]);
-
-        KafkaDataGenerator k = new KafkaDataGenerator(config, args[1],
-                config.numCampaigns / numBrokers,
-                config.loadTargetHz / numBrokers);
+        KafkaDataGenerator k = new KafkaDataGenerator(config);
         k.run();
 
 
