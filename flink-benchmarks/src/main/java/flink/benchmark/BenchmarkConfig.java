@@ -63,6 +63,7 @@ public class BenchmarkConfig implements Serializable {
     public final String singlelevelPath;
     public final String singlelevelStateBackend;
     public final int maxMemStateSize;
+    public final double mttiMs;
 
     /**
      * Create a config starting with an instance of ParameterTool
@@ -124,6 +125,8 @@ public class BenchmarkConfig implements Serializable {
         this.singlelevelStateBackend = parameterTool.get("singlelevel.statebackend", "fs");
 
         this.maxMemStateSize = parameterTool.getInt("max.memory.state.size", 5242880);
+
+        this.mttiMs = parameterTool.getDouble("mtti.ms", 20_000);
 
     }
 

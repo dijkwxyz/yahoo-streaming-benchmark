@@ -8,6 +8,7 @@ import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
+import flink.benchmark.utils.FailureInjector;
 import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLogger;
 import net.minidev.json.JSONObject;
@@ -66,6 +67,7 @@ public class AdvertisingTopologyFlinkWindows {
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
                 .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
+                .map(new FailureInjectionMap(config))
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple2<String, String>>forMonotonousTimestamps().
@@ -312,6 +314,20 @@ public class AdvertisingTopologyFlinkWindows {
                             obj.getAsString("event_time"),
                             obj.getAsString("ip_address"));
             out.collect(tuple);
+        }
+    }
+
+    private static class FailureInjectionMap implements MapFunction<Tuple2<String, String>, Tuple2<String, String>> {
+
+        private final FailureInjector failureInjector;
+
+        public FailureInjectionMap(BenchmarkConfig config) {
+            failureInjector  = new FailureInjector(config.mttiMs);
+        }
+
+        @Override
+        public Tuple2<String, String> map(Tuple2<String, String> stringStringTuple2) throws Exception {
+            return null;
         }
     }
 

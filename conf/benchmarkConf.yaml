@@ -36,6 +36,8 @@ load.target.hz: 100000
 num.campaigns: 100
 load.even: true
 
+# ========== experiment parameters =============
+mtti.ms: 20000
 
 
 # ============ checkpointing ============

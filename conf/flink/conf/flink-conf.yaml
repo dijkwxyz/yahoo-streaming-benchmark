@@ -271,5 +271,6 @@ taskmanager.memory.managed.size: 0
 #metrics.reporter.slf4j.interval: 60 SECONDS
 high-availability: com.dijk.ha.MultilevelHighAvailabilityServicesFactory
 #DELEGATE_EMBEDDED 0, DELEGATE_STANDALONE 1, DELEGATE_ZK 2
+#Currently ONLY support DELEGATE_STANDALONE !!!
 multilevel.ha.delegate: 1 
 

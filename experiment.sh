@@ -10,6 +10,7 @@ CHECKPOINT_INTERVAL_MS=10000
 MULTILEVEL_ENABLE=false
 USE_LOCAL_GENERATOR=false
 REDIS_FLUSH=false
+MTTI_MS=20000
 
 make_conf() {
     echo "# Copyright 2015, Yahoo Inc.
@@ -49,6 +50,8 @@ redis.flush: $REDIS_FLUSH
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 
+# ========== experiment parameters =============
+mtti.ms: $MTTI_MS
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
