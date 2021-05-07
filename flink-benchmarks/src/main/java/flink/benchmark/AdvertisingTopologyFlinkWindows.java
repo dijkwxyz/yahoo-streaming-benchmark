@@ -396,13 +396,14 @@ public class AdvertisingTopologyFlinkWindows {
             long currTime = System.currentTimeMillis();
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
             // this value is not very meaningful for windows
-            long processingTimeLatency = currTime - Long.parseLong(result.f3);
+//            long processingTimeLatency = currTime - Long.parseLong(result.f3);
+            long windowEnd = Long.parseLong(result.f3);
             StringBuilder sb = new StringBuilder();
             sb.append(result.f2);
             sb.append(' ');
             sb.append(eventTimeLatency);
             sb.append(' ');
-            sb.append(processingTimeLatency);
+            sb.append(currTime);
             sb.append(' ');
             sb.append(getRuntimeContext().getIndexOfThisSubtask() + 1);
             flushJedis.hset(result.f0, result.f1,

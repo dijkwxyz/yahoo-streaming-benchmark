@@ -4,6 +4,7 @@ import flink.benchmark.BenchmarkConfig;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -23,9 +24,9 @@ public class AnalyzeTool {
 
     public static class LatencyResult {
         DescriptiveStatistics eventTimeLatencies = new DescriptiveStatistics();
-        DescriptiveStatistics processingTimeLatencies = new DescriptiveStatistics();
-        Map<String, DescriptiveStatistics> perHostProcLat = new HashMap<>();
         Map<String, DescriptiveStatistics> perHostEventLat = new HashMap<>();
+//        DescriptiveStatistics processingTimeLatencies = new DescriptiveStatistics();
+//        Map<String, DescriptiveStatistics> perHostProcLat = new HashMap<>();
     }
 
     public static class ThroughputResult {
@@ -82,27 +83,41 @@ public class AnalyzeTool {
         Scanner sc = new Scanner(new File(path, srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
-        //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (7/8) (2a8ccfa5cea74ecbb2481e6152acb293) switched from RUNNING to CANCELING.
-        //2021-05-05 01:12:20,739 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (1/8) (437d49840ee23e6c9405dba8ed413e59) switched from RUNNING to CANCELING.
-        Pattern cancelPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from RUNNING to CANCELING.*");
+        //2021-05-05 04:52:22,719 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (8/8) (9530062f70342991c61311d3d5f47eba) switched from RUNNING to FAILED on org.apache.flink.runtime.jobmaster.slotpool.SingleLogicalSlot@2b36afee.
+        Pattern failedPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*switched from \\w+ to FAILED.*");
+        //2021-05-07 02:02:32,878 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Job WordCount Global Window Experiment (c405f119755983293e2309850970b3a0) switched from state RUNNING to RESTARTING.
+        Pattern restartPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*to RESTARTING.*");
+        //2021-05-05 01:14:24,424 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+        //2021-05-05 01:14:27,708 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+        Pattern loadCheckpointPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
         //2021-05-05 01:14:27,830 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
-        Pattern restartPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from DEPLOYING to RUNNING.*");
+        Pattern toRunningPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from DEPLOYING to RUNNING.*");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-        ArrayList<Tuple2<Date, Integer>> arr = new ArrayList<>();
-        final int toCanceled = 0;
-        final int toRunning = 1;
+        ArrayList<Tuple3<Date, Integer, String>> arr = new ArrayList<>();
+        final int toFailed = 0;
+        final int toRestart = 1;
+        final int loadCheckpoint = 2;
+        final int toRunning = 3;
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
-            Matcher cancelMatcher = cancelPattern.matcher(l);
+            Matcher failedMatcher = failedPattern.matcher(l);
             Matcher restartMatcher = restartPattern.matcher(l);
-            if (cancelMatcher.matches()) {
+            Matcher loadCheckpointMatcher = loadCheckpointPattern.matcher(l);
+            Matcher toRunningMatcher = toRunningPattern.matcher(l);
+            if (failedMatcher.matches()) {
                 //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
-                Date Date = dateFormat.parse(cancelMatcher.group(1));
-                arr.add(new Tuple2<>(Date, toCanceled));
+                Date Date = dateFormat.parse(failedMatcher.group(1));
+                arr.add(new Tuple3<>(Date, toFailed, null));
             } else if (restartMatcher.matches()) {
-                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
                 Date Date = dateFormat.parse(restartMatcher.group(1));
-                arr.add(new Tuple2<>(Date, toRunning));
+                arr.add(new Tuple3<>(Date, toRestart, null));
+            } else if (loadCheckpointMatcher.matches()) {
+                Date Date = dateFormat.parse(loadCheckpointMatcher.group(1));
+                arr.add(new Tuple3<>(Date, loadCheckpoint, loadCheckpointMatcher.group(2)));
+            } else if (toRunningMatcher.matches()) {
+                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
+                Date Date = dateFormat.parse(toRunningMatcher.group(1));
+                arr.add(new Tuple3<>(Date, toRunning, null));
             }
         }
 
@@ -112,33 +127,84 @@ public class AnalyzeTool {
         while (i < arr.size() && arr.get(i).f1 == toRunning) {
             i++;
         }
-        while (i < arr.size()) {
-            Date cancelTime;
-            Date restartTime;
 
-            //take the first toCancel tiemstamp
-            cancelTime = arr.get(i).f0;
+        fw.write("checkpointId");
+        fw.write(" || ");
+        fw.write("failedToRestart");
+        fw.write(' ');
+        fw.write("restartToLoadCP");
+        fw.write(' ');
+        fw.write("loadCPToRunning");
+
+        fw.write(" || ");
+        fw.write("failedTime");
+        fw.write(' ');
+        fw.write("restartTime");
+        fw.write(' ');
+        fw.write("loadCheckpointTime");
+        fw.write(' ');
+        fw.write("toRunningTime");
+
+        fw.write('\n');
+
+        while (i < arr.size()) {
+            Date failedTime;
+            Date restartTime;
+            Date toRunningTime;
+            Date loadCheckpointTime;
+            String checkpointId;
+
+            failedTime = arr.get(i).f0;
             i++;
-            //skip the rest
-            while (i < arr.size() && arr.get(i).f1 == toCanceled) {
-                i++;
+            if (i >= arr.size()) {
+                break;
             }
+
+            assert (arr.get(i).f1 == toRestart);
+            restartTime = arr.get(i).f0;
+            i++;
+            if (i >= arr.size()) {
+                break;
+            }
+
+            assert (arr.get(i).f1 == loadCheckpoint);
+            loadCheckpointTime = arr.get(i).f0;
+            checkpointId = arr.get(i).f2;
+            i++;
             if (i >= arr.size()) {
                 break;
             }
 
             //take the last toRunning record
-            Tuple2<Date, Integer> prevRecord = arr.get(i);
+            Tuple3<Date, Integer, String> prevRecord = arr.get(i);
             i++;
             while (i < arr.size() && arr.get(i).f1 == toRunning) {
                 prevRecord = arr.get(i);
                 i++;
             }
-            restartTime = prevRecord.f0;
+            toRunningTime = prevRecord.f0;
 
-//            restartCosts.add(restartTime.getTime() - cancelTime.getTime());
-            fw.write(String.valueOf(restartTime.getTime() - cancelTime.getTime()));
+
+            fw.write(checkpointId);
+
+            fw.write(" || ");
+            fw.write(String.valueOf(restartTime.getTime() - failedTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(loadCheckpointTime.getTime() - restartTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(toRunningTime.getTime() - loadCheckpointTime.getTime()));
+
+            fw.write(" || ");
+            fw.write(String.valueOf(failedTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(restartTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(loadCheckpointTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(toRunningTime.getTime()));
+
             fw.write('\n');
+
         }
 
         sc.close();
@@ -223,16 +289,16 @@ public class AnalyzeTool {
             long processingTimeLatency = Long.parseLong(l[2]);
             String subtask = String.valueOf(Integer.parseInt(l[3]));
             latencyResult.eventTimeLatencies.addValue(eventTimeLatency);
-            latencyResult.processingTimeLatencies.addValue(processingTimeLatency);
+//            latencyResult.processingTimeLatencies.addValue(processingTimeLatency);
 
             if (!latencyResult.perHostEventLat.containsKey(subtask)) {
                 latencyResult.perHostEventLat.put(subtask, new DescriptiveStatistics());
             }
-            if (!latencyResult.perHostProcLat.containsKey(subtask)) {
-                latencyResult.perHostProcLat.put(subtask, new DescriptiveStatistics());
-            }
             latencyResult.perHostEventLat.get(subtask).addValue(eventTimeLatency);
-            latencyResult.perHostProcLat.get(subtask).addValue(processingTimeLatency);
+//            if (!latencyResult.perHostProcLat.containsKey(subtask)) {
+//                latencyResult.perHostProcLat.put(subtask, new DescriptiveStatistics());
+//            }
+//            latencyResult.perHostProcLat.get(subtask).addValue(processingTimeLatency);
 
         }
 
@@ -241,7 +307,7 @@ public class AnalyzeTool {
 
     public static void writeLatency(LatencyResult latencyResult, FileWriter statisticsWriter) throws IOException {
         DescriptiveStatistics eventTimeLatencies = latencyResult.eventTimeLatencies;
-        DescriptiveStatistics processingTimeLatencies = latencyResult.processingTimeLatencies;
+//        DescriptiveStatistics processingTimeLatencies = latencyResult.processingTimeLatencies;
 
         StringBuilder sb = new StringBuilder();
         sb.append("====== " + "all-machines" + " =======");
@@ -257,15 +323,15 @@ public class AnalyzeTool {
         sb.append(nf.format(eventTimeLatencies.getMax())).append("||");
         sb.append(nf.format(eventTimeLatencies.getN()));
         sb.append('\n');
-        sb.append(nf.format(processingTimeLatencies.getMean())).append("||");
-        sb.append(nf.format(processingTimeLatencies.getPercentile(50))).append("||");
-        sb.append(nf.format(processingTimeLatencies.getPercentile(90))).append("||");
-        sb.append(nf.format(processingTimeLatencies.getPercentile(95))).append("||");
-        sb.append(nf.format(processingTimeLatencies.getPercentile(99))).append("||");
-        sb.append(nf.format(processingTimeLatencies.getMin())).append("||");
-        sb.append(nf.format(processingTimeLatencies.getMax())).append("||");
-        sb.append(nf.format(processingTimeLatencies.getN()));
-        sb.append('\n');
+//        sb.append(nf.format(processingTimeLatencies.getMean())).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(50))).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(90))).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(95))).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(99))).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getMin())).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getMax())).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getN()));
+//        sb.append('\n');
         String str = sb.toString();
         statisticsWriter.write(str);
         System.out.println(str);
@@ -274,16 +340,16 @@ public class AnalyzeTool {
         sb = new StringBuilder();
         for (String key : latencyResult.perHostEventLat.keySet()) {
             DescriptiveStatistics eventTime = latencyResult.perHostEventLat.get(key);
+//            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
-            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append('\n');
             sb.append("Mean event-time latency:   ").append(nf.format(eventTime.getMean()));
-            sb.append("      || ");
-            sb.append("Mean processing-time latency:   ").append(nf.format(procTime.getMean()));
+//            sb.append("      || ");
+//            sb.append("Mean processing-time latency:   ").append(nf.format(procTime.getMean()));
             sb.append('\n');
             sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
-            sb.append("      || ");
-            sb.append("Median processing-time latency: ").append(nf.format(procTime.getPercentile(50)));
+//            sb.append("      || ");
+//            sb.append("Median processing-time latency: ").append(nf.format(procTime.getPercentile(50)));
             sb.append('\n');
         }
         str = sb.toString();
