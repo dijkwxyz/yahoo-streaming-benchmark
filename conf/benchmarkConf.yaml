@@ -28,7 +28,7 @@ window.slide: 2
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
-use.local.event.generator: true
+use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second, per source node
@@ -42,16 +42,16 @@ mtti.ms: 20000
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 10000
-multilevel.enable: false
-#multilevel.level0.statebackend: "memory"
-#multilevel.level0.path: ""
-multilevel.level0.statebackend: "fs"
-multilevel.level0.path: "file:///dev/shm/flink/"
+multilevel.enable: true
+multilevel.level0.statebackend: "memory"
+multilevel.level0.path: ""
+#multilevel.level0.statebackend: "fs"
+#multilevel.level0.path: "file:///dev/shm/flink/"
 multilevel.level1.statebackend: "fs"
 multilevel.level1.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "1,1,2"
 singlelevel.statebackend: "fs"
-singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
 
