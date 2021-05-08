@@ -9,6 +9,7 @@ import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.FailureInjector;
+import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLogger;
 import net.minidev.json.JSONObject;
@@ -67,6 +68,7 @@ public class AdvertisingTopologyFlinkWindows {
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
                 .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
+                .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism()))
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple2<String, String>>forMonotonousTimestamps().
@@ -77,8 +79,6 @@ public class AdvertisingTopologyFlinkWindows {
         //out: (campaign id, event time, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
-                .keyBy((a) -> a.f0) // key by campaign_id
-                .process(new FailureInjector(config.mttiMs, config.numCampaigns))
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
