@@ -202,7 +202,7 @@ run() {
     rm -f dump.rdb
   elif [ "START_KAFKA" = "$OPERATION" ];
   then
-    start_if_needed kafka\.Kafka Kafka 10 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
+    start_if_needed kafka\.Kafka Kafka 5 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
     create_kafka_topic
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
@@ -319,14 +319,14 @@ run() {
   then
     cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
-    remote_operation $REDIS_HOST "START_REDIS"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
+    remote_operation $REDIS_HOST "START_REDIS"
     remote_operation $FLINK_HOST "START_FLINK"
-    sleep 2
-    remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     sleep 8
+    remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
+    sleep 5
 #    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD" ${KAFKA_HOST_PREFIX}1
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "START_LOAD_ON_HOST" $KAFKA_HOST_PREFIX$num
