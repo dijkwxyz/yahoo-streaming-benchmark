@@ -1,12 +1,13 @@
 package flink.benchmark.utils;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
 import java.util.Random;
 
-public class FailureInjectorMap<T> extends ProcessFunction<T, T> {
+public class FailureInjector extends KeyedProcessFunction<String, Tuple3<String, String, Long>, Tuple3<String, String, Long>> {
     /**
      * failure rate at this operator
      */
@@ -19,40 +20,34 @@ public class FailureInjectorMap<T> extends ProcessFunction<T, T> {
      * parallelismof application
      */
     private int parallelism;
-    private long prevTime = -1;
     private boolean first = true;
+    public final static long BASE_TIME_SLICE_MS = 100;
     /**
      * interval that checks for failure inejction
      */
-    private long timeSliceMs = 1000;
+    private long timeSliceMs;
 
     /**
-     * @param globalMttiMs mean time to interrupt in milliseconds
+     * @param globalMttiMs globalMttiMs mean time to interrupt in milliseconds
+     * @param numKeys Flink timers are resigered per key.
+     *                We adjust the timeSlice based on numKeys to control the MTTI.
      */
-    public FailureInjectorMap(long globalMttiMs, int parallelism) {
-        this.parallelism = parallelism;
+    public FailureInjector(long globalMttiMs, int numKeys) {
+        this.parallelism = numKeys;
         this.globalMttiMilliSeconds = globalMttiMs;
-        this.localFailureRatePerTimeSliceMs = (double) timeSliceMs / globalMttiMs / parallelism;
+        this.localFailureRatePerTimeSliceMs = (double) BASE_TIME_SLICE_MS / globalMttiMs;
+        this.timeSliceMs = numKeys * BASE_TIME_SLICE_MS;
     }
 
+
     /**
-     *
      * @param args
      */
     public static void main(String[] args) {
-        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(2000, 2);
+        FailureInjector failureInjector = new FailureInjector(2000, 2);
         DescriptiveStatistics ds = new DescriptiveStatistics();
-        long prev = System.currentTimeMillis();
-        //get 100 failures and calculate MTTI
-        while (ds.getN() < 3) {
-            if (failureInjectorMap.test()) {
-                long curr = System.currentTimeMillis();
-                ds.addValue(curr - prev);
-                prev = curr;
-            }
-        }
-        System.out.println(ds.getMean());
     }
+
     /**
      * inject failure based on failure rate
      */
@@ -63,19 +58,6 @@ public class FailureInjectorMap<T> extends ProcessFunction<T, T> {
         }
     }
 
-    public boolean test() {
-        long currTime = System.currentTimeMillis();
-        long timeDiff = currTime - prevTime;
-        if (timeDiff >= timeSliceMs) {
-            double roll = new Random().nextDouble();
-            if (roll < getLocalFailureRatePerTimeSliceMs()) {
-                return true;
-            }
-            prevTime = currTime;
-        }
-        return false;
-    }
-
     public double getLocalFailureRatePerTimeSliceMs() {
         return localFailureRatePerTimeSliceMs;
     }
@@ -84,10 +66,11 @@ public class FailureInjectorMap<T> extends ProcessFunction<T, T> {
         this.localFailureRatePerTimeSliceMs = failureRatePerMs;
     }
 
+
     @Override
-    public void processElement(T t, Context context, Collector<T> collector) throws Exception {
+    public void processElement(Tuple3<String, String, Long> t, Context context, Collector<Tuple3<String, String, Long>> collector) throws Exception {
         if (first) {
-            long triggerTime = context.timerService().currentProcessingTime() + 5000L;
+            long triggerTime = context.timerService().currentProcessingTime() + timeSliceMs;
             context.timerService().registerProcessingTimeTimer(triggerTime);
             first = false;
         }
@@ -95,7 +78,7 @@ public class FailureInjectorMap<T> extends ProcessFunction<T, T> {
     }
 
     @Override
-    public void onTimer(long timestamp, OnTimerContext ctx, Collector<T> out) throws Exception {
+    public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple3<String, String, Long>> out) throws Exception {
         //inject failure on timer
         maybeInjectFailure();
         long triggerTime = ctx.timerService().currentProcessingTime() + timeSliceMs;
