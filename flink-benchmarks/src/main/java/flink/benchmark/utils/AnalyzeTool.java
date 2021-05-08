@@ -139,7 +139,7 @@ public class AnalyzeTool {
         }
 
 
-        fw.write(String.format("MTTI: %f, total failures: %d", failedDS.getMean(), failedDS.getN()));
+        fw.write(String.format("MTTI: %f, total failures: %d", failedDS.getMean(), 1 + failedDS.getN()));
         fw.write('\n');
         
         int i = 0;
