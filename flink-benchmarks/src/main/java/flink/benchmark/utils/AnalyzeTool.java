@@ -102,6 +102,9 @@ public class AnalyzeTool {
         final int loadCheckpoint = 2;
         final int toRunning = 3;
         final int noCheckpoint = 4;
+
+        DescriptiveStatistics failedDS = new DescriptiveStatistics();
+        ArrayList<Date> failedArr = new ArrayList<>();
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
             Matcher failedMatcher = failedPattern.matcher(l);
@@ -111,24 +114,34 @@ public class AnalyzeTool {
             Matcher toRunningMatcher = toRunningPattern.matcher(l);
             if (failedMatcher.matches()) {
                 //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
-                Date Date = dateFormat.parse(failedMatcher.group(1));
-                arr.add(new Tuple3<>(Date, toFailed, null));
+                Date date = dateFormat.parse(failedMatcher.group(1));
+                arr.add(new Tuple3<>(date, toFailed, null));
+                failedArr.add(date);
             } else if (restartMatcher.matches()) {
-                Date Date = dateFormat.parse(restartMatcher.group(1));
-                arr.add(new Tuple3<>(Date, toRestart, null));
+                Date date = dateFormat.parse(restartMatcher.group(1));
+                arr.add(new Tuple3<>(date, toRestart, null));
             } else if (loadCheckpointMatcher.matches()) {
-                Date Date = dateFormat.parse(loadCheckpointMatcher.group(1));
-                arr.add(new Tuple3<>(Date, loadCheckpoint, loadCheckpointMatcher.group(2)));
+                Date date = dateFormat.parse(loadCheckpointMatcher.group(1));
+                arr.add(new Tuple3<>(date, loadCheckpoint, loadCheckpointMatcher.group(2)));
             }else if (noCheckpointMatcher.matches()) {
-                Date Date = dateFormat.parse(noCheckpointMatcher.group(1));
-                arr.add(new Tuple3<>(Date, noCheckpoint, null));
+                Date date = dateFormat.parse(noCheckpointMatcher.group(1));
+                arr.add(new Tuple3<>(date, noCheckpoint, null));
             } else if (toRunningMatcher.matches()) {
                 //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
-                Date Date = dateFormat.parse(toRunningMatcher.group(1));
-                arr.add(new Tuple3<>(Date, toRunning, null));
+                Date date = dateFormat.parse(toRunningMatcher.group(1));
+                arr.add(new Tuple3<>(date, toRunning, null));
             }
         }
 
+        for (int f = 1; f < failedArr.size(); f++) {
+            long timeDiff = failedArr.get(f).getTime() - failedArr.get(f - 1).getTime();
+            failedDS.addValue(timeDiff);
+        }
+
+
+        fw.write(String.format("MTTI: %f, total failures: %d", failedDS.getMean(), failedDS.getN()));
+        fw.write('\n');
+        
         int i = 0;
 //        ArrayList<Long> restartCosts = new ArrayList<>();
         //skip normal start
@@ -217,6 +230,9 @@ public class AnalyzeTool {
 
         sc.close();
         fw.close();
+
+
+
     }
 
 
