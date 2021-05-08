@@ -58,8 +58,8 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         if (currTime - prevTime > 0) {
             double roll = new Random().nextDouble();
             if (roll < (currTime - prevTime) * getLocalFailureRatePerMs()) {
-                throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, time %d",
-                        globalMttiMilliSeconds, parallelism, currTime));
+                throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, from time %d to %d",
+                        globalMttiMilliSeconds, parallelism, prevTime, currTime));
             }
             prevTime = currTime;
         }
