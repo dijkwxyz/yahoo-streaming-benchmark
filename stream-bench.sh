@@ -54,8 +54,8 @@ TEST_TIME=${TEST_TIME:-240}
 TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:-60}
 
 swap_flink_tm() {
-  ssh $2 /home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/bin/taskmanager.sh start
-  ssh $1 jps | grep TaskManagerRunner | awk '{print $1}' | xargs kill
+  ssh $2 "/home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/bin/taskmanager.sh start"
+  ssh $1 "ps -aef | grep "TaskManagerRunner" | grep -v grep | awk '{print $2}' | xargs kill -9"
   echo "swap TM of $1 to $2"
 }
 
@@ -136,6 +136,10 @@ create_kafka_topic() {
         echo "Kafka topic $TOPIC already exists"
     fi
 }
+
+
+
+
 
 run() {
   OPERATION=$1
@@ -320,9 +324,9 @@ run() {
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     run "CLUSTER_START"
-    ssh redis2 jps | grep TaskManagerRunner | awk '{print $1}' | xargs kill
-    for ((TIME=0; TIME < TEST_TIME / TM_FAIL_INTERVAL; TIME += 1)); do
-      if ((TIME % 2 == 0)); then
+    ssh redis2 "ps -aef | grep "TaskManagerRunner" | grep -v grep | awk '{print $2}' | xargs kill -9"
+    for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
+      if (($TIME % 2 == 0)); then
         swap_flink_tm flink3 redis2
       else
         swap_flink_tm redis2 flink3
