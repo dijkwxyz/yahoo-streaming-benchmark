@@ -321,7 +321,7 @@ run() {
   then
     run "CLUSTER_START"
     ssh redis2 jps | grep TaskManagerRunner | awk '{print $1}' | xargs kill
-    for ((TIME=0; TIME <= TEST_TIME / TM_FAIL_INTERVAL; TIME += 1)); do
+    for ((TIME=0; TIME < TEST_TIME / TM_FAIL_INTERVAL; TIME += 1)); do
       if ((TIME % 2 == 0)); then
         swap_flink_tm flink3 redis2
       else
