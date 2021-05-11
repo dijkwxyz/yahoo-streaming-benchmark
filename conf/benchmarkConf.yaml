@@ -34,7 +34,6 @@ redis.flush: false
 # number of events per second, per source node
 load.target.hz: 100000
 num.campaigns: 100
-load.even: true
 
 # ========== experiment parameters =============
 # MTTI for the application (not for each operator)

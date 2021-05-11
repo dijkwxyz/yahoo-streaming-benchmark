@@ -73,7 +73,7 @@ public class BenchmarkConfig implements Serializable {
 
         // load generator
         this.loadTargetHz = parameterTool.getInt("load.target.hz", 400_000);
-        this.loadEven = parameterTool.getBoolean("load.even", false);
+//        this.loadEven = parameterTool.getBoolean("load.even", false);
         this.timeSliceLengthMs = parameterTool.getInt("load.time.slice.length.ms", 100);
         this.useLocalEventGenerator = parameters.getBoolean("use.local.event.generator", false);
         this.numCampaigns = parameterTool.getInt("num.campaigns", 1_000_000);
