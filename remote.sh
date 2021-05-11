@@ -85,7 +85,8 @@ run_command() {
     scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/results/jm.log
     scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink2.log
     scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink3.log
-    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3
+    scp ec2-user@redis2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-11.novalocal.log ec2-user@zk1:$BASE_DIR/results/redis2.log
+    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3 redis2
   else
     if [ "HELP" != "$OPERATION" ];
     then

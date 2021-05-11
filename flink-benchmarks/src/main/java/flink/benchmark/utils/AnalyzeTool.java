@@ -35,8 +35,11 @@ public class AnalyzeTool {
     }
 
     public static void gatherThroughputData(String path, String host, String dstFileName) throws IOException {
-        Scanner sc = new Scanner(new File(path, host + ".log"));
-
+        File file = new File(path, host + ".log");
+        if (!file.exists()) {
+            return;
+        }
+        Scanner sc = new Scanner(file);
         FileWriter fw = new FileWriter(new File(path, dstFileName));
         Pattern dataPattern = Pattern.compile(".*#####(.+)&&&&&.*");
         fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
@@ -150,14 +153,14 @@ public class AnalyzeTool {
         }
 
         fw.write("checkpointId");
-        fw.write(" || ");
+        fw.write(' ');
         fw.write("failedToRestart");
         fw.write(' ');
         fw.write("restartToLoadCP");
         fw.write(' ');
         fw.write("loadCPToRunning");
 
-        fw.write(" || ");
+        fw.write(' ');
         fw.write("failedTime");
         fw.write(' ');
         fw.write("restartTime");
@@ -208,14 +211,14 @@ public class AnalyzeTool {
 
             fw.write(checkpointId);
 
-            fw.write(" || ");
+            fw.write(' ');
             fw.write(String.valueOf(restartTime.getTime() - failedTime.getTime()));
             fw.write(' ');
             fw.write(String.valueOf(loadCheckpointTime.getTime() - restartTime.getTime()));
             fw.write(' ');
             fw.write(String.valueOf(toRunningTime.getTime() - loadCheckpointTime.getTime()));
 
-            fw.write(" || ");
+            fw.write(' ');
             fw.write(String.valueOf(failedTime.getTime()));
             fw.write(' ');
             fw.write(String.valueOf(restartTime.getTime()));
@@ -336,24 +339,24 @@ public class AnalyzeTool {
         StringBuilder sb = new StringBuilder();
         sb.append("====== " + "all-machines" + " =======");
         sb.append('\n');
-        sb.append("lat-mean||lat-median||lat-90percentile||lat-95percentile||lat-99percentile||lat-min||lat-max||num-latencies");
+        sb.append("lat-mean,lat-median,lat-90percentile,lat-95percentile,lat-99percentile,lat-min,lat-max,num-latencies");
         sb.append('\n');
-        sb.append(nf.format(eventTimeLatencies.getMean())).append("||");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(50))).append("||");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(90))).append("||");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(95))).append("||");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(99))).append("||");
-        sb.append(nf.format(eventTimeLatencies.getMin())).append("||");
-        sb.append(nf.format(eventTimeLatencies.getMax())).append("||");
+        sb.append(nf.format(eventTimeLatencies.getMean())).append(",");
+        sb.append(nf.format(eventTimeLatencies.getPercentile(50))).append(",");
+        sb.append(nf.format(eventTimeLatencies.getPercentile(90))).append(",");
+        sb.append(nf.format(eventTimeLatencies.getPercentile(95))).append(",");
+        sb.append(nf.format(eventTimeLatencies.getPercentile(99))).append(",");
+        sb.append(nf.format(eventTimeLatencies.getMin())).append(",");
+        sb.append(nf.format(eventTimeLatencies.getMax())).append(",");
         sb.append(nf.format(eventTimeLatencies.getN()));
         sb.append('\n');
-//        sb.append(nf.format(processingTimeLatencies.getMean())).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(50))).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(90))).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(95))).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(99))).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getMin())).append("||");
-//        sb.append(nf.format(processingTimeLatencies.getMax())).append("||");
+//        sb.append(nf.format(processingTimeLatencies.getMean())).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(50))).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(90))).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(95))).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getPercentile(99))).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getMin())).append(",");
+//        sb.append(nf.format(processingTimeLatencies.getMax())).append(",");
 //        sb.append(nf.format(processingTimeLatencies.getN()));
 //        sb.append('\n');
         String str = sb.toString();
@@ -368,11 +371,11 @@ public class AnalyzeTool {
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
             sb.append('\n');
             sb.append("Mean event-time latency:   ").append(nf.format(eventTime.getMean()));
-//            sb.append("      || ");
+//            sb.append("      , ");
 //            sb.append("Mean processing-time latency:   ").append(nf.format(procTime.getMean()));
             sb.append('\n');
             sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
-//            sb.append("      || ");
+//            sb.append("      , ");
 //            sb.append("Median processing-time latency: ").append(nf.format(procTime.getPercentile(50)));
             sb.append('\n');
         }
@@ -387,10 +390,10 @@ public class AnalyzeTool {
         StringBuilder sb = new StringBuilder();
         sb.append("====== " + "all-machines" + " =======");
         sb.append('\n');
-        sb.append("throughput-mean||throughput-max||throughputs");
+        sb.append("throughput-mean,throughput-max,throughputs");
         sb.append('\n');
-        sb.append(nf.format(throughputs.getMean())).append("||");
-        sb.append(nf.format(throughputs.getMax())).append("||");
+        sb.append(nf.format(throughputs.getMean())).append(",");
+        sb.append(nf.format(throughputs.getMax())).append(",");
         sb.append(nf.format(throughputs.getN()));
         sb.append('\n');
         String str = sb.toString();
