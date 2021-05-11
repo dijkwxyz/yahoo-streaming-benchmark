@@ -53,9 +53,14 @@ SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 TEST_TIME=${TEST_TIME:-240}
 TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:-60}
 
+shutdown_tm() {
+  local pid=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
+  ssh $1 "pid | xargs kill -9"
+}
+
 swap_flink_tm() {
   ssh $2 "/home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/bin/taskmanager.sh start"
-  ssh $1 "ps -aef | grep "TaskManagerRunner" | grep -v grep | awk '{print $2}' | xargs kill -9"
+  shutdown_tm $1
   echo "swap TM of $1 to $2"
 }
 
@@ -324,7 +329,7 @@ run() {
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     run "CLUSTER_START"
-    ssh redis2 "ps -aef | grep "TaskManagerRunner" | grep -v grep | awk '{print $2}' | xargs kill -9"
+    shutdown_tm redis2
     for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
       if (($TIME % 2 == 0)); then
         swap_flink_tm flink3 redis2
