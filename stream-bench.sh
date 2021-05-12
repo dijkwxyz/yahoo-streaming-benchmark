@@ -213,7 +213,7 @@ run() {
     rm -f dump.rdb
   elif [ "START_KAFKA" = "$OPERATION" ];
   then
-    start_if_needed kafka\.Kafka Kafka 5 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
+    start_if_needed kafka\.Kafka Kafka 8 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
     create_kafka_topic
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
