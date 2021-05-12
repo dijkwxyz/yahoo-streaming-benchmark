@@ -52,7 +52,7 @@ SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
 TEST_TIME=${TEST_TIME:-240}
 TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:-90}
-
+TM_FAILURE=true
 
 swap_flink_tm() {
   remote_operation $2 "START_TM"
@@ -331,16 +331,20 @@ run() {
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     run "CLUSTER_START"
-    remote_operation redis2 "STOP_TM"
-    for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
-      if (($TIME % 2 == 0)); then
-        swap_flink_tm flink3 redis2
-      else
-        swap_flink_tm redis2 flink3
-      fi
-      sleep $TM_FAIL_INTERVAL
-    done
+    if [ true = $TM_FAILURE ]; then
+      for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
+        sleep $TM_FAIL_INTERVAL
+        if (($TIME % 2 == 0)); then
+          swap_flink_tm flink3 redis2
+        else
+          swap_flink_tm redis2 flink3
+        fi
+      done
+    else
+      sleep $TEST_TIME
+    fi
     run "CLUSTER_STOP"
+    remote_operation redis2 "STOP_TM"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
     cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
