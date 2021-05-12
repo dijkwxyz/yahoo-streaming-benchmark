@@ -10,7 +10,7 @@ CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-10000}
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
-MTTI_MS=${MTTI_MS:-20000}
+MTTI_MS=${MTTI_MS:-60000}
 
 make_conf() {
     echo "# Copyright 2015, Yahoo Inc.
@@ -76,6 +76,6 @@ for ((LOAD=100000; LOAD <= 200000; LOAD += 20000)); do
   echo "start experiment with LOAD = $LOAD"
   make_conf
   xsync $CONF_FILE
-  ./stream-bench.sh 240 90 CLUSTER_TEST
-  sleep 270
+  ./stream-bench.sh 600 180 CLUSTER_TEST
+  sleep 630
 done
