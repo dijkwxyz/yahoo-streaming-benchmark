@@ -16,11 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AnalyzeTool {
-    static NumberFormat nf = NumberFormat.getNumberInstance();
-
-    static {
-        nf.setMaximumFractionDigits(0);
-    }
 
     public static class LatencyResult {
         DescriptiveStatistics eventTimeLatencies = new DescriptiveStatistics();
@@ -341,23 +336,23 @@ public class AnalyzeTool {
         sb.append('\n');
         sb.append("lat-mean,lat-median,lat-90percentile,lat-95percentile,lat-99percentile,lat-min,lat-max,num-latencies");
         sb.append('\n');
-        sb.append(nf.format(eventTimeLatencies.getMean())).append(",");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(50))).append(",");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(90))).append(",");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(95))).append(",");
-        sb.append(nf.format(eventTimeLatencies.getPercentile(99))).append(",");
-        sb.append(nf.format(eventTimeLatencies.getMin())).append(",");
-        sb.append(nf.format(eventTimeLatencies.getMax())).append(",");
-        sb.append(nf.format(eventTimeLatencies.getN()));
+        sb.append(String.format("%.0f",eventTimeLatencies.getMean())).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(50))).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(90))).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(95))).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(99))).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getMin())).append(",");
+        sb.append(String.format("%.0f",eventTimeLatencies.getMax())).append(",");
+        sb.append(String.format("%d",eventTimeLatencies.getN()));
         sb.append('\n');
-//        sb.append(nf.format(processingTimeLatencies.getMean())).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(50))).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(90))).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(95))).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getPercentile(99))).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getMin())).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getMax())).append(",");
-//        sb.append(nf.format(processingTimeLatencies.getN()));
+//        sb.append(String.format("%.0f",processingTimeLatencies.getMean())).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getPercentile(50))).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getPercentile(90))).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getPercentile(95))).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getPercentile(99))).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getMin())).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getMax())).append(",");
+//        sb.append(String.format("%.0f",processingTimeLatencies.getN()));
 //        sb.append('\n');
         String str = sb.toString();
         statisticsWriter.write(str);
@@ -370,13 +365,13 @@ public class AnalyzeTool {
 //            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
             sb.append('\n');
-            sb.append("Mean event-time latency:   ").append(nf.format(eventTime.getMean()));
+            sb.append("Mean event-time latency:   ").append(String.format("%.0f",eventTime.getMean()));
 //            sb.append("      , ");
-//            sb.append("Mean processing-time latency:   ").append(nf.format(procTime.getMean()));
+//            sb.append("Mean processing-time latency:   ").append(String.format("%.0f",procTime.getMean()));
             sb.append('\n');
-            sb.append("Median event-time latency: ").append(nf.format(eventTime.getPercentile(50)));
+            sb.append("Median event-time latency: ").append(String.format("%.0f",eventTime.getPercentile(50)));
 //            sb.append("      , ");
-//            sb.append("Median processing-time latency: ").append(nf.format(procTime.getPercentile(50)));
+//            sb.append("Median processing-time latency: ").append(String.format("%.0f",procTime.getPercentile(50)));
             sb.append('\n');
         }
         str = sb.toString();
@@ -392,9 +387,9 @@ public class AnalyzeTool {
         sb.append('\n');
         sb.append("throughput-mean,throughput-max,throughputs");
         sb.append('\n');
-        sb.append(nf.format(throughputs.getMean())).append(",");
-        sb.append(nf.format(throughputs.getMax())).append(",");
-        sb.append(nf.format(throughputs.getN()));
+        sb.append(String.format("%.0f",throughputs.getMean())).append(",");
+        sb.append(String.format("%.0f",throughputs.getMax())).append(",");
+        sb.append(String.format("%d",throughputs.getN()));
         sb.append('\n');
         String str = sb.toString();
         fw.write(str);
@@ -406,7 +401,7 @@ public class AnalyzeTool {
         for (Map.Entry<String, SummaryStatistics> entry : throughputResult.perHostThr.entrySet()) {
             sb.append("====== ").append(entry.getKey()).append(" (entries: ").append(entry.getValue().getN()).append(")=======");
             sb.append('\n');
-            sb.append("Mean throughput: ").append(nf.format(entry.getValue().getMean()));
+            sb.append("Mean throughput: ").append(String.format("%.0f",entry.getValue().getMean()));
             sb.append('\n');
         }
         str = sb.toString();
