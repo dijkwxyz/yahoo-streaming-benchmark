@@ -63,7 +63,7 @@ public class BenchmarkConfig implements Serializable {
     public final String singlelevelStateBackend;
     public final int maxMemStateSize;
     public final long mttiMs;
-
+    public final int throughputLogFreq;
     /**
      * Create a config starting with an instance of ParameterTool
      */
@@ -126,6 +126,7 @@ public class BenchmarkConfig implements Serializable {
 
         this.mttiMs = parameterTool.getLong("mtti.ms", 20_000);
 
+        this.throughputLogFreq = parameterTool.getInt("throughput.log.freq", loadTargetHz * 5);
     }
 
     /**
