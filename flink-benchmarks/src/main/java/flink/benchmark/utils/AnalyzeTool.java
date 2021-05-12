@@ -2,13 +2,10 @@ package flink.benchmark.utils;
 
 import flink.benchmark.BenchmarkConfig;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,8 +22,8 @@ public class AnalyzeTool {
     }
 
     public static class ThroughputResult {
-        SummaryStatistics throughputs = new SummaryStatistics();
-        Map<String, SummaryStatistics> perHostThr = new HashMap<>();
+        DescriptiveStatistics throughputs = new DescriptiveStatistics();
+        Map<String, DescriptiveStatistics> perHostThr = new HashMap<>();
     }
 
     public static void gatherThroughputData(String path, String host, String dstFileName) throws IOException {
@@ -286,7 +283,7 @@ public class AnalyzeTool {
         String l;
         Pattern throughputPattern = Pattern.compile(".*That's ([0-9.]+) elements\\/second\\/core.*");
 
-        SummaryStatistics throughputs = new SummaryStatistics();
+        DescriptiveStatistics throughputs = new DescriptiveStatistics();
         while (sc.hasNextLine()) {
             l = sc.nextLine();
             Matcher tpMatcher = throughputPattern.matcher(l);
@@ -381,7 +378,7 @@ public class AnalyzeTool {
     }
 
     public static void writeThroughput(ThroughputResult throughputResult, FileWriter fw) throws IOException {
-        SummaryStatistics throughputs = throughputResult.throughputs;
+        DescriptiveStatistics throughputs = throughputResult.throughputs;
         StringBuilder sb = new StringBuilder();
         sb.append("====== " + "all-machines" + " =======");
         sb.append('\n');
@@ -398,7 +395,7 @@ public class AnalyzeTool {
         sb = new StringBuilder();
         sb.append("================= Throughput (in total " + throughputResult.perHostThr.size() + " reports ) =====================");
         sb.append('\n');
-        for (Map.Entry<String, SummaryStatistics> entry : throughputResult.perHostThr.entrySet()) {
+        for (Map.Entry<String, DescriptiveStatistics> entry : throughputResult.perHostThr.entrySet()) {
             sb.append("====== ").append(entry.getKey()).append(" (entries: ").append(entry.getValue().getN()).append(")=======");
             sb.append('\n');
             sb.append("Mean throughput: ").append(String.format("%.0f",entry.getValue().getMean()));
