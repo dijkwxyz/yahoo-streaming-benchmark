@@ -142,6 +142,7 @@ create_kafka_topic() {
 
 
 run() {
+  echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
   OPERATION=$1
   if [ "SETUP" = "$OPERATION" ];
   then
@@ -435,7 +436,6 @@ if [ $# -lt 3 ];
 then
   run $@
 else
-  echo "TEST_TIME=$1, TM_FAIL_INTERVAL=$2"
   TEST_TIME=$1
   TM_FAIL_INTERVAL=$2
   shift 2
