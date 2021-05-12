@@ -52,7 +52,6 @@ SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
 TEST_TIME=${TEST_TIME:-240}
 TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:-90}
-TM_FAILURE=true
 
 swap_flink_tm() {
   remote_operation $2 "START_TM"
@@ -331,7 +330,8 @@ run() {
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     run "CLUSTER_START"
-    if [ true = $TM_FAILURE ]; then
+    if [ $TM_FAIL_INTERVAL -gt 0 ]; then
+      echo "Injecting Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
         sleep $TM_FAIL_INTERVAL
         if (($TIME % 2 == 0)); then
@@ -340,7 +340,11 @@ run() {
           swap_flink_tm redis2 flink3
         fi
       done
+      if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then
+        sleep $(( $TEST_TIME - $TIME * $TM_FAIL_INTERVAL))
+      fi
     else
+      echo "No Failure Injection"
       sleep $TEST_TIME
     fi
     run "CLUSTER_STOP"
@@ -427,11 +431,15 @@ run() {
   fi
 }
 
-if [ $# -lt 1 ];
+if [ $# -lt 3 ];
 then
-  run "HELP"
+  run $@
 else
-    run $@
+  echo "TEST_TIME=$1, TM_FAIL_INTERVAL=$2"
+  TEST_TIME=$1
+  TM_FAIL_INTERVAL=$2
+  shift 2
+  run $@
 fi
 
 
