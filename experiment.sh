@@ -72,6 +72,7 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 
 
 for ((LOAD=100000; LOAD <= 200000; LOAD += 20000)); do
+  ./clear-data.sh
   echo "start experiment with LOAD = $LOAD"
   make_conf
   xsync $CONF_FILE
