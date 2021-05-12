@@ -142,7 +142,6 @@ create_kafka_topic() {
 
 
 run() {
-  echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
   OPERATION=$1
   if [ "SETUP" = "$OPERATION" ];
   then
@@ -331,6 +330,7 @@ run() {
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
     run "CLUSTER_START"
+    echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
     if [ $TM_FAIL_INTERVAL -gt 0 ]; then
       echo "Injecting Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do

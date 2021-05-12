@@ -75,6 +75,6 @@ for ((LOAD=100000; LOAD <= 200000; LOAD += 20000)); do
   echo "start experiment with LOAD = $LOAD"
   make_conf
   xsync $CONF_FILE
-  ./stream-bench.sh CLUSTER_TEST
+  ./stream-bench.sh 240 90 CLUSTER_TEST
   sleep 270
 done
