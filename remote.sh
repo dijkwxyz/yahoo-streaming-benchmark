@@ -19,6 +19,14 @@ remote_operation() {
   ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd" &
 }
 
+compact_and_scp_logs() {
+  local host="$1"
+  shift
+  ssh $host "cat $BASE_DIR/flink-1.11.2/log/* > all.log"
+  scp ec2-user@$host:$BASE_DIR/flink-1.11.2/log/all.log ec2-user@zk1:$BASE_DIR/results/$host.log
+  ssh $host "rm $BASE_DIR/flink-1.11.2/log/all.log"
+}
+
 run_command() {
   OPERATION=$1
   if [ "START_ZK" = "$OPERATION" ];
@@ -80,13 +88,13 @@ run_command() {
      run_command "STOP_FLINK"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    scp ec2-user@kafka1:$BASE_DIR/results/count-latency.txt ec2-user@zk1:$BASE_DIR/results/
+    scp ec2-user@$REDIS_HOST:$BASE_DIR/results/count-latency.txt ec2-user@zk1:$BASE_DIR/results/
 #    scp ec2-user@kafka1:$BASE_DIR/load.log ec2-user@zk1:$BASE_DIR/results/
     scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/results/jm.log
-    scp ec2-user@flink2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-6.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink2.log
-    scp ec2-user@flink3:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-7.novalocal.log ec2-user@zk1:$BASE_DIR/results/flink3.log
-    scp ec2-user@redis2:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-taskexecutor-0-multilevel-benchmark-11.novalocal.log ec2-user@zk1:$BASE_DIR/results/redis2.log
-    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3 redis2
+    compact_and_scp_logs flink2
+    compact_and_scp_logs flink3
+    compact_and_scp_logs redis2
+    java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3 redis2
   else
     if [ "HELP" != "$OPERATION" ];
     then
