@@ -19,7 +19,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
      */
     private int parallelism;
     private long prevTime = -1;
-
+    private boolean injectFailures = true;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
@@ -27,6 +27,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         this.parallelism = parallelism;
         this.globalMttiMilliSeconds = globalMttiMs;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
+        this.injectFailures = globalMttiMs > 0;
     }
 
     /**
@@ -88,7 +89,9 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
 
     @Override
     public T map(T t) throws Exception {
-        maybeInjectFailure();
+        if (injectFailures) {
+            maybeInjectFailure();
+        }
         return t;
     }
 }

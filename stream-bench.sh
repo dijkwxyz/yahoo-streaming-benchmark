@@ -209,6 +209,10 @@ run() {
 #    cd ..
   elif [ "STOP_REDIS" = "$OPERATION" ];
   then
+    # get results before stopping Redis
+    cd results
+    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
+    cd ..
     stop_if_needed redis-server Redis
     rm -f dump.rdb
   elif [ "START_KAFKA" = "$OPERATION" ];
@@ -252,10 +256,7 @@ run() {
     stop_if_needed KafkaDataGenerator "Load Generation"
 #    stop_if_needed leiningen.core.main "Load Generation"
     echo "INFO: stop load ..."
-    cd results
-    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
 #    $LEIN run -g --configPath ../$CONF_FILE || true
-    cd ..
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
     "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
