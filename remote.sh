@@ -22,7 +22,7 @@ remote_operation() {
 compact_and_scp_logs() {
   local host="$1"
   shift
-  ssh $host "cat $BASE_DIR/flink-1.11.2/log/* > all.log"
+  ssh $host "cat $BASE_DIR/flink-1.11.2/log/* > $BASE_DIR/flink-1.11.2/log/all.log"
   scp ec2-user@$host:$BASE_DIR/flink-1.11.2/log/all.log ec2-user@zk1:$BASE_DIR/results/$host.log
   ssh $host "rm $BASE_DIR/flink-1.11.2/log/all.log"
 }
