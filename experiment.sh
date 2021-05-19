@@ -5,6 +5,9 @@ MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-false}
 MTTI_MS=${MTTI_MS:--1}
 #MTTI_MS=${MTTI_MS:-60000}
 LOAD=${LOAD:-100000}
+TEST_TIME={TEST_TIME:-600}
+#FAILURE_INTERVAL={FAILURE_INTERVAL:-180}
+FAILURE_INTERVAL={FAILURE_INTERVAL:--1}
 
 BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}}
 CONF_FILE=${CONF_FILE:-conf/benchmarkConf.yaml}
@@ -73,11 +76,11 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 	}
 
 
-for (( LOAD=100000; LOAD <= 140000; LOAD += 20000 )); do
+for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
   ./clear-data.sh
   echo "start experiment with LOAD = $LOAD"
   make_conf
   xsync $CONF_FILE
-  ./stream-bench.sh 600 180 CLUSTER_TEST
+  ./stream-bench.sh $TEST_TIME $FAILURE_INTERVAL CLUSTER_TEST
   sleep 630
 done
