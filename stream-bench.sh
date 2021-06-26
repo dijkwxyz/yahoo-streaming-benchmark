@@ -137,10 +137,6 @@ create_kafka_topic() {
     fi
 }
 
-
-
-
-
 run() {
   OPERATION=$1
   if [ "SETUP" = "$OPERATION" ];

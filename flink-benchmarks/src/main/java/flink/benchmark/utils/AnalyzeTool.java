@@ -26,15 +26,13 @@ public class AnalyzeTool {
         Map<String, DescriptiveStatistics> perHostThr = new HashMap<>();
     }
 
-    public static void gatherThroughputData(String path, String host, String dstFileName) throws IOException {
-        File file = new File(path, host + ".log");
+    public static void gatherThroughputData(String logFileName, FileWriter fw) throws IOException {
+        File file = new File(logFileName);
         if (!file.exists()) {
             return;
         }
         Scanner sc = new Scanner(file);
-        FileWriter fw = new FileWriter(new File(path, dstFileName));
         Pattern dataPattern = Pattern.compile(".*#####(.+)&&&&&.*");
-        fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
         while (sc.hasNextLine()) {
 //            From 1618917151330 to 1618917160712 (9382 ms), we received 1000000 elements. That's 106587.08164570454 elements/second/core. 24.395846934289064 MB/sec/core. GB received 0
 //            "- #####1618917151330,1618917160712,9382,1000000,106587.08164570454,24.395846934289064,0&&&&&"
@@ -45,8 +43,6 @@ public class AnalyzeTool {
                 fw.write('\n');
             }
         }
-
-        fw.close();
     }
 
     public static class CheckpointData {
@@ -280,22 +276,19 @@ public class AnalyzeTool {
 
     public static ThroughputResult analyzeThroughput(String path, String host, ThroughputResult throughputResult) throws IOException {
         Scanner sc = new Scanner(new File(path, host + ".log"));
-        String l;
-        Pattern throughputPattern = Pattern.compile(".*That's ([0-9.]+) elements\\/second\\/core.*");
+        // data format
+        // start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received
+        // 1621437064490,1621437069120,4630,1000000,215982.7213822894,49.43452180075594,0
 
         DescriptiveStatistics throughputs = new DescriptiveStatistics();
         while (sc.hasNextLine()) {
-            l = sc.nextLine();
-            Matcher tpMatcher = throughputPattern.matcher(l);
-            if (tpMatcher.matches()) {
-                double eps = Double.valueOf(tpMatcher.group(1));
-                throughputs.addValue(eps);
-                throughputResult.throughputs.addValue(eps);
-            }
+            String[] l = sc.nextLine().split(",");
+            double eps = Double.valueOf(l[4]);
+            throughputs.addValue(eps);
+            throughputResult.throughputs.addValue(eps);
         }
 
         throughputResult.perHostThr.put(host, throughputs);
-
         return throughputResult;
     }
 
@@ -429,36 +422,55 @@ public class AnalyzeTool {
     }
 
     public static void main(String[] args) throws IOException, ParseException {
-        /*
-         path prefix
-         hostname
-         */
-        String dir = args[0];
-        BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
-        String load = String.valueOf(config.loadTargetHz);
-        System.out.println("load = " + load);
-        String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
-        String generatedPrefix = date + "_load-" + load + "/";
-        File generatedDir = new File(dir, generatedPrefix);
-        if (!generatedDir.exists()) {
-            generatedDir.mkdir();
-        }
-
-        copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
-        copyFile(dir, generatedDir.getAbsolutePath(), "count-latency.txt");
-
-        parseRestartCost(dir, "jm.log", generatedPrefix + "restart-cost.txt");
-        parseCheckpoint(dir, "jm.log", generatedPrefix + "checkpoint.txt");
-
+        int argIdx = 0;
+        String mode = args[argIdx++];
+        String dir;
+        String fileName;
         LatencyResult latencyResult = new LatencyResult();
         ThroughputResult throughputResult = new ThroughputResult();
-        analyzeLatency(dir, latencyResult);
-        for (int i = 1; i < args.length; i++) {
-            analyzeThroughput(dir, args[i], throughputResult);
-            gatherThroughputData(dir, args[i], generatedPrefix + args[i] + "_throughput.txt");
+        switch (mode) {
+            case "zk":
+                // zk dir ...hostnames
+                dir = args[argIdx++];
+                BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
+                String load = String.valueOf(config.loadTargetHz);
+                System.out.println("load = " + load);
+                String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
+                String generatedPrefix = date + "_load-" + load + "/";
+                File generatedDir = new File(dir, generatedPrefix);
+                if (!generatedDir.exists()) {
+                    generatedDir.mkdir();
+                }
+                copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
+                copyFile(dir, generatedDir.getAbsolutePath(), "count-latency.txt");
+
+                analyzeLatency(dir, latencyResult);
+                for (int i = argIdx; i < args.length; i++) {
+                    analyzeThroughput(dir, args[i], throughputResult);
+                }
+                writeLatencyThroughput(latencyResult, throughputResult, dir, generatedPrefix + "latency_throughput.txt");
+                break;
+            case "jm":
+                // jm dir fileName
+                dir = args[argIdx++];
+                fileName = args[argIdx++];
+                parseRestartCost(dir, fileName,  "restart-cost.txt");
+                parseCheckpoint(dir, fileName,  "checkpoints.txt");
+                break;
+            case "tm":
+                // tm ...fileNames
+                FileWriter fw = new FileWriter(new File("results/throughputs.txt"));
+                fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
+                for (int i = argIdx; i < args.length; i++) {
+                    fileName = args[argIdx++];
+                    gatherThroughputData(fileName, fw);
+                }
+                fw.close();
+                break;
+            default:
+                break;
         }
 
-        writeLatencyThroughput(latencyResult, throughputResult, dir, generatedPrefix + "latency_throughput.txt");
     }
 
 
