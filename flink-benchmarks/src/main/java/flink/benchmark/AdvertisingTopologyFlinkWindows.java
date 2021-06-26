@@ -8,7 +8,6 @@ import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
-import flink.benchmark.utils.FailureInjector;
 import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLogger;
@@ -404,7 +403,7 @@ public class AdvertisingTopologyFlinkWindows {
 //            long processingTimeLatency = currTime - Long.parseLong(result.f3);
             long windowEnd = Long.parseLong(result.f3);
             StringBuilder sb = new StringBuilder();
-            sb.append(result.f2);
+            sb.append(result.f2); //count
             sb.append(' ');
             sb.append(eventTimeLatency);
             sb.append(' ');

@@ -228,7 +228,6 @@ public class AnalyzeTool {
     public static void parseCheckpoint(String srcFileName, String path, String dstFileName) throws IOException {
         Scanner sc = new Scanner(new File(srcFileName));
 
-        FileWriter fw = new FileWriter(new File(path, dstFileName));
         Pattern triggerPattern = Pattern.compile(".*Triggering checkpoint (\\d) \\(type=CHECKPOINT\\) @ (\\d+) for job (\\w+).*");
         Pattern completePattern = Pattern.compile(".*Completed checkpoint (\\d) for job (\\w+) \\((\\d+) bytes in (\\d+) ms\\).*");
         //cpId -> startTime
@@ -262,6 +261,8 @@ public class AnalyzeTool {
             }
         }
 
+        FileWriter fw = new FileWriter(new File(path, dstFileName));
+        fw.write("id, size_bytes, startTime_ms, timeCost_ms\n");
         for (int cpId : idToData.keySet()) {
             CheckpointData cpData = idToData.get(cpId);
             fw.write(cpData.toString());
