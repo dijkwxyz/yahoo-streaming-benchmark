@@ -13,7 +13,8 @@ REDIS_HOST="redis1"
 
 JAR_PATH=$BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
 ANALYZE_MAIN_CLASS=flink.benchmark.utils.AnalyzeTool
-RESULTS_DIR=$BASE_DIR/results
+RESULTS_DIR=$BASE_DIR/results/
+FLINK_LOG_DIR=$BASE_DIR/flink-1.11.2/log/
 
 remote_operation() {
   local host="$1"
@@ -26,14 +27,15 @@ analyze_on_host_tm() {
   local host="$1"
   shift
   # since tm will be killed, there may be multiple log files
-  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS tm $RESULTS_DIR/ $BASE_DIR/log/*.out "
-  scp ec2-user@$host:$BASE_DIR/flink-1.11.2/results/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
+  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS tm $RESULTS_DIR/ $FLINK_LOG_DIR/*.out* "
+  scp ec2-user@$host:$RESULTS_DIR/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
 }
 
 analyze_on_host_jm() {
   local host="$1"
   shift
-  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS jm $RESULTS_DIR/ $BASE_DIR/flink-1.11.2/log/*-standalonesession-*.log"
+  # only use current jm log
+  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS jm $RESULTS_DIR/ $FLINK_LOG_DIR/*-standalonesession-*.log"
   scp ec2-user@$host:$RESULTS_DIR/restart-cost.txt ec2-user@zk1:$RESULTS_DIR/restart-cost.txt
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
 }
@@ -99,11 +101,11 @@ run_command() {
      run_command "STOP_FLINK"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    # collect latency results from redis
+    echo "====== collecting latency results from redis"
     scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
-    # collect checkpoint and recovery results from jm
+    echo "====== collecting checkpoint and recovery results from jm"
     analyze_on_host_jm flink1
-    # collect throughput results from tm
+    echo "====== collecting throughput results from tm"
     analyze_on_host_tm flink2
     analyze_on_host_tm flink3
     analyze_on_host_tm redis2
