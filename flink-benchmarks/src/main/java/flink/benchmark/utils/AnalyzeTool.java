@@ -435,7 +435,7 @@ public class AnalyzeTool {
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-        args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt".split(" ");
+        // args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String dir = args[argIdx++];
