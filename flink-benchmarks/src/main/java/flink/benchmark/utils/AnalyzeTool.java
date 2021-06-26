@@ -43,6 +43,7 @@ public class AnalyzeTool {
                 fw.write('\n');
             }
         }
+        sc.close();
     }
 
     public static class CheckpointData {
@@ -70,8 +71,8 @@ public class AnalyzeTool {
         }
     }
 
-    public static void parseRestartCost(String path, String srcFileName, String dstFileName) throws IOException, ParseException {
-        Scanner sc = new Scanner(new File(path, srcFileName));
+    public static void parseRestartCost(String srcFileName, String path, String dstFileName) throws IOException, ParseException {
+        Scanner sc = new Scanner(new File(srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
         //2021-05-05 04:52:22,719 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (8/8) (9530062f70342991c61311d3d5f47eba) switched from RUNNING to FAILED on org.apache.flink.runtime.jobmaster.slotpool.SingleLogicalSlot@2b36afee.
@@ -221,14 +222,11 @@ public class AnalyzeTool {
 
         sc.close();
         fw.close();
-
-
-
     }
 
 
-    public static void parseCheckpoint(String path, String srcFileName, String dstFileName) throws IOException {
-        Scanner sc = new Scanner(new File(path, srcFileName));
+    public static void parseCheckpoint(String srcFileName, String path, String dstFileName) throws IOException {
+        Scanner sc = new Scanner(new File(srcFileName));
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
         Pattern triggerPattern = Pattern.compile(".*Triggering checkpoint (\\d) \\(type=CHECKPOINT\\) @ (\\d+) for job (\\w+).*");
@@ -274,21 +272,29 @@ public class AnalyzeTool {
         fw.close();
     }
 
-    public static ThroughputResult analyzeThroughput(String path, String host, ThroughputResult throughputResult) throws IOException {
-        Scanner sc = new Scanner(new File(path, host + ".log"));
+    public static ThroughputResult analyzeThroughput(
+            String inDir, String fileName,
+            ThroughputResult throughputResult, FileWriter fw) throws IOException {
+        Scanner sc = new Scanner(new File(inDir, fileName));
         // data format
         // start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received
         // 1621437064490,1621437069120,4630,1000000,215982.7213822894,49.43452180075594,0
 
+        // throughput = elements/second/core
         DescriptiveStatistics throughputs = new DescriptiveStatistics();
+        // skip header line
+        sc.nextLine();
         while (sc.hasNextLine()) {
-            String[] l = sc.nextLine().split(",");
+            String line = sc.nextLine();
+            fw.write(line + '\n');
+            String[] l = line.split(",");
             double eps = Double.valueOf(l[4]);
             throughputs.addValue(eps);
             throughputResult.throughputs.addValue(eps);
         }
 
-        throughputResult.perHostThr.put(host, throughputs);
+        throughputResult.perHostThr.put(fileName, throughputs);
+        sc.close();
         return throughputResult;
     }
 
@@ -313,11 +319,11 @@ public class AnalyzeTool {
 //            latencyResult.perHostProcLat.get(subtask).addValue(processingTimeLatency);
 
         }
-
+        sc.close();
         return latencyResult;
     }
 
-    public static void writeLatency(LatencyResult latencyResult, FileWriter statisticsWriter) throws IOException {
+    public static void writeLatencyStat(LatencyResult latencyResult, FileWriter statisticsWriter) throws IOException {
         DescriptiveStatistics eventTimeLatencies = latencyResult.eventTimeLatencies;
 //        DescriptiveStatistics processingTimeLatencies = latencyResult.processingTimeLatencies;
 
@@ -370,7 +376,7 @@ public class AnalyzeTool {
 
     }
 
-    public static void writeThroughput(ThroughputResult throughputResult, FileWriter fw) throws IOException {
+    public static void writeThroughputStat(ThroughputResult throughputResult, FileWriter fw) throws IOException {
         DescriptiveStatistics throughputs = throughputResult.throughputs;
         StringBuilder sb = new StringBuilder();
         sb.append("====== " + "all-machines" + " =======");
@@ -400,10 +406,12 @@ public class AnalyzeTool {
 
     }
 
-    public static void writeLatencyThroughput(LatencyResult latencyResult, ThroughputResult throughputResult, String path, String fileName) throws IOException {
-        FileWriter fw = new FileWriter(new File(path, fileName));
-        writeLatency(latencyResult, fw);
-        writeThroughput(throughputResult, fw);
+    public static void writeLatencyThroughputStat(
+            LatencyResult latencyResult, ThroughputResult throughputResult,
+            String outputDir, String fileName) throws IOException {
+        FileWriter fw = new FileWriter(new File(outputDir, fileName));
+        writeLatencyStat(latencyResult, fw);
+        writeThroughputStat(throughputResult, fw);
         fw.close();
     }
 
@@ -422,44 +430,56 @@ public class AnalyzeTool {
     }
 
     public static void main(String[] args) throws IOException, ParseException {
+        // jm outputDir logFileName
+        // args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\jm.log".split(" ");
+        // tm outputDir ...logFilePaths
+        // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
+        // zk resultDir ...tmFileNames
+        args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
-        String dir;
+        String dir = args[argIdx++];
         String fileName;
         LatencyResult latencyResult = new LatencyResult();
         ThroughputResult throughputResult = new ThroughputResult();
         switch (mode) {
             case "zk":
-                // zk dir ...hostnames
-                dir = args[argIdx++];
+                // zk resultDir ...tmFileNames
                 BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
                 String load = String.valueOf(config.loadTargetHz);
                 System.out.println("load = " + load);
-                String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());//设置日期格式
+                String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());
                 String generatedPrefix = date + "_load-" + load + "/";
                 File generatedDir = new File(dir, generatedPrefix);
                 if (!generatedDir.exists()) {
                     generatedDir.mkdir();
                 }
-                copyFile(dir, generatedDir.getAbsolutePath(), "conf-copy.yaml");
-                copyFile(dir, generatedDir.getAbsolutePath(), "count-latency.txt");
+                String outDirAbsPath = generatedDir.getAbsolutePath();
+                copyFile(dir, outDirAbsPath, "conf-copy.yaml");
+                copyFile(dir, outDirAbsPath, "count-latency.txt");
+                copyFile(dir, outDirAbsPath, "restart-cost.txt");
+                copyFile(dir, outDirAbsPath, "checkpoints.txt");
 
                 analyzeLatency(dir, latencyResult);
+
+                FileWriter fileWriter = new FileWriter(new File(outDirAbsPath , "throughputs.txt"));
+                fileWriter.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
                 for (int i = argIdx; i < args.length; i++) {
-                    analyzeThroughput(dir, args[i], throughputResult);
+                    analyzeThroughput(dir, args[i], throughputResult, fileWriter);
                 }
-                writeLatencyThroughput(latencyResult, throughputResult, dir, generatedPrefix + "latency_throughput.txt");
+                fileWriter.close();
+
+                writeLatencyThroughputStat(latencyResult, throughputResult, outDirAbsPath, "latency_throughput.txt");
                 break;
             case "jm":
-                // jm dir fileName
-                dir = args[argIdx++];
+                // jm outputDir logFileName
                 fileName = args[argIdx++];
-                parseRestartCost(dir, fileName,  "restart-cost.txt");
-                parseCheckpoint(dir, fileName,  "checkpoints.txt");
+                parseRestartCost(fileName,  dir, "restart-cost.txt");
+                parseCheckpoint(fileName,  dir, "checkpoints.txt");
                 break;
             case "tm":
-                // tm ...fileNames
-                FileWriter fw = new FileWriter(new File("results/throughputs.txt"));
+                // tm outputDir ...logFilePaths
+                FileWriter fw = new FileWriter(new File(dir ,"throughputs.txt"));
                 fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
@@ -473,6 +493,4 @@ public class AnalyzeTool {
 
     }
 
-
 }
-

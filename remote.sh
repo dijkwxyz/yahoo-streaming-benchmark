@@ -11,6 +11,9 @@ YARN_HOST="hadoop4"
 FLINK_HOST="flink1"
 REDIS_HOST="redis1"
 
+JAR_PATH=$BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
+ANALYZE_MAIN_CLASS=flink.benchmark.utils.AnalyzeTool
+RESULTS_DIR=$BASE_DIR/results
 
 remote_operation() {
   local host="$1"
@@ -19,11 +22,21 @@ remote_operation() {
   ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd" &
 }
 
-analyze_tm_throughputs() {
+analyze_on_host_tm() {
   local host="$1"
   shift
-  ssh $host "java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool tm $BASE_DIR/log "
-  scp ec2-user@$host:$BASE_DIR/flink-1.11.2/log/throughputs.txt ec2-user@zk1:$BASE_DIR/results/$host.log
+  # since tm will be killed, there may be multiple log files
+  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS tm $RESULTS_DIR/ $BASE_DIR/log/*.out "
+  scp ec2-user@$host:$BASE_DIR/flink-1.11.2/results/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
+}
+
+analyze_on_host_jm() {
+  local host="$1"
+  shift
+  scp ec2-user@flink1:
+  ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS jm $RESULTS_DIR/ $BASE_DIR/flink-1.11.2/log/*-standalonesession-*.log"
+  scp ec2-user@$host:$RESULTS_DIR/restart-cost.txt ec2-user@zk1:$RESULTS_DIR/restart-cost.txt
+  scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
 }
 
 run_command() {
@@ -87,12 +100,16 @@ run_command() {
      run_command "STOP_FLINK"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    scp ec2-user@$REDIS_HOST:$BASE_DIR/results/count-latency.txt ec2-user@zk1:$BASE_DIR/results/
-    analyze_tm_throughputs flink2
-    analyze_tm_throughputs flink3
-    analyze_tm_throughputs redis2
-    scp ec2-user@flink1:$BASE_DIR/flink-1.11.2/log/flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log ec2-user@zk1:$BASE_DIR/results/jm.log
-    java -cp $BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.AnalyzeTool $BASE_DIR/results/ flink2 flink3 redis2
+    # collect latency results from redis
+    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
+    # collect checkpoint and recovery results from jm
+    analyze_on_host jm flink1
+    # collect throughput results from tm
+    analyze_on_host_tm tm flink2
+    analyze_on_host_tm tm flink3
+    analyze_on_host_tm tm redis2
+    # analyze on main node (zk)
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else
     if [ "HELP" != "$OPERATION" ];
     then
