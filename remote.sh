@@ -33,7 +33,6 @@ analyze_on_host_tm() {
 analyze_on_host_jm() {
   local host="$1"
   shift
-  scp ec2-user@flink1:
   ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS jm $RESULTS_DIR/ $BASE_DIR/flink-1.11.2/log/*-standalonesession-*.log"
   scp ec2-user@$host:$RESULTS_DIR/restart-cost.txt ec2-user@zk1:$RESULTS_DIR/restart-cost.txt
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
@@ -103,11 +102,11 @@ run_command() {
     # collect latency results from redis
     scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     # collect checkpoint and recovery results from jm
-    analyze_on_host jm flink1
+    analyze_on_host_jm flink1
     # collect throughput results from tm
-    analyze_on_host_tm tm flink2
-    analyze_on_host_tm tm flink3
-    analyze_on_host_tm tm redis2
+    analyze_on_host_tm flink2
+    analyze_on_host_tm flink3
+    analyze_on_host_tm redis2
     # analyze on main node (zk)
     java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else
