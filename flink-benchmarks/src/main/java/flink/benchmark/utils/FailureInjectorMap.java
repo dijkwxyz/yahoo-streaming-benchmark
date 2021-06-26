@@ -19,7 +19,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
      */
     private int parallelism;
     private long prevTime = -1;
-    private boolean injectFailures = true;
+    private boolean injectFailures;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
@@ -28,6 +28,7 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
         this.globalMttiMilliSeconds = globalMttiMs;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
         this.injectFailures = globalMttiMs > 0;
+        System.out.println("Inject Software Failures: " + injectFailures);
     }
 
     /**

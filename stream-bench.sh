@@ -51,7 +51,7 @@ CONF_FILE=conf/benchmarkConf.yaml
 SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
 TEST_TIME=${TEST_TIME:-240}
-TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:-90}
+TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:--1}
 
 swap_flink_tm() {
   remote_operation $2 "START_TM"

@@ -36,8 +36,9 @@ load.target.hz: 100000
 num.campaigns: 100
 
 # ========== experiment parameters =============
-# MTTI for the application (not for each operator)
-mtti.ms: 20000
+# MTTI for application failure (not for each operator)
+# set to NEGATIVE if not injecting application-level failures
+mtti.ms: -1
 
 
 # ============ checkpointing ============
