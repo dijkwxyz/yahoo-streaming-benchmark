@@ -271,7 +271,7 @@ public class AnalyzeTool {
             ThroughputResult throughputResult, FileWriter fw) throws IOException {
         Scanner sc = new Scanner(new File(inDir, fileName));
         // data format
-        // start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received
+        // start || end || duration || num-elements || elements/second/core || MB/sec/core || GB_received
         // 1621437064490,1621437069120,4630,1000000,215982.7213822894,49.43452180075594,0
 
         // throughput = elements/second/core
@@ -457,7 +457,7 @@ public class AnalyzeTool {
                 analyzeLatency(dir, latencyResult);
 
                 FileWriter fileWriter = new FileWriter(new File(outDirAbsPath , "throughputs.txt"));
-                fileWriter.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
+                fileWriter.write("start,end,duration,num-elements,elements/second/core,MB/sec/core,GB_received\n");
                 for (int i = argIdx; i < args.length; i++) {
                     analyzeThroughput(dir, args[i], throughputResult, fileWriter);
                 }
@@ -474,7 +474,7 @@ public class AnalyzeTool {
             case "tm":
                 // tm outputDir ...logFilePaths
                 FileWriter fw = new FileWriter(new File(dir ,"throughputs.txt"));
-                fw.write("start || end || duration || num-elements || elements/second/core || MB/sec/core || GB received\n");
+                fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
                     gatherThroughputData(fileName, fw);
