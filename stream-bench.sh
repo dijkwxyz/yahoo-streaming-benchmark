@@ -346,7 +346,6 @@ run() {
       sleep $TEST_TIME
     fi
     run "CLUSTER_STOP"
-    remote_operation redis2 "STOP_TM"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
     cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
@@ -376,6 +375,8 @@ run() {
     done
     remote_operation $REDIS_HOST "STOP_REDIS"
     remote_operation $ZK_HOST "STOP_ZK"
+    # wait for writing redis data to file before analyzing
+    sleep 5
     ./remote.sh ANALYZE
   elif [ "STOP_ALL" = "$OPERATION" ];
   then

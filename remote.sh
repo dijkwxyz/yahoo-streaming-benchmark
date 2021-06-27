@@ -101,15 +101,15 @@ run_command() {
      run_command "STOP_FLINK"
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    echo "====== collecting latency results from redis"
-    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     echo "====== collecting checkpoint and recovery results from jm"
     analyze_on_host_jm flink1
     echo "====== collecting throughput results from tm"
     analyze_on_host_tm flink2
     analyze_on_host_tm flink3
     analyze_on_host_tm redis2
-    # analyze on main node (zk)
+    echo "====== collecting latency results from redis"
+    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
+    echo "====== analyzing data"
     java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else
     if [ "HELP" != "$OPERATION" ];
