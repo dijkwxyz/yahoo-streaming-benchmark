@@ -345,6 +345,7 @@ run() {
       echo "No Failure Injection"
       sleep $TEST_TIME
     fi
+    remote_operation redis2 "STOP_TM"
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then

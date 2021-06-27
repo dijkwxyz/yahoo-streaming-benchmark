@@ -268,7 +268,7 @@ public class AnalyzeTool {
 
     public static ThroughputResult analyzeThroughput(
             String inDir, String fileName,
-            ThroughputResult throughputResult, FileWriter fw) throws IOException {
+            ThroughputResult throughputResult) throws IOException {
         Scanner sc = new Scanner(new File(inDir, fileName));
         // data format
         // start || end || duration || num-elements || elements/second/core || MB/sec/core || GB_received
@@ -280,7 +280,6 @@ public class AnalyzeTool {
         sc.nextLine();
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
-            fw.write(line + '\n');
             String[] l = line.split(",");
             double eps = Double.valueOf(l[4]);
             throughputs.addValue(eps);
@@ -429,7 +428,7 @@ public class AnalyzeTool {
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-        // args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt".split(" ");
+        // args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt redis2.txt".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String dir = args[argIdx++];
@@ -456,12 +455,10 @@ public class AnalyzeTool {
 
                 analyzeLatency(dir, latencyResult);
 
-                FileWriter fileWriter = new FileWriter(new File(outDirAbsPath , "throughputs.txt"));
-                fileWriter.write("start,end,duration,num-elements,elements/second/core,MB/sec/core,GB_received\n");
                 for (int i = argIdx; i < args.length; i++) {
-                    analyzeThroughput(dir, args[i], throughputResult, fileWriter);
+                    analyzeThroughput(dir, args[i], throughputResult);
+                    copyFile(dir, outDirAbsPath, args[i]);
                 }
-                fileWriter.close();
 
                 writeLatencyThroughputStat(latencyResult, throughputResult, outDirAbsPath, "latency_throughput.txt");
                 break;
