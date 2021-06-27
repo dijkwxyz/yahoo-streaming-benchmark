@@ -396,7 +396,7 @@ public class AdvertisingTopologyFlinkWindows {
         @Override
         public void invoke(Tuple4<String, String, Long, String> result) throws Exception {
             // redis set: key: campaign id, field: window-timestamp,
-            // data: count event-time-latency processing-time-latency subtask
+            // data: count event-time-latency finishTime subtask
             long currTime = System.currentTimeMillis();
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
             // this value is not very meaningful for windows
@@ -413,7 +413,7 @@ public class AdvertisingTopologyFlinkWindows {
             flushJedis.hset(result.f0, result.f1,
                     sb.toString()
             );
-            LOG.info("#$#$#$ {}", sb.toString());
+            System.out.println(sb.toString());
         }
 
         @Override
