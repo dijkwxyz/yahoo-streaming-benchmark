@@ -82,5 +82,5 @@ for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
   make_conf
   xsync $CONF_FILE
   ./stream-bench.sh $TEST_TIME $FAILURE_INTERVAL CLUSTER_TEST
-  sleep 630
+  sleep 60
 done

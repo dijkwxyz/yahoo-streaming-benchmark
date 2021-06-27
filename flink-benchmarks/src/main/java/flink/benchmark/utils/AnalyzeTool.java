@@ -2,7 +2,7 @@ package flink.benchmark.utils;
 
 import flink.benchmark.BenchmarkConfig;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -67,7 +67,7 @@ public class AnalyzeTool {
 
         @Override
         public String toString() {
-            return id + "," + size + "," + startTime + "," + timeCost;
+            return id + " " + size + " " + startTime + " " + timeCost;
         }
     }
 
@@ -79,8 +79,8 @@ public class AnalyzeTool {
         Pattern failedPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*switched from \\w+ to FAILED.*");
         //2021-05-07 02:02:32,878 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Job WordCount Global Window Experiment (c405f119755983293e2309850970b3a0) switched from state RUNNING to RESTARTING.
         Pattern restartPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*to RESTARTING.*");
-        //2021-05-05 01:14:24,424 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
-        //2021-05-05 01:14:27,708 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 8 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+        //2021-05-05 01:14:24,424 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 81 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+        //2021-05-05 01:14:27,708 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 88 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
         Pattern loadCheckpointPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
         //2021-05-07 10:46:36,209 INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - No checkpoint found during restore.
         Pattern noCheckpointPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) .*No checkpoint found during restore.*");
@@ -88,7 +88,9 @@ public class AnalyzeTool {
         //2021-05-05 01:14:27,830 INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
         Pattern toRunningPattern = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) INFO.*switched from DEPLOYING to RUNNING.*");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-        ArrayList<Tuple3<Date, Integer, String>> arr = new ArrayList<>();
+        //(timestamp, type, info, matched string)
+        ArrayList<Tuple4<Date, Integer, String, String>> arr = new ArrayList<>();
+        //define type constants
         final int toFailed = 0;
         final int toRestart = 1;
         final int loadCheckpoint = 2;
@@ -105,23 +107,21 @@ public class AnalyzeTool {
             Matcher noCheckpointMatcher = noCheckpointPattern.matcher(l);
             Matcher toRunningMatcher = toRunningPattern.matcher(l);
             if (failedMatcher.matches()) {
-                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
                 Date date = dateFormat.parse(failedMatcher.group(1));
-                arr.add(new Tuple3<>(date, toFailed, null));
+                arr.add(new Tuple4<>(date, toFailed, null, failedMatcher.group()));
                 failedArr.add(date);
             } else if (restartMatcher.matches()) {
                 Date date = dateFormat.parse(restartMatcher.group(1));
-                arr.add(new Tuple3<>(date, toRestart, null));
+                arr.add(new Tuple4<>(date, toRestart, null, restartMatcher.group()));
             } else if (loadCheckpointMatcher.matches()) {
                 Date date = dateFormat.parse(loadCheckpointMatcher.group(1));
-                arr.add(new Tuple3<>(date, loadCheckpoint, loadCheckpointMatcher.group(2)));
+                arr.add(new Tuple4<>(date, loadCheckpoint, loadCheckpointMatcher.group(2), loadCheckpointMatcher.group()));
             }else if (noCheckpointMatcher.matches()) {
                 Date date = dateFormat.parse(noCheckpointMatcher.group(1));
-                arr.add(new Tuple3<>(date, noCheckpoint, null));
+                arr.add(new Tuple4<>(date, noCheckpoint, null, noCheckpointMatcher.group()));
             } else if (toRunningMatcher.matches()) {
-                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
                 Date date = dateFormat.parse(toRunningMatcher.group(1));
-                arr.add(new Tuple3<>(date, toRunning, null));
+                arr.add(new Tuple4<>(date, toRunning, null, toRunningMatcher.group()));
             }
         }
 
@@ -131,33 +131,17 @@ public class AnalyzeTool {
         }
 
 
-        fw.write(String.format("MTTI: %f, total failures: %d", failedDS.getMean(), 1 + failedDS.getN()));
-        fw.write('\n');
-        
+        fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
+
         int i = 0;
-//        ArrayList<Long> restartCosts = new ArrayList<>();
         //skip normal start
         while (i < arr.size() && arr.get(i).f1 == toRunning) {
             i++;
         }
 
-        fw.write("checkpointId");
+        fw.write("checkpointId failedToRestart restartToLoadCP loadCPToRunning");
         fw.write(' ');
-        fw.write("failedToRestart");
-        fw.write(' ');
-        fw.write("restartToLoadCP");
-        fw.write(' ');
-        fw.write("loadCPToRunning");
-
-        fw.write(' ');
-        fw.write("failedTime");
-        fw.write(' ');
-        fw.write("restartTime");
-        fw.write(' ');
-        fw.write("loadCheckpointTime");
-        fw.write(' ');
-        fw.write("toRunningTime");
-
+        fw.write("failedTime restartTime loadCheckpointTime toRunningTime");
         fw.write('\n');
 
         while (i < arr.size()) {
@@ -166,6 +150,14 @@ public class AnalyzeTool {
             Date toRunningTime;
             Date loadCheckpointTime;
             String checkpointId;
+
+            //skip state before first failure
+            while(i < arr.size() && arr.get(i).f1 != toFailed) {
+                i++;
+            }
+            if (i >= arr.size()) {
+                break;
+            }
 
             failedTime = arr.get(i).f0;
             i++;
@@ -189,7 +181,7 @@ public class AnalyzeTool {
             }
 
             //take the last toRunning record
-            Tuple3<Date, Integer, String> prevRecord = arr.get(i);
+            Tuple4<Date, Integer, String, String> prevRecord = arr.get(i);
             i++;
             while (i < arr.size() && arr.get(i).f1 == toRunning) {
                 prevRecord = arr.get(i);
@@ -228,8 +220,8 @@ public class AnalyzeTool {
     public static void parseCheckpoint(String srcFileName, String path, String dstFileName) throws IOException {
         Scanner sc = new Scanner(new File(srcFileName));
 
-        Pattern triggerPattern = Pattern.compile(".*Triggering checkpoint (\\d) \\(type=CHECKPOINT\\) @ (\\d+) for job (\\w+).*");
-        Pattern completePattern = Pattern.compile(".*Completed checkpoint (\\d) for job (\\w+) \\((\\d+) bytes in (\\d+) ms\\).*");
+        Pattern triggerPattern = Pattern.compile(".*Triggering checkpoint (\\d+) \\(type=CHECKPOINT\\) @ (\\d+) for job (\\w+).*");
+        Pattern completePattern = Pattern.compile(".*Completed checkpoint (\\d+) for job (\\w+) \\((\\d+) bytes in (\\d+) ms\\).*");
         //cpId -> startTime
 
         HashMap<Integer, CheckpointData> idToData = new HashMap<>();
@@ -238,7 +230,7 @@ public class AnalyzeTool {
             Matcher triggerMatcher = triggerPattern.matcher(l);
             Matcher completeMatcher = completePattern.matcher(l);
             if (triggerMatcher.matches()) {
-                //Triggering checkpoint 1 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
+                //Triggering checkpoint 12 (type=CHECKPOINT) @ 1618917145019 for job 73b8361e88c2073a9940f12ead6955cb.
                 int cpId = Integer.parseInt(triggerMatcher.group(1));
                 long startTime = Long.parseLong(triggerMatcher.group(2));
                 // String jobId = triggerMatcher.group(3);
@@ -262,7 +254,7 @@ public class AnalyzeTool {
         }
 
         FileWriter fw = new FileWriter(new File(path, dstFileName));
-        fw.write("id, size_bytes, startTime_ms, timeCost_ms\n");
+        fw.write("id size_bytes startTime_ms timeCost_ms\n");
         for (int cpId : idToData.keySet()) {
             CheckpointData cpData = idToData.get(cpId);
             fw.write(cpData.toString());
@@ -432,7 +424,7 @@ public class AnalyzeTool {
 
     public static void main(String[] args) throws IOException, ParseException {
         // jm outputDir logFileName
-        // args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\jm.log".split(" ");
+        args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log".split(" ");
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
