@@ -413,7 +413,7 @@ public class AdvertisingTopologyFlinkWindows {
             flushJedis.hset(result.f0, result.f1,
                     sb.toString()
             );
-            System.out.println(sb.toString());
+            // System.out.println(sb.toString());
         }
 
         @Override
