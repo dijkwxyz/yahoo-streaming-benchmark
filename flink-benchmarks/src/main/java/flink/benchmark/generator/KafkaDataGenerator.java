@@ -55,16 +55,23 @@ public class KafkaDataGenerator {
         kafkaProducer = new KafkaProducer<>(properties);
         List<PartitionInfo> partitionInfos = kafkaProducer.partitionsFor(topic);
         if (dstHost.isEmpty()) {
+            System.out.print("Host is not defined. Send to partition: ");
             for (PartitionInfo p : partitionInfos) {
                 partitions.add(p.partition());
+                System.out.print(p.partition());
             }
+            System.out.print('\n');
         }
         else {
+            System.out.print("Host: " + dstHost);
+            System.out.print("Send to partition: ");
             for (PartitionInfo p : partitionInfos) {
                 if (dstHost.equals(p.leader().host())) {
                     partitions.add(p.partition());
+                    System.out.print(p.partition());
                 }
             }
+            System.out.print('\n');
         }
 
 //        // register campaigns to redis
