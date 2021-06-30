@@ -64,11 +64,11 @@ public class KafkaDataGenerator {
         }
         else {
             System.out.print("Host: " + dstHost);
-            System.out.print("Send to partition: ");
+            System.out.print(". Send to partition: ");
             for (PartitionInfo p : partitionInfos) {
                 if (dstHost.equals(p.leader().host())) {
                     partitions.add(p.partition());
-                    System.out.print(p.partition());
+                    System.out.print(p.partition() + " ");
                 }
             }
             System.out.print('\n');
@@ -187,7 +187,7 @@ public class KafkaDataGenerator {
         while (running) {
             long emitStartTime = System.currentTimeMillis();
             for (int i = 0; i < elements; i++) {
-                recordThroughput();
+                // recordThroughput();
                 collect(generateElement());
             }
             // Sleep for the rest of timeslice if needed
