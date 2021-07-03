@@ -385,10 +385,8 @@ run() {
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "STOP_KAFKA"
     done
-    remote_operation $REDIS_HOST "STOP_REDIS"
+    remote_operation_sync $REDIS_HOST "STOP_REDIS"
     remote_operation $ZK_HOST "STOP_ZK"
-    # wait for writing redis data to file before analyzing
-    sleep 5
     ./remote.sh ANALYZE
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
