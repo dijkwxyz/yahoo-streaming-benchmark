@@ -56,10 +56,8 @@ TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:--1}
 TM_START_BUFFER=${TM_START_BUFFER:-10}
 
 swap_flink_tm() {
-  echo "### `date`: starting new TM $2"
   remote_operation $2 "START_TM"
   sleep $TM_START_BUFFER
-  echo "### `date`: killing TM $1"
   remote_operation $1 "STOP_TM"
 }
 
@@ -142,7 +140,7 @@ create_kafka_topic() {
 }
 
 get_checkpoint_history() {
-  local JOB_ID="`flink list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}';`"
+  local JOB_ID=$1
   echo "Obtaining checkpoint history for job $JOB_ID"
   curl "localhost:8080/jobs/$JOB_ID/checkpoints" -o $RESULTS_DIR/checkpoints.json
 }
@@ -278,14 +276,16 @@ run() {
 	  then
 	  echo "Could not find streaming job to kill"
     else
-      get_checkpoint_history
+      get_checkpoint_history $FLINK_ID
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
     fi
   elif [ "START_TM" = "$OPERATION" ];
   then
+    echo "### `date`: starting new TM $2"
     $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
   elif [ "STOP_TM" = "$OPERATION" ];
   then
+    echo "### `date`: killing TM $1"
     stop_if_needed TaskManagerRunner TaskManager
   elif [ "FLINK_DEBUG_SINGLELEVEL" = "$OPERATION" ];
   then
