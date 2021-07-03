@@ -31,7 +31,7 @@ KAFKA_DIR="kafka_$SCALA_BIN_VERSION-$KAFKA_VERSION"
 ZK_DIR="zookeeper-$ZK_VERSION"
 FLINK_DIR="flink-$FLINK_VERSION"
 HADOOP_DIR=hadoop-$HADOOP_VERSION
-#SPARK_DIR="/opt/module/spark-$SPARK_VERSION-bin-hadoop2.6"
+RESULTS_DIR=$BASE_DIR/results
 
 ZK_HOST="zk1"
 ZK_PORT="2181"
@@ -139,6 +139,12 @@ create_kafka_topic() {
     else
         echo "Kafka topic $TOPIC already exists"
     fi
+}
+
+get_checkpoint_history() {
+  local JOB_ID="`flink list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}';`"
+  echo "Obtaining checkpoint history for job $JOB_ID"
+  curl "localhost:8080/jobs/$JOB_ID/checkpoints" -o $RESULTS_DIR/checkpoints.json
 }
 
 run() {
@@ -272,8 +278,8 @@ run() {
 	  then
 	  echo "Could not find streaming job to kill"
     else
+      get_checkpoint_history
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
-      sleep 3
     fi
   elif [ "START_TM" = "$OPERATION" ];
   then
@@ -359,7 +365,7 @@ run() {
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
     echo "### `date`: CLUSTER_START"
-    cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
+    cp $CONF_FILE $RESULTS_DIR/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"

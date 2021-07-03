@@ -452,6 +452,7 @@ public class AnalyzeTool {
                 copyFile(dir, outDirAbsPath, "count-latency.txt");
                 copyFile(dir, outDirAbsPath, "restart-cost.txt");
                 copyFile(dir, outDirAbsPath, "checkpoints.txt");
+                copyFile(dir, outDirAbsPath, "checkpoints.json");
 
                 analyzeLatency(dir, latencyResult);
 
