@@ -94,6 +94,7 @@ start_if_needed() {
     echo "$name is already running..."
   else
     "$@" &
+    echo "### starting $name..."
     sleep $sleep_time
   fi
 }
