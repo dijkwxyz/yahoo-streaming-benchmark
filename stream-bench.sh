@@ -52,11 +52,15 @@ SINGLELEVEL_CONF_FILE=./conf/singleLevelConf.yaml
 #test time in seconds
 TEST_TIME=${TEST_TIME:-240}
 TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:--1}
+# start time for new TM before killing the old one when swap tm
+TM_START_BUFFER=${TM_START_BUFFER:-10}
 
 swap_flink_tm() {
+  echo "### `date`: starting new TM $2"
   remote_operation $2 "START_TM"
+  sleep $TM_START_BUFFER
+  echo "### `date`: killing TM $1"
   remote_operation $1 "STOP_TM"
-  echo "swap TM of $1 to $2"
 }
 
 pid_match() {
@@ -329,9 +333,14 @@ run() {
     run "CLUSTER_START"
     echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
     if [ $TM_FAIL_INTERVAL -gt 0 ]; then
-      echo "Injecting Failures"
+      echo "### This test will Inject TM Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
-        sleep $TM_FAIL_INTERVAL
+        if (( $TM_FAIL_INTERVAL > $TM_START_BUFFER )); then
+          sleep $(( $TM_FAIL_INTERVAL - $TM_START_BUFFER ))
+        else
+          sleep $TM_START_BUFFER
+        fi
+        echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
           swap_flink_tm flink3 redis2
         else
@@ -349,6 +358,7 @@ run() {
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
+    echo "### `date`: CLUSTER_START"
     cp $CONF_FILE $BASE_DIR/results/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
@@ -365,6 +375,7 @@ run() {
     done
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
+    echo "### `date`: CLUSTER_STOP"
 #    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"

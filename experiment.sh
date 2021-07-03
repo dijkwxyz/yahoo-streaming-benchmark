@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-false}
 LOAD=${LOAD:-100000}
 TEST_TIME=${TEST_TIME:-600}
@@ -9,8 +9,8 @@ FAILURE_INTERVAL=${FAILURE_INTERVAL:--1}
 
 BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}}
 CONF_FILE=${CONF_FILE:-conf/benchmarkConf.yaml}
-WINDOW_SIZE=${WINDOW_SIZE:-10}
-WINDOW_SLIDE=${WINDOW_SLIDE:-2}
+WINDOW_SIZE=${WINDOW_SIZE:-60}
+WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-100}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
@@ -74,7 +74,8 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 	}
 
 
-for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
+#for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
+for (( LOAD=800000; LOAD <= 1000000; LOAD += 100000 )); do
   ./clear-data.sh
   echo "start experiment with LOAD = $LOAD"
   make_conf
