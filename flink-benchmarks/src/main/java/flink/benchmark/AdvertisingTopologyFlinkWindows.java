@@ -10,7 +10,7 @@ import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
-import flink.benchmark.utils.ThroughputLogger;
+import flink.benchmark.utils.ThroughputLoggerProcessor;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -59,7 +59,8 @@ public class AdvertisingTopologyFlinkWindows {
         DataStream<String>  rawMessageStream = streamSource(config, env);
 //        rawMessageStream.print("raw");
         // log performance
-        rawMessageStream.flatMap(new ThroughputLogger<String>(240, config.throughputLogFreq));
+        rawMessageStream.process(new ThroughputLoggerProcessor<String>(
+                240, config.throughputLogFreq));
 
 
         //out: (campaign id, event time)
