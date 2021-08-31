@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-600}
+TEST_TIME=${TEST_TIME:-1200}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-300000}
 MTTI_MS=${MTTI_MS:--1}
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-false}
 
 WINDOW_SIZE=${WINDOW_SIZE:-60}
-WINDOW_SLIDE=${WINDOW_SLIDE:-1}
+WINDOW_SLIDE=${WINDOW_SLIDE:-5}
 
 LOAD=${LOAD:-100000}
 NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-100}
@@ -86,7 +86,7 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 
 
 #for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
-for (( LOAD=800000; LOAD <= 1000000; LOAD += 100000 )); do
+for (( LOAD=200000; LOAD <= 600000; LOAD += 100000 )); do
   ./clear-data.sh
   echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
   make_conf
