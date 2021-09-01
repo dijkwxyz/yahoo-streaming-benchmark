@@ -440,9 +440,10 @@ public class AnalyzeTool {
                 // zk resultDir ...tmFileNames
                 BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
                 String load = String.valueOf(config.loadTargetHz);
+                String backend = config.multilevelEnable ? "multi" : "single";
                 System.out.println("load = " + load);
                 String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());
-                String generatedPrefix = date + "_load-" + load + "/";
+                String generatedPrefix = String.format("%s_load-%s-%s/", date, load, backend);
                 File generatedDir = new File(dir, generatedPrefix);
                 if (!generatedDir.exists()) {
                     generatedDir.mkdir();
