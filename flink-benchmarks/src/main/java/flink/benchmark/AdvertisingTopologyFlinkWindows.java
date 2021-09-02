@@ -21,6 +21,7 @@ import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
@@ -62,13 +63,26 @@ public class AdvertisingTopologyFlinkWindows {
         rawMessageStream.process(new ThroughputLoggerProcessor<String>(
                 240, config.throughputLogFreq));
 
-
-        //out: (campaign id, event time)
-        DataStream<Tuple2<String, String>> joinedAdImpressions = rawMessageStream
+        //out (ad_id, event_time)
+        SingleOutputStreamOperator<Tuple2<String, String>> adIdEventTime = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
-                .<Tuple2<String, String>>project(2, 5) //ad_id, event_time
                 .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism()))
+                .<Tuple2<String, String>>project(2, 5);
+
+        //=======================advertisement count=========================================
+        //out (ad_id, count)
+        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
+                .map(new MapToImpressionCount())
+                .keyBy(a -> a.f1)
+                .timeWindow(Time.minutes(10))
+                .aggregate(new AdAggregator());
+
+        adCount.addSink(new RedisAdCount(config));
+
+        //=======================campaign count=========================================
+        //out: (campaign id, event time)
+        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
                 .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple2<String, String>>forMonotonousTimestamps().
@@ -79,8 +93,6 @@ public class AdvertisingTopologyFlinkWindows {
         //out: (campaign id, event time, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
-//                .keyBy((a) -> a.f0) // key by campaign_id
-//                .process(new FailureInjector(config.mttiMs, config.numCampaigns))
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
@@ -204,6 +216,36 @@ public class AdvertisingTopologyFlinkWindows {
                 out.collect(res);
             }
         };
+    }
+
+    /**
+     * in: (ad_id(key), event_time, 1L)
+     * out: (ad_id, largest event_time, count)
+     */
+    private static class AdAggregator implements AggregateFunction<Tuple3<String, String, Long>, Tuple3<String, String, Long>, Tuple3<String, String, Long>> {
+
+        @Override
+        public Tuple3<String, String, Long> createAccumulator() {
+            return Tuple3.of("", "0", 0L);
+        }
+
+        @Override
+        public Tuple3<String, String, Long> add(Tuple3<String, String, Long> value, Tuple3<String, String, Long> accumulator) {
+            return merge(value, accumulator);
+        }
+
+        @Override
+        public Tuple3<String, String, Long> getResult(Tuple3<String, String, Long> accumulator) {
+            return accumulator;
+        }
+
+        @Override
+        public Tuple3<String, String, Long> merge(Tuple3<String, String, Long> a, Tuple3<String, String, Long> b) {
+            return Tuple3.of(
+                    a.f0,
+                    String.valueOf(Math.max(Long.parseLong(a.f1), Long.parseLong(b.f1))),
+                    a.f2 + b.f2);
+        }
     }
 
     /**
@@ -367,7 +409,7 @@ public class AdvertisingTopologyFlinkWindows {
     }
 
     /**
-     *
+     * (campaign id, event time, 1)
      */
     private static class MapToImpressionCount implements MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>> {
         @Override
@@ -396,13 +438,52 @@ public class AdvertisingTopologyFlinkWindows {
 
         @Override
         public void invoke(Tuple4<String, String, Long, String> result) throws Exception {
-            // redis set: key: campaign id, field: window-timestamp,
-            // data: count event-time-latency finishTime subtask
+            long currTime = System.currentTimeMillis();
+            //currTime - the timestamp that generates the watermark which triggeres this window
+            long eventTimeLatency = currTime - Long.parseLong(result.f1);
+            StringBuilder sb = new StringBuilder();
+            sb.append(result.f2); //count
+            sb.append(' ');
+            sb.append(eventTimeLatency);
+            sb.append(' ');
+            sb.append(currTime);
+            sb.append(' ');
+            sb.append(getRuntimeContext().getIndexOfThisSubtask() + 1);
+            flushJedis.hset(result.f0, result.f1,
+                    sb.toString()
+            );
+            // System.out.println(sb.toString());
+        }
+
+        @Override
+        public void close() throws Exception {
+            super.close();
+            flushJedis.close();
+        }
+    }
+
+    /**
+     * Simplified version of Redis data structure
+     */
+    private static class RedisAdCount extends RichSinkFunction<Tuple3<String, String, Long>> {
+        private final BenchmarkConfig config;
+        private Jedis flushJedis;
+
+        public RedisAdCount(BenchmarkConfig config) {
+            this.config = config;
+        }
+
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            super.open(parameters);
+            flushJedis = new Jedis(config.redisHost);
+            flushJedis.select(2); // select db 1
+        }
+
+        @Override
+        public void invoke(Tuple3<String, String, Long> result) throws Exception {
             long currTime = System.currentTimeMillis();
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
-            // this value is not very meaningful for windows
-//            long processingTimeLatency = currTime - Long.parseLong(result.f3);
-            long windowEnd = Long.parseLong(result.f3);
             StringBuilder sb = new StringBuilder();
             sb.append(result.f2); //count
             sb.append(' ');
