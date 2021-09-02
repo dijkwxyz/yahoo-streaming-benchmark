@@ -5,12 +5,12 @@ TEST_TIME=${TEST_TIME:-1200}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-300000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
 MTTI_MS=${MTTI_MS:--1}
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-false}
 
 WINDOW_SIZE=${WINDOW_SIZE:-60}
-WINDOW_SLIDE=${WINDOW_SLIDE:-5}
+WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 LOAD=${LOAD:-100000}
 NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-100}
@@ -85,12 +85,34 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 	}
 
 
+# limit network bandwidth for experiment
+#for (( num=1; num <= 4; num += 1)); do
+#  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -c -a eth0"
+#  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
+#done
+xdo "sudo ~/wondershaper/wondershaper -c -a eth0"
+xdo "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
+
 #for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
-for (( LOAD=200000; LOAD <= 600000; LOAD += 100000 )); do
+
+for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
   ./clear-data.sh
   echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+  MULTILEVEL_ENABLE=false
   make_conf
   xsync $CONF_FILE
   ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
   sleep 30
 done
+
+for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
+  ./clear-data.sh
+  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+  MULTILEVEL_ENABLE=true
+  make_conf
+  xsync $CONF_FILE
+  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+  sleep 30
+done
+
+xdo "sudo ~/wondershaper/wondershaper -c -a eth0"
