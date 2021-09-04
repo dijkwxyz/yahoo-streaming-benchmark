@@ -18,8 +18,8 @@ USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
 # other
-BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}}
-CONF_FILE=${CONF_FILE:-conf/benchmarkConf.yaml}
+BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}
+CONF_FILE=${CONF_FILE:-${BASE_DIR}conf/benchmarkConf.yaml}
 
 
 make_conf() {
@@ -90,29 +90,31 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 #  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -c -a eth0"
 #  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
 #done
-xdo "sudo ~/wondershaper/wondershaper -c -a eth0"
-xdo "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
+xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
+xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
 
-#for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
-
-for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
-  ./clear-data.sh
-  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-  MULTILEVEL_ENABLE=false
-  make_conf
-  xsync $CONF_FILE
-  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-  sleep 30
-done
-
-for (( LOAD=100000; LOAD <= 200000; LOAD += 20000 )); do
-  ./clear-data.sh
-  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+for (( num=0; num < 5; num += 1 )); do
+for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
+  #./clear-data.sh
   MULTILEVEL_ENABLE=true
+  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
   make_conf
-  xsync $CONF_FILE
-  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-  sleep 30
+  cat $CONF_FILE | grep multilevel.enable
+  #xsync $CONF_FILE
+  #./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+  #sleep 30
 done
 
-xdo "sudo ~/wondershaper/wondershaper -c -a eth0"
+for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
+  #./clear-data.sh
+  MULTILEVEL_ENABLE=false
+  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+  make_conf
+  cat $CONF_FILE | grep multilevel.enable
+  #xsync $CONF_FILE
+  #./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+  #sleep 30
+done
+done
+
+xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
