@@ -7,7 +7,7 @@ prefix=test
 # get curr username
 user=`whoami`
 
-echo "###### xdo from $user ######"
+echo "###### xdo  ######"
 for((host=1; host <=12; host++)); do
         echo ------------ $prefix$host ------------
         ssh $user@$prefix$host "cd $BASE_DIR; $cmd"
