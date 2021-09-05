@@ -473,9 +473,9 @@ public class AnalyzeTool {
                 copyFile(dir, outDirAbsPath, "restart-cost.txt");
                 copyFile(dir, outDirAbsPath, "checkpoints.txt");
                 copyFile(dir, outDirAbsPath, "checkpoints.json");
-                copyFileWithPrefix(dir, outDirAbsPath, "cpu");
-                copyFileWithPrefix(dir, outDirAbsPath, "memory");
-                copyFileWithPrefix(dir, outDirAbsPath, "network");
+                copyFileWithPrefix(dir, outDirAbsPath, "cpu-");
+                copyFileWithPrefix(dir, outDirAbsPath, "memory-");
+                copyFileWithPrefix(dir, outDirAbsPath, "network-");
 
                 analyzeLatency(dir, latencyResult);
 
