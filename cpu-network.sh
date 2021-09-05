@@ -16,13 +16,9 @@ if [ $# -lt 1 ]; then
   echo "timestamp user_space system nice idle iowait hardware_interrupt software_interrupt steal" > $CPU_FILE
   echo "timetamp total free used buff/cache" > $MEMORY_FILE
 else
-#LENGTH=$1
-#INTERVAL=$2
-#for (( num=0; num<$LENGTH; num+=$INTERVAL )); do
-  echo "`date +%s%3N` `grep "eth" /proc/net/dev |head -n1|sed -e 's/^[ \t]*//'| sed -n 's/  \+/ /gp' | sed -e 's/://'`" >> $NETWORK_FILE
-  echo "`date +%s%3N` `top -n 1 -b | head -n4 | grep Cpu | sed 's/[^0-9\.,]//g' | sed 's/,/ /g'`" >> $CPU_FILE
-  echo "`date +%s%3N` `top -n 1 -b | head -n4 | grep "KiB Mem" | sed 's/[^0-9\.,]//g' | sed 's/,/ /g'`" >> $MEMORY_FILE
+  echo "`date +%s%3N` `grep "eth" /proc/net/dev | head -n1`" >> $NETWORK_FILE
+  echo "`date +%s%3N` `top -n 1 -b | sed '3q;d'`" >> $CPU_FILE
+  echo "`date +%s%3N` `top -n 1 -b | sed '4q;d'`" >> $MEMORY_FILE
   sleep $1
-#done
 fi
 
