@@ -6,6 +6,8 @@ import org.apache.flink.api.java.tuple.Tuple4;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -422,6 +424,23 @@ public class AnalyzeTool {
         outputChannel.close();
     }
 
+    public static void copyFileWithPrefix(String srcDir, String dstDir, String prefix) throws IOException {
+        Files.list(new File(srcDir).toPath()).forEach(
+                path -> {
+                    String fileName = path.getFileName().toString();
+                    if (fileName.startsWith(prefix)) {
+                        try {
+                            copyFile(srcDir, dstDir, fileName);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
+
+    }
+
+
     public static void main(String[] args) throws IOException, ParseException {
         // jm outputDir logFileName
         // args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log".split(" ");
@@ -454,6 +473,9 @@ public class AnalyzeTool {
                 copyFile(dir, outDirAbsPath, "restart-cost.txt");
                 copyFile(dir, outDirAbsPath, "checkpoints.txt");
                 copyFile(dir, outDirAbsPath, "checkpoints.json");
+                copyFileWithPrefix(dir, outDirAbsPath, "cpu");
+                copyFileWithPrefix(dir, outDirAbsPath, "memory");
+                copyFileWithPrefix(dir, outDirAbsPath, "network");
 
                 analyzeLatency(dir, latencyResult);
 
