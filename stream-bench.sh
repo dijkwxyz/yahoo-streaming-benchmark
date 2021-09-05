@@ -370,6 +370,7 @@ run() {
       sample_resource $TEST_TIME
     fi
     remote_operation redis2 "STOP_TM"
+    xdo ./cpu-network-format.sh
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
