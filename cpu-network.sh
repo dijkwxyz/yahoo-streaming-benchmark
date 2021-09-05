@@ -6,9 +6,14 @@ MEMORY_FILE=$BASE_DIR/memory.txt
 
 if [ $# -lt 1 ]; then
   echo "init cpu-memory-network logs..."
-  echo "" > $NETWORK_FILE
-  echo "" > $CPU_FILE
-  echo "" > $MEMORY_FILE
+  rm $NETWORK_FILE
+  touch $NETWORK_FILE
+
+  rm $CPU_FILE
+  touch $CPU_FILE
+
+  rm $MEMORY_FILE
+  touch $MEMORY_FILE
 else
   echo "`date +%s%3N` `grep "eth" /proc/net/dev | head -n1`" >> $NETWORK_FILE
   echo "`date +%s%3N` `top -n 1 -b | sed '3q;d'`" >> $CPU_FILE
