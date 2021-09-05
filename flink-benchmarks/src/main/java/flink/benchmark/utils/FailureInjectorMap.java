@@ -1,11 +1,17 @@
 package flink.benchmark.utils;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.util.Collector;
 
+import java.io.IOException;
 import java.util.Random;
 
-public class FailureInjectorMap<T> implements MapFunction<T, T> {
+public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     /**
      * failure rate at this operator
      */
@@ -20,23 +26,33 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
     private int parallelism;
     private long prevTime = -1;
     private boolean injectFailures;
+
+    private long startTimeMs;
+    private ValueState<Long> startTimeMsState;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
-    public FailureInjectorMap(long globalMttiMs, int parallelism) {
+    public FailureInjectorMap(long globalMttiMs, int parallelism, long startTimeMs) throws IOException {
         this.parallelism = parallelism;
         this.globalMttiMilliSeconds = globalMttiMs;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
         this.injectFailures = globalMttiMs > 0;
+        this.startTimeMs = startTimeMs;
         System.out.println("Inject Software Failures: " + injectFailures);
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        this.startTimeMsState = getRuntimeContext().getState( new ValueStateDescriptor<>("startTimeMs", Long.class));
+        this.startTimeMsState.update(startTimeMs);
     }
 
     /**
      *
      * @param args
      */
-    public static void main(String[] args) {
-        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100, 1);
+    public static void main(String[] args) throws IOException {
+        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100, 1, 0L);
         DescriptiveStatistics ds = new DescriptiveStatistics();
         long prev = System.currentTimeMillis();
         //get 100 failures and calculate MTTI
@@ -89,10 +105,10 @@ public class FailureInjectorMap<T> implements MapFunction<T, T> {
     }
 
     @Override
-    public T map(T t) throws Exception {
-        if (injectFailures) {
+    public T map(T value) throws Exception {
+        if (System.currentTimeMillis() > startTimeMsState.value() && injectFailures) {
             maybeInjectFailure();
         }
-        return t;
+        return value;
     }
 }

@@ -57,17 +57,20 @@ public class AdvertisingTopologyFlinkWindows {
 
         StreamExecutionEnvironment env = setupEnvironment(config);
 
-        DataStream<String>  rawMessageStream = streamSource(config, env);
+        DataStream<String> rawMessageStream = streamSource(config, env);
 //        rawMessageStream.print("raw");
         // log performance
         rawMessageStream.process(new ThroughputLoggerProcessor<String>(
                 240, config.throughputLogFreq));
 
+        long startTimeMs = config.checkpointInterval > 0
+                ? config.checkpointInterval + 60_000L + System.currentTimeMillis()
+                : 0;
         //out (ad_id, event_time)
         SingleOutputStreamOperator<Tuple2<String, String>> adIdEventTime = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
-                .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism()))
+                .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism(), startTimeMs))
                 .<Tuple2<String, String>>project(2, 5);
 
         //=======================advertisement count=========================================
