@@ -34,6 +34,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     private long prevTime = -1;
     private boolean injectFailures;
 
+    private long startTimeDelayMs;
     private long startTimeMs;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
@@ -43,6 +44,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         this.globalMttiMilliSeconds = globalMttiMs;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
         this.injectFailures = globalMttiMs > 0;
+        this.startTimeDelayMs = startTimeDelayMs;
         this.startTimeMs = startTimeDelayMs + System.currentTimeMillis();
         System.out.println("Inject Software Failures: " + injectFailures);
     }
@@ -76,6 +78,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         if (currTime - prevTime > 0) {
             double roll = new Random().nextDouble();
             if (roll < (currTime - prevTime) * getLocalFailureRatePerMs()) {
+                startTimeMs = startTimeDelayMs + System.currentTimeMillis();
                 throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, time slice %d ms, timestamp %d",
                         globalMttiMilliSeconds, parallelism, currTime - prevTime, currTime));
             }
