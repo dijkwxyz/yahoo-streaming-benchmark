@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class FailureInjectorMap<T> extends RichMapFunction<T, T> implements CheckpointedFunction {
+public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     /**
      * failure rate at this operator
      */
@@ -35,16 +35,15 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> implements Chec
     private boolean injectFailures;
 
     private long startTimeMs;
-    private ListState<Long> startTimeMsState;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
-    public FailureInjectorMap(long globalMttiMs, int parallelism, long startTimeMs) throws IOException {
+    public FailureInjectorMap(long globalMttiMs, int parallelism, long startTimeDelayMs) throws IOException {
         this.parallelism = parallelism;
         this.globalMttiMilliSeconds = globalMttiMs;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
         this.injectFailures = globalMttiMs > 0;
-        this.startTimeMs = startTimeMs;
+        this.startTimeMs = startTimeDelayMs + System.currentTimeMillis();
         System.out.println("Inject Software Failures: " + injectFailures);
     }
 
@@ -113,26 +112,26 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> implements Chec
         return value;
     }
 
-    @Override
-    public void snapshotState(FunctionSnapshotContext context) throws Exception {
-    }
-
-    @Override
-    public void initializeState(FunctionInitializationContext context) throws Exception {
-
-        ListStateDescriptor<Long> descriptor = new ListStateDescriptor<>("startTimeMs", Long.class);
-        this.startTimeMsState = context.getOperatorStateStore().getListState(descriptor);
-
-        if (context.isRestored()) {
-            for (Long element : startTimeMsState.get()) {
-                startTimeMs = element;
-            }
-        } else {
-            startTimeMsState.clear();
-            ArrayList<Long> arr = new ArrayList<>();
-            arr.add(startTimeMs);
-            this.startTimeMsState.update(arr);
-        }
-
-    }
+//    @Override
+//    public void snapshotState(FunctionSnapshotContext context) throws Exception {
+//    }
+//
+//    @Override
+//    public void initializeState(FunctionInitializationContext context) throws Exception {
+//
+//        ListStateDescriptor<Long> descriptor = new ListStateDescriptor<>("startTimeMs", Long.class);
+//        this.startTimeMsState = context.getOperatorStateStore().getListState(descriptor);
+//
+//        if (context.isRestored()) {
+//            for (Long element : startTimeMsState.get()) {
+//                startTimeMs = element;
+//            }
+//        } else {
+//            startTimeMsState.clear();
+//            ArrayList<Long> arr = new ArrayList<>();
+//            arr.add(startTimeMs);
+//            this.startTimeMsState.update(arr);
+//        }
+//
+//    }
 }

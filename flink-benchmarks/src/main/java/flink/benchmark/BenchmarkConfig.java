@@ -41,6 +41,7 @@ public class BenchmarkConfig implements Serializable {
     // Application
     public final long windowSize;
     public final long windowSlide;
+    public final long failureStartTimeDelayMs;
 
     // Flink
     public final long checkpointInterval;
@@ -95,6 +96,7 @@ public class BenchmarkConfig implements Serializable {
         // Application
         this.windowSize = parameterTool.getLong("window.size", 10);
         this.windowSlide = parameterTool.getLong("window.slide", 5);
+        this.failureStartTimeDelayMs = parameterTool.getLong("failure.start.delay.ms", 0);
 
         // Flink
         this.checkpointInterval = parameterTool.getLong("flink.checkpoint.interval", 0);
