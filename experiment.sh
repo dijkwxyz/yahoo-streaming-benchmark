@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1200}
+TEST_TIME=${TEST_TIME:-900}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:--1}
+MTTI_MS=${MTTI_MS:-1000}
+let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
+
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 
 WINDOW_SIZE=${WINDOW_SIZE:-60}
@@ -63,6 +65,7 @@ redis.flush: $REDIS_FLUSH
 # number of events per second, per source node
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
+failure.start.delay.ms: $FAILURE_START_DELAY_MS
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
@@ -93,13 +96,27 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
 
-for (( num=0; num < 3; num += 1 )); do
+for (( num=0; num < 1; num += 1 )); do
 	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
 	  ./clear-data.sh
-	  echo "start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+	  MULTILEVEL_ENABLE=true
 	  make_conf
+	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
+	  xdo "./cpu-network.sh &"
+	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+	  sleep 30
+	done
+
+	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
+	  ./clear-data.sh
+	  MULTILEVEL_ENABLE=false
+	  make_conf
+	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+	  cat $CONF_FILE | grep multilevel.enable
+	  xsync $CONF_FILE
+	  xdo "./cpu-network.sh &"
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done
