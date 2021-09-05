@@ -119,7 +119,18 @@ run_command() {
     echo "====== collecting latency results from redis"
     scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     echo "====== collecting cpu-network data"
-
+    copy_cpu_network_log hadoop1
+    copy_cpu_network_log hadoop2
+    copy_cpu_network_log hadoop3
+    copy_cpu_network_log hadoop4
+    copy_cpu_network_log flink1
+    copy_cpu_network_log flink2
+    copy_cpu_network_log flink3
+    copy_cpu_network_log kafka1
+    copy_cpu_network_log kafka2
+    copy_cpu_network_log redis1
+    copy_cpu_network_log redis2
+    copy_cpu_network_log zk1
     echo "====== analyzing data"
     java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else
