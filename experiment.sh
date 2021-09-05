@@ -104,7 +104,7 @@ for (( num=0; num < 1; num += 1 )); do
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  xdo "./cpu-network.sh &"
+	  xdo "nohup ./cpu-network.sh $TEST_TIME 1 &"
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done
@@ -116,7 +116,7 @@ for (( num=0; num < 1; num += 1 )); do
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  xdo "./cpu-network.sh &"
+	  xdo "nohup ./cpu-network.sh $TEST_TIME 1 &"
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done
