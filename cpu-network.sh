@@ -13,6 +13,5 @@ else
   echo "`date +%s%3N` `grep "eth" /proc/net/dev | head -n1`" >> $NETWORK_FILE
   echo "`date +%s%3N` `top -n 1 -b | sed '3q;d'`" >> $CPU_FILE
   echo "`date +%s%3N` `top -n 1 -b | sed '4q;d'`" >> $MEMORY_FILE
-  sleep $1
 fi
 

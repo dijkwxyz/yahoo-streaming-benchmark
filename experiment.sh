@@ -94,7 +94,7 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 #  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
 #done
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
-xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
+xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 204800 -d 204800"
 
 for (( num=0; num < 1; num += 1 )); do
 	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
@@ -104,7 +104,6 @@ for (( num=0; num < 1; num += 1 )); do
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  xdo "nohup ./cpu-network.sh $TEST_TIME 1 >/dev/null 2>&1 &"
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done
@@ -116,7 +115,6 @@ for (( num=0; num < 1; num += 1 )); do
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  xdo "nohup ./cpu-network.sh $TEST_TIME 1 >/dev/null 2>&1 &"
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done

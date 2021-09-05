@@ -1,6 +1,10 @@
 # Copyright 2015, Yahoo Inc.
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
+# ====== experiment.sh config ======
+# TEST_TIME=900
+# TM_FAILURE_INTERVAL=-1
+#
 # ============ kafka ============
 kafka.brokers:
     - "kafka1"
@@ -23,8 +27,8 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 10
-window.slide: 2
+window.size: 60
+window.slide: 1
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
@@ -32,17 +36,15 @@ use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second, per source node
-load.target.hz: 100000
+load.target.hz: 160000
 num.campaigns: 100
+failure.start.delay.ms: 240000
 
 # ========== experiment parameters =============
-# MTTI for application failure (not for each operator)
-# set to NEGATIVE if not injecting application-level failures
-mtti.ms: -1
-
+mtti.ms: 1000
 
 # ============ checkpointing ============
-flink.checkpoint.interval: 10000
+flink.checkpoint.interval: 180000
 multilevel.enable: true
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
