@@ -24,4 +24,4 @@ sed -i "1itimestamp user_space system nice idle iowait hardware_interrupt softwa
 
 sed 's/[^0-9\.,]//g' $MEMORY_FILE | sed 's/,/ /g' > $MEMORY_FILE.copy
 mv $MEMORY_FILE.copy $MEMORY_FILE
-sed -i "1itimetamp total free used buff/cache" $MEMORY_FILE
+sed -i "1itimestamp total free used buff/cache" $MEMORY_FILE
