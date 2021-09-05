@@ -4,7 +4,11 @@ NETWORK_FILE=$BASE_DIR/network.txt
 CPU_FILE=$BASE_DIR/cpu.txt
 MEMORY_FILE=$BASE_DIR/memory.txt
 
-echo "`date +%s%3N` `grep "eth" /proc/net/dev |head -n1|sed -e 's/^[ \t]*//'| sed -n 's/  \+/ /gp' | sed -e 's/://'`" >> $NETWORK_FILE 
-echo "`date +%s%3N` `top -n 1 -b | head -n4 | grep Cpu | sed 's/[^0-9\.,]//g' | sed 's/,/ /g'`" >> $CPU_FILE 
-echo "`date +%s%3N` `top -n 1 -b | head -n4 | grep "KiB Mem" | sed 's/[^0-9\.,]//g' | sed 's/,/ /g'`" >> $MEMORY_FILE 
+sed -e 's/^[ \t]*//' $NETWORK_FILE | sed -n 's/  \+/ /gp' | sed -e 's/://' > $NETWORK_FILE.copy
+mv $NETWORK_FILE.copy $NETWORK_FILE
 
+sed 's/[^0-9\.,]//g' $CPU_FILE | sed 's/,/ /g' > $CPU_FILE.copy
+mv $CPU_FILE.copy $CPU_FILE
+
+sed 's/[^0-9\.,]//g' $MEMORY_FILE | sed 's/,/ /g' > $MEMORY_FILE.copy
+mv $MEMORY_FILE.copy $MEMORY_FILE
