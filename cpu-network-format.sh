@@ -16,7 +16,7 @@ MEMORY_FILE=$BASE_DIR/memory.txt
 
 sed -e 's/^[ \t]*//' $NETWORK_FILE | sed -n 's/  \+/ /gp' | sed -e 's/://' > $NETWORK_FILE.copy
 mv $NETWORK_FILE.copy $NETWORK_FILE
-sed -i "1itimestamp interface recv_bytes recv_packets recv_errs recv_dropped recv_fifo recv_frame recv_compressed recv_multicast sent_bytes sent_packets sent_errs sent_dropped sent_fifo sent_frame sent_compressed sent_multicast" $NETWORK_FILE
+sed -i "1itimestamp recv_bytes recv_packets recv_errs recv_dropped recv_fifo recv_frame recv_compressed recv_multicast sent_bytes sent_packets sent_errs sent_dropped sent_fifo sent_frame sent_compressed sent_multicast" $NETWORK_FILE
 
 sed 's/[^0-9\.,]//g' $CPU_FILE | sed 's/,/ /g' > $CPU_FILE.copy
 mv $CPU_FILE.copy $CPU_FILE
