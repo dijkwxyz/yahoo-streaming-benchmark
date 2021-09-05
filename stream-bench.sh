@@ -146,6 +146,13 @@ get_checkpoint_history() {
   curl "localhost:8080/jobs/$JOB_ID/checkpoints" -o $RESULTS_DIR/checkpoints.json
 }
 
+sample_resource() {
+  local TIME_LENGTH_S=$1
+  for ((SAMPLE=0; SAMPLE < $TIME_LENGTH_S; SAMPLE +=1)); do
+    xdo "./cpu-network.sh 1" & sleep 1
+  done
+}
+
 run() {
   OPERATION=$1
   if [ "SETUP" = "$OPERATION" ];
@@ -344,13 +351,9 @@ run() {
       echo "### This test will Inject TM Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
         if (( $TM_FAIL_INTERVAL > $TM_START_BUFFER )); then
-          for ((SAMPLE=0; SAMPLE < $TM_FAIL_INTERVAL - $TM_START_BUFFER; SAMPLE +=1)); do
-            ./cpu-network.sh 1
-          done
+          sample_resource $(($TM_FAIL_INTERVAL - $TM_START_BUFFER))
         else
-          for ((SAMPLE=0; SAMPLE < $TM_START_BUFFER; SAMPLE +=1)); do
-            ./cpu-network.sh 1
-          done
+          sample_resource $TM_START_BUFFER
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
@@ -360,11 +363,11 @@ run() {
         fi
       done
       if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then
-        sleep $(( $TEST_TIME - $TIME * $TM_FAIL_INTERVAL))
+        sample_resource $(( $TEST_TIME - $TIME * $TM_FAIL_INTERVAL))
       fi
     else
       echo "No Failure Injection"
-      sleep $TEST_TIME
+      sample_resource $TEST_TIME
     fi
     remote_operation redis2 "STOP_TM"
     run "CLUSTER_STOP"
