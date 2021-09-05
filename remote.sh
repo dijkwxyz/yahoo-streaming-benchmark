@@ -41,6 +41,14 @@ analyze_on_host_jm() {
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
 }
 
+copy_cpu_network_log() {
+  local host="$1"
+  shift
+  scp ec2-user@host:$RESULTS_DIR/network.txt ec2-user@zk1:$RESULTS_DIR/network-$host.txt
+  scp ec2-user@host:$RESULTS_DIR/cpu.txt ec2-user@zk1:$RESULTS_DIR/cpu-$host.txt
+  scp ec2-user@host:$RESULTS_DIR/memory.txt ec2-user@zk1:$RESULTS_DIR/memory-$host.txt
+}
+
 run_command() {
   OPERATION=$1
   if [ "START_ZK" = "$OPERATION" ];
@@ -110,6 +118,8 @@ run_command() {
     analyze_on_host_tm redis2
     echo "====== collecting latency results from redis"
     scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
+    echo "====== collecting cpu-network data"
+
     echo "====== analyzing data"
     java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else
