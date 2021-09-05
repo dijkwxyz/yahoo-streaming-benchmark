@@ -370,7 +370,6 @@ run() {
       sample_resource $TEST_TIME
     fi
     remote_operation redis2 "STOP_TM"
-    xdo ./cpu-network-format.sh
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
@@ -392,6 +391,7 @@ run() {
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
     echo "### `date`: CLUSTER_STOP"
+    xdo-parallel ./cpu-network-format.sh
 #    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
