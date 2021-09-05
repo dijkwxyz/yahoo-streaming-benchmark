@@ -36,6 +36,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
 
     private long startTimeDelayMs;
     private long startTimeMs;
+//    private ListState<Long> startTimeMsState;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
@@ -115,7 +116,12 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         return value;
     }
 
-//    @Override
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        startTimeMs = System.currentTimeMillis() + startTimeDelayMs;
+    }
+
+    //    @Override
 //    public void snapshotState(FunctionSnapshotContext context) throws Exception {
 //    }
 //
@@ -125,16 +131,11 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
 //        ListStateDescriptor<Long> descriptor = new ListStateDescriptor<>("startTimeMs", Long.class);
 //        this.startTimeMsState = context.getOperatorStateStore().getListState(descriptor);
 //
-//        if (context.isRestored()) {
-//            for (Long element : startTimeMsState.get()) {
-//                startTimeMs = element;
-//            }
-//        } else {
-//            startTimeMsState.clear();
-//            ArrayList<Long> arr = new ArrayList<>();
-//            arr.add(startTimeMs);
-//            this.startTimeMsState.update(arr);
-//        }
+//        startTimeMs = System.currentTimeMillis() + startTimeDelayMs;
 //
+//        startTimeMsState.clear();
+//        ArrayList<Long> arr = new ArrayList<>();
+//        arr.add(startTimeMs);
+//        this.startTimeMsState.update(arr);
 //    }
 }
