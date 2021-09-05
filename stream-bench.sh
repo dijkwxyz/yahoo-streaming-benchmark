@@ -344,7 +344,7 @@ run() {
     remote_operation $YARN_HOST "STOP_YARN"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
-    ./cpu-network.sh
+    xdo ./cpu-network.sh
     run "CLUSTER_START"
     echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
     if [ $TM_FAIL_INTERVAL -gt 0 ]; then
