@@ -2,16 +2,23 @@ package flink.benchmark.utils;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
+public class FailureInjectorMap<T> extends RichMapFunction<T, T> implements CheckpointedFunction {
     /**
      * failure rate at this operator
      */
@@ -28,7 +35,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     private boolean injectFailures;
 
     private long startTimeMs;
-    private ValueState<Long> startTimeMsState;
+    private ListState<Long> startTimeMsState;
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
@@ -39,12 +46,6 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         this.injectFailures = globalMttiMs > 0;
         this.startTimeMs = startTimeMs;
         System.out.println("Inject Software Failures: " + injectFailures);
-    }
-
-    @Override
-    public void open(Configuration parameters) throws Exception {
-        this.startTimeMsState = getRuntimeContext().getState( new ValueStateDescriptor<>("startTimeMs", Long.class));
-        this.startTimeMsState.update(startTimeMs);
     }
 
     /**
@@ -106,9 +107,32 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
 
     @Override
     public T map(T value) throws Exception {
-        if (System.currentTimeMillis() > startTimeMsState.value() && injectFailures) {
+        if (System.currentTimeMillis() > startTimeMs && injectFailures) {
             maybeInjectFailure();
         }
         return value;
+    }
+
+    @Override
+    public void snapshotState(FunctionSnapshotContext context) throws Exception {
+    }
+
+    @Override
+    public void initializeState(FunctionInitializationContext context) throws Exception {
+
+        ListStateDescriptor<Long> descriptor = new ListStateDescriptor<>("startTimeMs", Long.class);
+        this.startTimeMsState = context.getOperatorStateStore().getListState(descriptor);
+
+        if (context.isRestored()) {
+            for (Long element : startTimeMsState.get()) {
+                startTimeMs = element;
+            }
+        } else {
+            startTimeMsState.clear();
+            ArrayList<Long> arr = new ArrayList<>();
+            arr.add(startTimeMs);
+            this.startTimeMsState.update(arr);
+        }
+
     }
 }
