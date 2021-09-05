@@ -337,15 +337,20 @@ run() {
     remote_operation $YARN_HOST "STOP_YARN"
   elif [ "CLUSTER_TEST" = "$OPERATION" ];
   then
+    ./cpu-network.sh
     run "CLUSTER_START"
     echo "TEST_TIME=$TEST_TIME, TM_FAIL_INTERVAL=$TM_FAIL_INTERVAL"
     if [ $TM_FAIL_INTERVAL -gt 0 ]; then
       echo "### This test will Inject TM Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
         if (( $TM_FAIL_INTERVAL > $TM_START_BUFFER )); then
-          sleep $(( $TM_FAIL_INTERVAL - $TM_START_BUFFER ))
+          for ((SAMPLE=0; SAMPLE < $TM_FAIL_INTERVAL - $TM_START_BUFFER; SAMPLE +=1)); do
+            ./cpu-network.sh 1
+          done
         else
-          sleep $TM_START_BUFFER
+          for ((SAMPLE=0; SAMPLE < $TM_START_BUFFER; SAMPLE +=1)); do
+            ./cpu-network.sh 1
+          done
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
