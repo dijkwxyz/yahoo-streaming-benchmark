@@ -148,8 +148,8 @@ get_checkpoint_history() {
 
 sample_resource() {
   local TIME_LENGTH_S=$1
-  for ((SAMPLE=0; SAMPLE < $TIME_LENGTH_S; SAMPLE +=1)); do
-    xdo "./cpu-network.sh 1" & sleep 1
+  for ((SAMPLE=0; SAMPLE < $TIME_LENGTH_S; SAMPLE +=2)); do
+    xdo "./cpu-network.sh 1" & sleep 2
   done
 }
 
