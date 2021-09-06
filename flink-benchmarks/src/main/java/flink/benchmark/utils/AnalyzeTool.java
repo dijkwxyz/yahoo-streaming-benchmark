@@ -476,6 +476,7 @@ public class AnalyzeTool {
                 copyFileWithPrefix(dir, outDirAbsPath, "cpu-");
                 copyFileWithPrefix(dir, outDirAbsPath, "memory-");
                 copyFileWithPrefix(dir, outDirAbsPath, "network-");
+                copyFileWithPrefix(dir, outDirAbsPath, "disk-");
 
                 analyzeLatency(dir, latencyResult);
 
