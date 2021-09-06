@@ -30,8 +30,8 @@ sed 's/[^0-9\.,:]//g' $MEMORY_FILE | sed 's/[,:]/ /g' > $MEMORY_FILE.copy
 mv $MEMORY_FILE.copy $MEMORY_FILE
 sed -i "1itimestamp total free used buff/cache" $MEMORY_FILE
 
-sed 's/[^0-9\.,:]//g' $DISK_FILE | sed 's/[,:]/ /g' > $DISK_FILE.copy
+sed 's/ \+/ /g' $DISK_FILE > $DISK_FILE.copy
 mv $DISK_FILE.copy $DISK_FILE 
-sed -i "1itimestamp total_read_per_s total_write_per_s" $DISK_FILE
+sed -i "1itimestamp disk read_total read_merged read_sectors read_ms write_total write_merged write_sectors write_ms io_cur io_sec" $DISK_FILE
 
 
