@@ -47,6 +47,7 @@ copy_cpu_network_log() {
   scp ec2-user@$host:$RESULTS_DIR/network.txt ec2-user@zk1:$RESULTS_DIR/network-$host.txt
   scp ec2-user@$host:$RESULTS_DIR/cpu.txt ec2-user@zk1:$RESULTS_DIR/cpu-$host.txt
   scp ec2-user@$host:$RESULTS_DIR/memory.txt ec2-user@zk1:$RESULTS_DIR/memory-$host.txt
+  scp ec2-user@$host:$RESULTS_DIR/disk.txt ec2-user@zk1:$RESULTS_DIR/disk-$host.txt
 }
 
 run_command() {

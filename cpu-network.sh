@@ -3,6 +3,7 @@ BASE_DIR=/home/ec2-user/yahoo-streaming-benchmark/results
 NETWORK_FILE=$BASE_DIR/network.txt
 CPU_FILE=$BASE_DIR/cpu.txt
 MEMORY_FILE=$BASE_DIR/memory.txt
+DISK_FILE=$BASE_DIR/disk.txt
 
 if [ $# -lt 1 ]; then
   echo "init cpu-memory-network logs..."
@@ -14,9 +15,13 @@ if [ $# -lt 1 ]; then
 
   rm $MEMORY_FILE
   touch $MEMORY_FILE
+
+  rm $DISK_FILE
+  touch $DISK_FILE
 else
   echo "`date +%s%3N` `grep "eth" /proc/net/dev | head -n1`" >> $NETWORK_FILE
   echo "`date +%s%3N` `top -n 1 -b | sed '3q;d'`" >> $CPU_FILE
   echo "`date +%s%3N` `top -n 1 -b | sed '4q;d'`" >> $MEMORY_FILE
+  echo "`date +%s%3N` `sudo iotop -n1 -b | head -n1`" >> $DISK_FILE
 fi
 

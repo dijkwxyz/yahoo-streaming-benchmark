@@ -83,7 +83,8 @@ multilevel.level2.statebackend: \"fs\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 multilevel.pattern: \"1,1,2\"
 singlelevel.statebackend: \"fs\"
-singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
+#singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
+singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 " > $CONF_FILE
 	}
 
@@ -96,10 +97,11 @@ singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 204800 -d 204800"
 
+
 for (( num=0; num < 1; num += 1 )); do
 	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
 	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
+	  MULTILEVEL_ENABLE=false
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable

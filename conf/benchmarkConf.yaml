@@ -27,7 +27,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 60
+window.size: 120
 window.slide: 1
 
 # ============ java load generator ============
@@ -36,7 +36,7 @@ use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second, per source node
-load.target.hz: 160000
+load.target.hz: 170000
 num.campaigns: 100
 failure.start.delay.ms: 240000
 
@@ -45,7 +45,7 @@ mtti.ms: 1000
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 180000
-multilevel.enable: true
+multilevel.enable: false
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
 multilevel.level0.statebackend: "fs"
@@ -56,5 +56,6 @@ multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "1,1,2"
 singlelevel.statebackend: "fs"
-singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
+#singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
+singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 
