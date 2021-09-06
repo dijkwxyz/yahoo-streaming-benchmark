@@ -391,7 +391,6 @@ run() {
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
     echo "### `date`: CLUSTER_STOP"
-    xdo-parallel ./cpu-network-format.sh
 #    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
@@ -403,6 +402,7 @@ run() {
     done
     remote_operation_sync $REDIS_HOST "STOP_REDIS"
     remote_operation $ZK_HOST "STOP_ZK"
+    xdo ./cpu-network-format.sh
     ./remote.sh ANALYZE
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
