@@ -18,20 +18,18 @@ DISK_FILE=$BASE_DIR/disk.txt
 #iotop: disk
 #1630893722428 Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
 
-sed -e 's/^[ \t]*//' $NETWORK_FILE | sed -n 's/  \+/ /gp' | sed -e 's/://' > $NETWORK_FILE.copy
-mv $NETWORK_FILE.copy $NETWORK_FILE
+sed -i 's/ \+/ /gp' $NETWORK_FILE
 sed -i "1itimestamp interface recv_bytes recv_packets recv_errs recv_dropped recv_fifo recv_frame recv_compressed recv_multicast sent_bytes sent_packets sent_errs sent_dropped sent_fifo sent_frame sent_compressed sent_multicast" $NETWORK_FILE
 
-sed 's/[^0-9\.,:]//g' $CPU_FILE | sed 's/[,:]/ /g' > $CPU_FILE.copy
-mv $CPU_FILE.copy $CPU_FILE
+sed -i 's/[^0-9\.,:]//g' $CPU_FILE
+sed -i 's/[,:]/ /g' $CPU_FILE
 sed -i "1itimestamp user_space system nice idle iowait hardware_interrupt software_interrupt steal" $CPU_FILE
 
-sed 's/[^0-9\.,:]//g' $MEMORY_FILE | sed 's/[,:]/ /g' > $MEMORY_FILE.copy
-mv $MEMORY_FILE.copy $MEMORY_FILE
+sed -i 's/[^0-9\.,:]//g' $MEMORY_FILE
+sed -i 's/[,:]/ /g' $MEMORY_FILE
 sed -i "1itimestamp total free used buff/cache" $MEMORY_FILE
 
-sed 's/ \+/ /g' $DISK_FILE > $DISK_FILE.copy
-mv $DISK_FILE.copy $DISK_FILE 
+sed -i 's/ \+/ /g' $DISK_FILE
 sed -i "1itimestamp disk read_total read_merged read_sectors read_ms write_total write_merged write_sectors write_ms io_cur io_sec" $DISK_FILE
 
 
