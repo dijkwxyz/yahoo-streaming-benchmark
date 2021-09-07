@@ -359,11 +359,8 @@ public class AnalyzeTool {
 
         //write results
         FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
-
         fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
-
-        fw.write("checkpointId failed RecoveryStart loadCheckpointComplete \n");
-        fw.write('\n');
+        fw.write("checkpointId failedTime RecoveryStartTime loadCheckpointCompleteTime\n");
 
         int jmSignalsIdx = 0;
         int taskCancelledIdx = 0;
@@ -701,8 +698,8 @@ public class AnalyzeTool {
                 LatencyResult latencyResult = new LatencyResult();
                 ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
-                    analyzeThroughput(srcDir, tmHost+".txt", throughputResult);
-                    copyFile(srcDir, outDirAbsPath, tmHost+".txt");
+                    analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
+                    copyFile(srcDir, outDirAbsPath, tmHost + ".txt");
                 }
 
                 List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
