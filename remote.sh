@@ -132,6 +132,7 @@ run_command() {
     copy_cpu_network_log redis1
     copy_cpu_network_log redis2
     copy_cpu_network_log zk1
+    ./cpu-network-format.sh
     echo "====== analyzing data"
     java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
   else

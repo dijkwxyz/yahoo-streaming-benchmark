@@ -6,7 +6,7 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:-1000}
+MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
@@ -19,6 +19,8 @@ NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-100}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
+#1024*1024 = 1048576
+NET_THRESHOLD=${NET_THRESHOLD:-1048576}
 # other
 BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}
 CONF_FILE=${CONF_FILE:-${BASE_DIR}conf/benchmarkConf.yaml}
@@ -83,8 +85,8 @@ multilevel.level2.statebackend: \"fs\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 multilevel.pattern: \"1,1,2\"
 singlelevel.statebackend: \"fs\"
-#singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
+singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
+#singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 " > $CONF_FILE
 	}
 
@@ -95,13 +97,13 @@ singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2
 #  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
 #done
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
-xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u 204800 -d 204800"
+xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
 for (( num=0; num < 1; num += 1 )); do
-	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
+	for (( LOAD=60000; LOAD <= 60000; LOAD += 20000 )); do
 	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=false
+	  MULTILEVEL_ENABLE=true
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
@@ -110,16 +112,6 @@ for (( num=0; num < 1; num += 1 )); do
 	  sleep 30
 	done
 
-	for (( LOAD=160000; LOAD <= 170000; LOAD += 10000 )); do
-	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=false
-	  make_conf
-	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	  cat $CONF_FILE | grep multilevel.enable
-	  xsync $CONF_FILE
-	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	  sleep 30
-	done
 done
 
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"

@@ -110,7 +110,7 @@ stop_if_needed() {
     local CHECK_AGAIN=`pid_match "$match"`
     if [[ "$CHECK_AGAIN" -ne "" ]];
     then
-      kill -9 "$CHECK_AGAIN"
+      sudo kill -9 "$CHECK_AGAIN"
     fi
   else
     echo "No $name instance found to stop"
@@ -405,7 +405,6 @@ run() {
     done
     remote_operation_sync $REDIS_HOST "STOP_REDIS"
     remote_operation $ZK_HOST "STOP_ZK"
-    xdo ./cpu-network-format.sh
     ./remote.sh ANALYZE
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
