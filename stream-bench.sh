@@ -369,7 +369,6 @@ run() {
       echo "No Failure Injection"
       sample_resource $TEST_TIME
     fi
-    remote_operation redis2 "STOP_TM"
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
@@ -397,6 +396,10 @@ run() {
     done
     remote_operation_sync $FLINK_HOST "STOP_FLINK_PROCESSING"
     remote_operation $FLINK_HOST "STOP_FLINK"
+    #ensure TMs are killed
+    remote_operation flink2 "STOP_TM"
+    remote_operation flink3 "STOP_TM"
+    remote_operation redis2 "STOP_TM"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "STOP_KAFKA"
     done
