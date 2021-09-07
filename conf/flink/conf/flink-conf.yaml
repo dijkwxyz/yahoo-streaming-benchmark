@@ -37,19 +37,19 @@ jobmanager.rpc.address: flink1
 jobmanager.rpc.port: 6123
 #jobmanager.rpc.port: 6700
 
-jobmanager.memory.heap.size: 1gb
+#jobmanager.memory.heap.size: 1gb
 # The total process memory size for the JobManager.
 #
 # Note this accounts for all memory usage within the JobManager process, including JVM metaspace and other overhead.
 
-jobmanager.memory.process.size: 2gb
+jobmanager.memory.process.size: 4gb
 
 
 # The total process memory size for the TaskManager.
 #
 # Note this accounts for all memory usage within the TaskManager process, including JVM metaspace and other overhead.
 
-taskmanager.memory.process.size: 12gb
+taskmanager.memory.process.size: 10gb
 
 # To exclude JVM metaspace and overhead, please, use total Flink memory size instead of 'taskmanager.memory.process.size'.
 # It is not recommended to set both 'taskmanager.memory.process.size' and Flink memory.
@@ -255,9 +255,11 @@ rest.port: 8080
 # Interval in milliseconds for refreshing the monitored directories.
 #historyserver.archive.fs.refresh-interval: 10000
 # env.java.home: /opt/module/jdk1.8.0_261
-env.java.opts.jobmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
-env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
+#env.java.opts.jobmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+#env.java.opts.taskmanager: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
 env.java.home: /home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
+env.java.opts: -Xloggc:/home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/log/gc.log -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -XX:+PrintGCTimeStamps -XX:+UseG1GC
+#env.java.opts: -XX:+UseG1GC
 
 state.checkpoints.num-retained: 3
 web.checkpoints.history: 99999999
@@ -271,6 +273,5 @@ taskmanager.memory.managed.size: 0
 #metrics.reporter.slf4j.interval: 60 SECONDS
 high-availability: com.dijk.ha.MultilevelHighAvailabilityServicesFactory
 #DELEGATE_EMBEDDED 0, DELEGATE_STANDALONE 1, DELEGATE_ZK 2
-#Currently ONLY support DELEGATE_STANDALONE !!!
 multilevel.ha.delegate: 1 
-
+heartbeat.timeout: 90000
