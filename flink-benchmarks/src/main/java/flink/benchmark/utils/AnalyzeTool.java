@@ -679,7 +679,6 @@ public class AnalyzeTool {
                 String outDirAbsPath = generatedDir.getAbsolutePath();
                 copyFile(srcDir, outDirAbsPath, "conf-copy.yaml");
                 copyFile(srcDir, outDirAbsPath, "count-latency.txt");
-                copyFile(srcDir, outDirAbsPath, "restart-cost.txt");
                 copyFile(srcDir, outDirAbsPath, "checkpoints.txt");
                 copyFile(srcDir, outDirAbsPath, "checkpoints.json");
                 copyFileWithPrefix(srcDir, outDirAbsPath, "cpu-");
