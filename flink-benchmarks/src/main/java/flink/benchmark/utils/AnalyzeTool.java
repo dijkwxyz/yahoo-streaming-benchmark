@@ -354,7 +354,6 @@ public class AnalyzeTool {
         DescriptiveStatistics failedDS = parseJMForFailureTime(
                 new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
 
-
         //write results
         FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
 

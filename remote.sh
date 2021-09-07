@@ -28,7 +28,9 @@ analyze_on_host_tm() {
   shift
   # since tm will be killed, there may be multiple log files
   ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS tm $RESULTS_DIR/ $FLINK_LOG_DIR/*.out* "
+  ssh $host "cat $FLINK_LOG_DIR/*.log* > $host.log"
   scp ec2-user@$host:$RESULTS_DIR/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
+  scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
 }
 
 analyze_on_host_jm() {
@@ -36,6 +38,8 @@ analyze_on_host_jm() {
   shift
   # only use current jm log
   ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS jm $RESULTS_DIR/ $FLINK_LOG_DIR/*-standalonesession-*.log"
+  ssh $host "cp $FLINK_LOG_DIR/*-standalonesession-*.log $FLINK_LOG_DIR/$host.log"
+  scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.json ec2-user@zk1:$RESULTS_DIR/checkpoints.json
   scp ec2-user@$host:$RESULTS_DIR/restart-cost.txt ec2-user@zk1:$RESULTS_DIR/restart-cost.txt
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
