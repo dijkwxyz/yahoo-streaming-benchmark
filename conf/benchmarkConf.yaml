@@ -2,7 +2,7 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 # ====== experiment.sh config ======
-# TEST_TIME=900
+# TEST_TIME=1200
 # TM_FAILURE_INTERVAL=-1
 #
 # ============ kafka ============
@@ -27,7 +27,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 120
+window.size: 90
 window.slide: 1
 
 # ============ java load generator ============
@@ -36,12 +36,12 @@ use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second, per source node
-load.target.hz: 170000
+load.target.hz: 80000
 num.campaigns: 100
 failure.start.delay.ms: 240000
 
 # ========== experiment parameters =============
-mtti.ms: 1000
+mtti.ms: 180000
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 180000
@@ -56,6 +56,6 @@ multilevel.level2.statebackend: "fs"
 multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
 multilevel.pattern: "1,1,2"
 singlelevel.statebackend: "fs"
-#singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
-singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
+singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
+#singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 
