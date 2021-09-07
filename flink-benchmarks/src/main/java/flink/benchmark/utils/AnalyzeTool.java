@@ -424,8 +424,6 @@ public class AnalyzeTool {
             fw.write(' ');
             fw.write(String.valueOf(recoveryStartTime.getTime()));
             fw.write(' ');
-            fw.write(String.valueOf(recoveryStartTime.getTime()));
-            fw.write(' ');
             fw.write(String.valueOf(recoveryEndTime.getTime()));
             fw.write('\n');
         }
