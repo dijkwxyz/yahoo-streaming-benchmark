@@ -7,7 +7,6 @@ import org.apache.flink.api.java.tuple.Tuple4;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -73,152 +72,338 @@ public class AnalyzeTool {
         }
     }
 
-    public static void parseRestartCost(String srcFileName, String path, String dstFileName) throws IOException, ParseException {
-        Scanner sc = new Scanner(new File(srcFileName));
+//    public static void parseRestartCost(String srcFileName, String path, String dstFileName) throws IOException, ParseException {
+//        Scanner sc = new Scanner(new File(srcFileName));
+//
+//        FileWriter fw = new FileWriter(new File(path, dstFileName));
+//        String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
+//        //2021-05-05 04:52:22,719 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (8/8) (9530062f70342991c61311d3d5f47eba) switched from RUNNING to FAILED on org.apache.flink.runtime.jobmaster.slotpool.SingleLogicalSlot@2b36afee.
+//        Pattern failedPattern = Pattern.compile(timePattern + " .*switched from \\w+ to FAILED.*");
+//        //2021-05-07 02:02:32,878 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Job WordCount Global Window Experiment (c405f119755983293e2309850970b3a0) switched from state RUNNING to RESTARTING.
+//        Pattern restartPattern = Pattern.compile(timePattern + " .*to RESTARTING.*");
+//        //2021-05-05 01:14:24,424 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 81 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+//        //2021-05-05 01:14:27,708 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 88 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
+//        Pattern loadCheckpointPattern = Pattern.compile(timePattern + " .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
+//        //2021-05-07 10:46:36,209 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - No checkpoint found during restore.
+//        Pattern noCheckpointPattern = Pattern.compile(timePattern + " .*No checkpoint found during restore.*");
+//
+//        //2021-05-05 01:14:27,830 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
+//        Pattern toRunningPattern = Pattern.compile(timePattern + " INFO.*switched from DEPLOYING to RUNNING.*");
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS zzz");
+//        //(timestamp, type, info, matched string)
+//        ArrayList<Tuple4<Date, Signal, String, String>> arr = new ArrayList<>();
+//        //define type constants
+//        final int toFailed = 0;
+//        final int toRestart = 1;
+//        final int loadCheckpoint = 2;
+//        final int toRunning = 3;
+//        final int noCheckpoint = 4;
+//
+//        DescriptiveStatistics failedDS = new DescriptiveStatistics();
+//        ArrayList<Date> failedArr = new ArrayList<>();
+//        while (sc.hasNextLine()) {
+//            String l = sc.nextLine();
+//            Matcher failedMatcher = failedPattern.matcher(l);
+//            Matcher restartMatcher = restartPattern.matcher(l);
+//            Matcher loadCheckpointMatcher = loadCheckpointPattern.matcher(l);
+//            Matcher noCheckpointMatcher = noCheckpointPattern.matcher(l);
+//            Matcher toRunningMatcher = toRunningPattern.matcher(l);
+//            if (failedMatcher.matches()) {
+//                Date date = dateFormat.parse(failedMatcher.group(1));
+//                arr.add(new Tuple4<>(date, toFailed, null, failedMatcher.group()));
+//                failedArr.add(date);
+//            } else if (restartMatcher.matches()) {
+//                Date date = dateFormat.parse(restartMatcher.group(1));
+//                arr.add(new Tuple4<>(date, toRestart, null, restartMatcher.group()));
+//            } else if (loadCheckpointMatcher.matches()) {
+//                Date date = dateFormat.parse(loadCheckpointMatcher.group(1));
+//                arr.add(new Tuple4<>(date, loadCheckpoint, loadCheckpointMatcher.group(2), loadCheckpointMatcher.group()));
+//            }else if (noCheckpointMatcher.matches()) {
+//                Date date = dateFormat.parse(noCheckpointMatcher.group(1));
+//                arr.add(new Tuple4<>(date, noCheckpoint, null, noCheckpointMatcher.group()));
+//            } else if (toRunningMatcher.matches()) {
+//                Date date = dateFormat.parse(toRunningMatcher.group(1));
+//                arr.add(new Tuple4<>(date, toRunning, null, toRunningMatcher.group()));
+//            }
+//        }
+//
+//        for (int f = 1; f < failedArr.size(); f++) {
+//            long timeDiff = failedArr.get(f).getTime() - failedArr.get(f - 1).getTime();
+//            failedDS.addValue(timeDiff);
+//        }
+//
+//
+//        fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
+//
+//        int i = 0;
+//        //skip normal start
+//        while (i < arr.size() && arr.get(i).f1 == toRunning) {
+//            i++;
+//        }
+//
+//        fw.write("checkpointId failedToRestart restartToLoadCP loadCPToRunning");
+//        fw.write(' ');
+//        fw.write("failedTime restartTime loadCheckpointTime toRunningTime");
+//        fw.write('\n');
+//
+//        while (i < arr.size()) {
+//            Date failedTime;
+//            Date restartTime;
+//            Date toRunningTime;
+//            Date loadCheckpointTime;
+//            String checkpointId;
+//
+//            //skip state before first failure
+//            while(i < arr.size() && arr.get(i).f1 != toFailed) {
+//                i++;
+//            }
+//            if (i >= arr.size()) {
+//                break;
+//            }
+//
+//            failedTime = arr.get(i).f0;
+//            i++;
+//            if (i >= arr.size()) {
+//                break;
+//            }
+//
+//            assert (arr.get(i).f1 == toRestart);
+//            restartTime = arr.get(i).f0;
+//            i++;
+//            if (i >= arr.size()) {
+//                break;
+//            }
+//
+//            assert (arr.get(i).f1 == loadCheckpoint || arr.get(i).f1 == noCheckpoint);
+//            loadCheckpointTime = arr.get(i).f0;
+//            checkpointId = arr.get(i).f1 == loadCheckpoint ? arr.get(i).f2 : "-1";
+//            i++;
+//            if (i >= arr.size()) {
+//                break;
+//            }
+//
+//            //take the last toRunning record
+//            Tuple4<Date, Signal, String, String> prevRecord = arr.get(i);
+//            i++;
+//            while (i < arr.size() && arr.get(i).f1 == toRunning) {
+//                prevRecord = arr.get(i);
+//                i++;
+//            }
+//            toRunningTime = prevRecord.f0;
+//
+//
+//            fw.write(checkpointId);
+//
+//            fw.write(' ');
+//            fw.write(String.valueOf(restartTime.getTime() - failedTime.getTime()));
+//            fw.write(' ');
+//            fw.write(String.valueOf(loadCheckpointTime.getTime() - restartTime.getTime()));
+//            fw.write(' ');
+//            fw.write(String.valueOf(toRunningTime.getTime() - loadCheckpointTime.getTime()));
+//
+//            fw.write(' ');
+//            fw.write(String.valueOf(failedTime.getTime()));
+//            fw.write(' ');
+//            fw.write(String.valueOf(restartTime.getTime()));
+//            fw.write(' ');
+//            fw.write(String.valueOf(loadCheckpointTime.getTime()));
+//            fw.write(' ');
+//            fw.write(String.valueOf(toRunningTime.getTime()));
+//
+//            fw.write('\n');
+//
+//        }
+//
+//        sc.close();
+//        fw.close();
+//    }
 
-        FileWriter fw = new FileWriter(new File(path, dstFileName));
-        String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
-        //2021-05-05 04:52:22,719 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Source: Kafka -> (Flat Map, Flat Map -> Filter -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (8/8) (9530062f70342991c61311d3d5f47eba) switched from RUNNING to FAILED on org.apache.flink.runtime.jobmaster.slotpool.SingleLogicalSlot@2b36afee.
+    private static String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS zzz");
+
+    //define type constants
+    private enum Signal {
+        taskFailed,
+        restoreFromCheckpoint,
+        noCheckpoint,
+        taskCancelled,
+        loadCheckpointComplete
+    }
+
+    //(timestamp, type, info, matched string)
+    public static DescriptiveStatistics parseJMForFailureTime(
+            String srcAbsPath,
+            ArrayList<Tuple4<Date, Signal, String, String>> JmSignals) throws IOException, ParseException {
+        Scanner sc = new Scanner(new File(srcAbsPath));
+
+        //2021-09-07 07:48:14,065 UTC WARN  org.apache.flink.runtime.taskmanager.Task                    [] - Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (8/8) (a6a92d12e69eff55ad9a182a0c311bb1) switched from RUNNING to FAILED.
         Pattern failedPattern = Pattern.compile(timePattern + " .*switched from \\w+ to FAILED.*");
-        //2021-05-07 02:02:32,878 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Job WordCount Global Window Experiment (c405f119755983293e2309850970b3a0) switched from state RUNNING to RESTARTING.
-        Pattern restartPattern = Pattern.compile(timePattern + " .*to RESTARTING.*");
         //2021-05-05 01:14:24,424 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 81 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
         //2021-05-05 01:14:27,708 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - Restoring job effa6bd99425bf0381a8a567c71e016b from latest valid checkpoint: Checkpoint 88 @ 1620177217703 for effa6bd99425bf0381a8a567c71e016b.
-        Pattern loadCheckpointPattern = Pattern.compile(timePattern + " .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
+        Pattern restoreCheckpointPattern = Pattern.compile(timePattern + " .*Restoring job \\w+ from latest valid checkpoint: Checkpoint (\\d+) @ \\d+ for \\w+.*");
         //2021-05-07 10:46:36,209 UTC INFO  org.apache.flink.runtime.checkpoint.CheckpointCoordinator    [] - No checkpoint found during restore.
         Pattern noCheckpointPattern = Pattern.compile(timePattern + " .*No checkpoint found during restore.*");
 
-        //2021-05-05 01:14:27,830 UTC INFO  org.apache.flink.runtime.executiongraph.ExecutionGraph       [] - Window(SlidingEventTimeWindows(10000, 2000), EventAndProcessingTimeTrigger, ProcessWindowFunction$1) -> Sink: Unnamed (8/8) (276a4225d3c078389e1a21c7b0e4c8e8) switched from DEPLOYING to RUNNING.
-        Pattern toRunningPattern = Pattern.compile(timePattern + " INFO.*switched from DEPLOYING to RUNNING.*");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS zzz");
-        //(timestamp, type, info, matched string)
-        ArrayList<Tuple4<Date, Integer, String, String>> arr = new ArrayList<>();
-        //define type constants
-        final int toFailed = 0;
-        final int toRestart = 1;
-        final int loadCheckpoint = 2;
-        final int toRunning = 3;
-        final int noCheckpoint = 4;
-
         DescriptiveStatistics failedDS = new DescriptiveStatistics();
-        ArrayList<Date> failedArr = new ArrayList<>();
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
             Matcher failedMatcher = failedPattern.matcher(l);
-            Matcher restartMatcher = restartPattern.matcher(l);
-            Matcher loadCheckpointMatcher = loadCheckpointPattern.matcher(l);
+            Matcher restoreCheckpointMatcher = restoreCheckpointPattern.matcher(l);
             Matcher noCheckpointMatcher = noCheckpointPattern.matcher(l);
-            Matcher toRunningMatcher = toRunningPattern.matcher(l);
             if (failedMatcher.matches()) {
                 Date date = dateFormat.parse(failedMatcher.group(1));
-                arr.add(new Tuple4<>(date, toFailed, null, failedMatcher.group()));
-                failedArr.add(date);
-            } else if (restartMatcher.matches()) {
-                Date date = dateFormat.parse(restartMatcher.group(1));
-                arr.add(new Tuple4<>(date, toRestart, null, restartMatcher.group()));
-            } else if (loadCheckpointMatcher.matches()) {
-                Date date = dateFormat.parse(loadCheckpointMatcher.group(1));
-                arr.add(new Tuple4<>(date, loadCheckpoint, loadCheckpointMatcher.group(2), loadCheckpointMatcher.group()));
-            }else if (noCheckpointMatcher.matches()) {
+                JmSignals.add(new Tuple4<>(date, Signal.taskFailed, null, failedMatcher.group()));
+            } else if (restoreCheckpointMatcher.matches()) {
+                Date date = dateFormat.parse(restoreCheckpointMatcher.group(1));
+                JmSignals.add(new Tuple4<>(date, Signal.restoreFromCheckpoint, restoreCheckpointMatcher.group(2), restoreCheckpointMatcher.group()));
+            } else if (noCheckpointMatcher.matches()) {
                 Date date = dateFormat.parse(noCheckpointMatcher.group(1));
-                arr.add(new Tuple4<>(date, noCheckpoint, null, noCheckpointMatcher.group()));
-            } else if (toRunningMatcher.matches()) {
-                Date date = dateFormat.parse(toRunningMatcher.group(1));
-                arr.add(new Tuple4<>(date, toRunning, null, toRunningMatcher.group()));
+                JmSignals.add(new Tuple4<>(date, Signal.noCheckpoint, null, noCheckpointMatcher.group()));
             }
         }
 
-        for (int f = 1; f < failedArr.size(); f++) {
-            long timeDiff = failedArr.get(f).getTime() - failedArr.get(f - 1).getTime();
-            failedDS.addValue(timeDiff);
-        }
-
-
-        fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
-
-        int i = 0;
-        //skip normal start
-        while (i < arr.size() && arr.get(i).f1 == toRunning) {
-            i++;
-        }
-
-        fw.write("checkpointId failedToRestart restartToLoadCP loadCPToRunning");
-        fw.write(' ');
-        fw.write("failedTime restartTime loadCheckpointTime toRunningTime");
-        fw.write('\n');
-
-        while (i < arr.size()) {
-            Date failedTime;
-            Date restartTime;
-            Date toRunningTime;
-            Date loadCheckpointTime;
-            String checkpointId;
-
-            //skip state before first failure
-            while(i < arr.size() && arr.get(i).f1 != toFailed) {
-                i++;
+        for (int f = 1; f < JmSignals.size(); f++) {
+            if (JmSignals.get(f).f1 == Signal.taskFailed) {
+                long timeDiff = JmSignals.get(f).f0.getTime() - JmSignals.get(f - 1).f0.getTime();
+                failedDS.addValue(timeDiff);
             }
-            if (i >= arr.size()) {
-                break;
-            }
-
-            failedTime = arr.get(i).f0;
-            i++;
-            if (i >= arr.size()) {
-                break;
-            }
-
-            assert (arr.get(i).f1 == toRestart);
-            restartTime = arr.get(i).f0;
-            i++;
-            if (i >= arr.size()) {
-                break;
-            }
-
-            assert (arr.get(i).f1 == loadCheckpoint || arr.get(i).f1 == noCheckpoint);
-            loadCheckpointTime = arr.get(i).f0;
-            checkpointId = arr.get(i).f1 == loadCheckpoint ? arr.get(i).f2 : "-1";
-            i++;
-            if (i >= arr.size()) {
-                break;
-            }
-
-            //take the last toRunning record
-            Tuple4<Date, Integer, String, String> prevRecord = arr.get(i);
-            i++;
-            while (i < arr.size() && arr.get(i).f1 == toRunning) {
-                prevRecord = arr.get(i);
-                i++;
-            }
-            toRunningTime = prevRecord.f0;
-
-
-            fw.write(checkpointId);
-
-            fw.write(' ');
-            fw.write(String.valueOf(restartTime.getTime() - failedTime.getTime()));
-            fw.write(' ');
-            fw.write(String.valueOf(loadCheckpointTime.getTime() - restartTime.getTime()));
-            fw.write(' ');
-            fw.write(String.valueOf(toRunningTime.getTime() - loadCheckpointTime.getTime()));
-
-            fw.write(' ');
-            fw.write(String.valueOf(failedTime.getTime()));
-            fw.write(' ');
-            fw.write(String.valueOf(restartTime.getTime()));
-            fw.write(' ');
-            fw.write(String.valueOf(loadCheckpointTime.getTime()));
-            fw.write(' ');
-            fw.write(String.valueOf(toRunningTime.getTime()));
-
-            fw.write('\n');
-
         }
 
         sc.close();
-        fw.close();
+        return failedDS;
     }
 
+    //(timestamp, type, info, matched string)
+    public static void parseTmLogForRecoveryTime(
+            String srcAbsPath,
+            ArrayList<Tuple4<Date, Signal, String, String>> taskCancelledSignals,
+            ArrayList<Tuple4<Date, Signal, String, String>> loadCheckpointCompleteSignals) throws IOException, ParseException {
+        Scanner sc = new Scanner(new File(srcAbsPath));
+
+        String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
+        //2021-09-07 07:48:14,269 UTC INFO  org.apache.flink.runtime.taskexecutor.TaskExecutor           [] - Un-registering task and sending final execution state CANCELED to JobManager for task Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (6/8) d2e54e8977271191a9b4c7f5f4e6829c.
+        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state CANCELED to JobManager for task.*");
+        //2021-09-07 07:49:25,678 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing heap keyed state backend with stream factory.
+        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Initializing heap keyed state backend with stream factory.*");
+
+        while (sc.hasNextLine()) {
+            String l = sc.nextLine();
+            Matcher taskCancelledMatcher = taskCancelledPattern.matcher(l);
+            Matcher loadCheckpointCompleteMatcher = loadCheckpointCompletePattern.matcher(l);
+            if (taskCancelledMatcher.matches()) {
+                Date date = dateFormat.parse(taskCancelledMatcher.group(1));
+                taskCancelledSignals.add(new Tuple4<>(date, Signal.taskCancelled, null, taskCancelledMatcher.group()));
+            } else if (loadCheckpointCompleteMatcher.matches()) {
+                Date date = dateFormat.parse(loadCheckpointCompleteMatcher.group(1));
+                loadCheckpointCompleteSignals.add(new Tuple4<>(date, Signal.loadCheckpointComplete, loadCheckpointCompleteMatcher.group(2), loadCheckpointCompleteMatcher.group()));
+            }
+        }
+
+        sc.close();
+    }
+
+    private static void deduplicateWithinTimeDiff(
+            ArrayList<Tuple4<Date, Signal, String, String>> arr, int threshold) {
+        //sort by timestamp
+        arr.sort(Comparator.comparing(a -> a.f0));
+
+        ArrayList<Tuple4<Date, Signal, String, String>> newArr = new ArrayList<>();
+
+        for (int i = 1; i < arr.size(); i++) {
+            long prevTime = arr.get(i - 1).f0.getTime();
+            long currTime = arr.get(i).f0.getTime();
+            // if time diff is less than 1 sec,
+            // it belongs to different parallel task of the same failure,
+            // so do not keep the signal
+            if (currTime - prevTime < threshold) {
+                continue;
+            }
+            //else keep the last signal
+            else {
+                newArr.add(arr.get(i - 1));
+            }
+        }
+        //keep the last one
+        newArr.add(arr.get(arr.size() - 1));
+
+        arr.clear();
+        arr.addAll(newArr);
+    }
+
+    //(timestamp, type, info, matched string)
+    public static void parseRestartCost(
+            String srcDir,
+            String JmLog,
+            List<String> tmLogs,
+            String dstDir,
+            String dstFileName) throws IOException, ParseException {
+
+        //(timestamp, type, info, matched string)
+        ArrayList<Tuple4<Date, Signal, String, String>> jmSignals = new ArrayList<>();
+        ArrayList<Tuple4<Date, Signal, String, String>> taskCancelledSignals = new ArrayList<>();
+        ArrayList<Tuple4<Date, Signal, String, String>> loadCheckpointCompleteSignals = new ArrayList<>();
+
+        for (String tmLog : tmLogs) {
+            String srcAbsName = new File(srcDir, tmLog).getAbsolutePath();
+            parseTmLogForRecoveryTime(srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
+        }
+        //consider the same signals within 3 secs as deduplicates
+        deduplicateWithinTimeDiff(taskCancelledSignals, 3000);
+        deduplicateWithinTimeDiff(loadCheckpointCompleteSignals, 3000);
+
+        DescriptiveStatistics failedDS = parseJMForFailureTime(
+                new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
+
+
+        //write results
+        FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
+
+        fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
+
+        fw.write("checkpointId failed RecoveryStart loadCheckpointComplete \n");
+        fw.write('\n');
+
+        Iterator<Tuple4<Date, Signal, String, String>> jmSignalsIter = jmSignals.iterator();
+        Iterator<Tuple4<Date, Signal, String, String>> taskCancelledIter = taskCancelledSignals.iterator();
+        Iterator<Tuple4<Date, Signal, String, String>> loadCheckpointIter = loadCheckpointCompleteSignals.iterator();
+        while (jmSignalsIter.hasNext()) {
+            Tuple4<Date, Signal, String, String> signal = jmSignalsIter.next();
+            if (signal.f1 != Signal.taskFailed) {
+                continue;
+            }
+            Date failedTime = signal.f0;
+
+            //if no checkpoint to restore, set checkpoint id as -1
+            Tuple4<Date, Signal, String, String> restoreFrom = jmSignalsIter.next();
+            assert restoreFrom.f1 == Signal.noCheckpoint || restoreFrom.f1 == Signal.restoreFromCheckpoint
+            String checkpointId = restoreFrom.f1 == Signal.noCheckpoint ? "-1" : restoreFrom.f2;
+
+            if (!taskCancelledIter.hasNext()) {
+                break;
+            }
+            Tuple4<Date, Signal, String, String> taskCancelledSignal = taskCancelledIter.next();
+            Date recoveryStartTime = taskCancelledSignal.f0;
+
+            if (!loadCheckpointIter.hasNext()) {
+                break;
+            }
+            Tuple4<Date, Signal, String, String> loadCheckpointSignal = loadCheckpointIter.next();
+            Date recoveryEndTime = loadCheckpointSignal.f0;
+
+            fw.write(checkpointId);
+            fw.write(' ');
+            fw.write(String.valueOf(failedTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(recoveryStartTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(recoveryStartTime.getTime()));
+            fw.write(' ');
+            fw.write(String.valueOf(recoveryEndTime.getTime()));
+            fw.write('\n');
+        }
+
+        fw.close();
+    }
 
     public static void parseCheckpoint(String srcFileName, String path, String dstFileName) throws IOException {
         Scanner sc = new Scanner(new File(srcFileName));
@@ -327,14 +512,14 @@ public class AnalyzeTool {
         sb.append('\n');
         sb.append("lat-mean,lat-median,lat-90percentile,lat-95percentile,lat-99percentile,lat-min,lat-max,num-latencies");
         sb.append('\n');
-        sb.append(String.format("%.0f",eventTimeLatencies.getMean())).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(50))).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(90))).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(95))).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getPercentile(99))).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getMin())).append(",");
-        sb.append(String.format("%.0f",eventTimeLatencies.getMax())).append(",");
-        sb.append(String.format("%d",eventTimeLatencies.getN()));
+        sb.append(String.format("%.0f", eventTimeLatencies.getMean())).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getPercentile(50))).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getPercentile(90))).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getPercentile(95))).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getPercentile(99))).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getMin())).append(",");
+        sb.append(String.format("%.0f", eventTimeLatencies.getMax())).append(",");
+        sb.append(String.format("%d", eventTimeLatencies.getN()));
         sb.append('\n');
 //        sb.append(String.format("%.0f",processingTimeLatencies.getMean())).append(",");
 //        sb.append(String.format("%.0f",processingTimeLatencies.getPercentile(50))).append(",");
@@ -356,11 +541,11 @@ public class AnalyzeTool {
 //            DescriptiveStatistics procTime = latencyResult.perHostProcLat.get(key);
             sb.append("============== ").append(key).append(" (entries: ").append(eventTime.getN()).append(") ===============");
             sb.append('\n');
-            sb.append("Mean event-time latency:   ").append(String.format("%.0f",eventTime.getMean()));
+            sb.append("Mean event-time latency:   ").append(String.format("%.0f", eventTime.getMean()));
 //            sb.append("      , ");
 //            sb.append("Mean processing-time latency:   ").append(String.format("%.0f",procTime.getMean()));
             sb.append('\n');
-            sb.append("Median event-time latency: ").append(String.format("%.0f",eventTime.getPercentile(50)));
+            sb.append("Median event-time latency: ").append(String.format("%.0f", eventTime.getPercentile(50)));
 //            sb.append("      , ");
 //            sb.append("Median processing-time latency: ").append(String.format("%.0f",procTime.getPercentile(50)));
             sb.append('\n');
@@ -378,9 +563,9 @@ public class AnalyzeTool {
         sb.append('\n');
         sb.append("throughput-mean,throughput-max,throughputs");
         sb.append('\n');
-        sb.append(String.format("%.0f",throughputs.getMean())).append(",");
-        sb.append(String.format("%.0f",throughputs.getMax())).append(",");
-        sb.append(String.format("%d",throughputs.getN()));
+        sb.append(String.format("%.0f", throughputs.getMean())).append(",");
+        sb.append(String.format("%.0f", throughputs.getMax())).append(",");
+        sb.append(String.format("%d", throughputs.getN()));
         sb.append('\n');
         String str = sb.toString();
         fw.write(str);
@@ -392,7 +577,7 @@ public class AnalyzeTool {
         for (Map.Entry<String, DescriptiveStatistics> entry : throughputResult.perHostThr.entrySet()) {
             sb.append("====== ").append(entry.getKey()).append(" (entries: ").append(entry.getValue().getN()).append(")=======");
             sb.append('\n');
-            sb.append("Mean throughput: ").append(String.format("%.0f",entry.getValue().getMean()));
+            sb.append("Mean throughput: ").append(String.format("%.0f", entry.getValue().getMean()));
             sb.append('\n');
         }
         str = sb.toString();
@@ -490,12 +675,12 @@ public class AnalyzeTool {
             case "jm":
                 // jm outputDir logFileName
                 fileName = args[argIdx++];
-                parseRestartCost(fileName,  dir, "restart-cost.txt");
-                parseCheckpoint(fileName,  dir, "checkpoints.txt");
+                parseRestartCost(fileName, dir, "restart-cost.txt");
+                parseCheckpoint(fileName, dir, "checkpoints.txt");
                 break;
             case "tm":
                 // tm outputDir ...logFilePaths
-                FileWriter fw = new FileWriter(new File(dir ,"throughputs.txt"));
+                FileWriter fw = new FileWriter(new File(dir, "throughputs.txt"));
                 fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
