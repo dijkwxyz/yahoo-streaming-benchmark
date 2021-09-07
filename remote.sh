@@ -146,7 +146,7 @@ run_command() {
     copy_cpu_network_log zk1
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2.txt flink3.txt redis2.txt
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 redis2
   else
     if [ "HELP" != "$OPERATION" ];
     then

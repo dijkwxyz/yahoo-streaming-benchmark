@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AnalyzeTool {
 
@@ -295,7 +296,7 @@ public class AnalyzeTool {
                 taskCancelledSignals.add(new Tuple4<>(date, Signal.taskCancelled, null, taskCancelledMatcher.group()));
             } else if (loadCheckpointCompleteMatcher.matches()) {
                 Date date = dateFormat.parse(loadCheckpointCompleteMatcher.group(1));
-                loadCheckpointCompleteSignals.add(new Tuple4<>(date, Signal.loadCheckpointComplete, loadCheckpointCompleteMatcher.group(2), loadCheckpointCompleteMatcher.group()));
+                loadCheckpointCompleteSignals.add(new Tuple4<>(date, Signal.loadCheckpointComplete, null, loadCheckpointCompleteMatcher.group()));
             }
         }
 
@@ -303,9 +304,7 @@ public class AnalyzeTool {
     }
 
     private static void deduplicateWithinTimeDiff(
-            ArrayList<Tuple4<Date, Signal, String, String>> arr, int threshold) {
-        //sort by timestamp
-        arr.sort(Comparator.comparing(a -> a.f0));
+            ArrayList<Tuple4<Date, Signal, String, String>> arr, int threshold_ms) {
 
         ArrayList<Tuple4<Date, Signal, String, String>> newArr = new ArrayList<>();
 
@@ -315,7 +314,7 @@ public class AnalyzeTool {
             // if time diff is less than 1 sec,
             // it belongs to different parallel task of the same failure,
             // so do not keep the signal
-            if (currTime - prevTime < threshold) {
+            if (currTime - prevTime < threshold_ms) {
                 continue;
             }
             //else keep the last signal
@@ -347,9 +346,13 @@ public class AnalyzeTool {
             String srcAbsName = new File(srcDir, tmLog).getAbsolutePath();
             parseTmLogForRecoveryTime(srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
         }
+
+        //sort by timestamp
+        taskCancelledSignals.sort(Comparator.comparing(a -> a.f0));
+        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
+
         //consider the same signals within 3 secs as deduplicates
         deduplicateWithinTimeDiff(taskCancelledSignals, 3000);
-        deduplicateWithinTimeDiff(loadCheckpointCompleteSignals, 3000);
 
         DescriptiveStatistics failedDS = parseJMForFailureTime(
                 new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
@@ -362,32 +365,61 @@ public class AnalyzeTool {
         fw.write("checkpointId failed RecoveryStart loadCheckpointComplete \n");
         fw.write('\n');
 
-        Iterator<Tuple4<Date, Signal, String, String>> jmSignalsIter = jmSignals.iterator();
-        Iterator<Tuple4<Date, Signal, String, String>> taskCancelledIter = taskCancelledSignals.iterator();
-        Iterator<Tuple4<Date, Signal, String, String>> loadCheckpointIter = loadCheckpointCompleteSignals.iterator();
-        while (jmSignalsIter.hasNext()) {
-            Tuple4<Date, Signal, String, String> signal = jmSignalsIter.next();
+        int jmSignalsIdx = 0;
+        int taskCancelledIdx = 0;
+        int loadCheckpointIdx = 0;
+        while (jmSignalsIdx < jmSignals.size()) {
+            //starts with a taskFailed signal
+            Tuple4<Date, Signal, String, String> signal = jmSignals.get(jmSignalsIdx++);
             if (signal.f1 != Signal.taskFailed) {
                 continue;
             }
             Date failedTime = signal.f0;
 
             //if no checkpoint to restore, set checkpoint id as -1
-            Tuple4<Date, Signal, String, String> restoreFrom = jmSignalsIter.next();
-            assert restoreFrom.f1 == Signal.noCheckpoint || restoreFrom.f1 == Signal.restoreFromCheckpoint
+            Tuple4<Date, Signal, String, String> restoreFrom = jmSignals.get(jmSignalsIdx++);
+            assert restoreFrom.f1 == Signal.noCheckpoint || restoreFrom.f1 == Signal.restoreFromCheckpoint;
             String checkpointId = restoreFrom.f1 == Signal.noCheckpoint ? "-1" : restoreFrom.f2;
 
-            if (!taskCancelledIter.hasNext()) {
+            if (taskCancelledIdx >= taskCancelledSignals.size()) {
                 break;
             }
-            Tuple4<Date, Signal, String, String> taskCancelledSignal = taskCancelledIter.next();
+            Tuple4<Date, Signal, String, String> taskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx++);
             Date recoveryStartTime = taskCancelledSignal.f0;
 
-            if (!loadCheckpointIter.hasNext()) {
+            if (loadCheckpointIdx >= loadCheckpointCompleteSignals.size()) {
                 break;
             }
-            Tuple4<Date, Signal, String, String> loadCheckpointSignal = loadCheckpointIter.next();
-            Date recoveryEndTime = loadCheckpointSignal.f0;
+
+            Tuple4<Date, Signal, String, String> loadCheckpointSignal = null;
+            Date recoveryEndTime = null;
+            //if next taskCancelledSignals cannot be found, use the last loadCheckpointSignal.
+            //usually this doesn't happen.
+            if (taskCancelledIdx >= taskCancelledSignals.size()) {
+                loadCheckpointSignal = loadCheckpointCompleteSignals.get(loadCheckpointCompleteSignals.size() - 1);
+                recoveryEndTime = loadCheckpointSignal.f0;
+            }
+            //otherwise, use the last loadCheckpointSignal that is smaller than next taskCancelledSignals
+            else {
+                Tuple4<Date, Signal, String, String> nextTaskCancelledSignals =
+                        taskCancelledSignals.get(taskCancelledIdx);
+                while (loadCheckpointIdx < loadCheckpointCompleteSignals.size()) {
+                    Tuple4<Date, Signal, String, String> currLoadCheckpointSignal =
+                            loadCheckpointCompleteSignals.get(loadCheckpointIdx);
+                    if (currLoadCheckpointSignal.f0.compareTo(nextTaskCancelledSignals.f0) > 0) {
+                        break;
+                    }
+
+                    loadCheckpointSignal = currLoadCheckpointSignal;
+                    loadCheckpointIdx++;
+                }
+                if (loadCheckpointSignal != null) {
+                    recoveryEndTime = loadCheckpointSignal.f0;
+                }
+            }
+            if (recoveryEndTime == null) {
+                break;
+            }
 
             fw.write(checkpointId);
             fw.write(' ');
@@ -631,55 +663,63 @@ public class AnalyzeTool {
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-        // args = "zk C:\\Users\\46522\\Downloads\\results flink2.txt flink3.txt redis2.txt".split(" ");
+        // args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 redis2".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
-        String dir = args[argIdx++];
+        String srcDir = args[argIdx++];
         String fileName;
-        LatencyResult latencyResult = new LatencyResult();
-        ThroughputResult throughputResult = new ThroughputResult();
         switch (mode) {
             case "zk":
                 // zk resultDir ...tmFileNames
-                BenchmarkConfig config = new BenchmarkConfig(new File(dir, "conf-copy.yaml").getAbsolutePath());
+                BenchmarkConfig config = new BenchmarkConfig(new File(srcDir, "conf-copy.yaml").getAbsolutePath());
                 String load = String.valueOf(config.loadTargetHz);
                 String backend = config.multilevelEnable ? "multi" : "single";
                 System.out.println("load = " + load);
                 String date = new SimpleDateFormat("MM-dd_HH-mm-ss").format(new Date());
                 String generatedPrefix = String.format("%s_load-%s-%s/", date, load, backend);
-                File generatedDir = new File(dir, generatedPrefix);
+                File generatedDir = new File(srcDir, generatedPrefix);
                 if (!generatedDir.exists()) {
                     generatedDir.mkdir();
                 }
                 String outDirAbsPath = generatedDir.getAbsolutePath();
-                copyFile(dir, outDirAbsPath, "conf-copy.yaml");
-                copyFile(dir, outDirAbsPath, "count-latency.txt");
-                copyFile(dir, outDirAbsPath, "restart-cost.txt");
-                copyFile(dir, outDirAbsPath, "checkpoints.txt");
-                copyFile(dir, outDirAbsPath, "checkpoints.json");
-                copyFileWithPrefix(dir, outDirAbsPath, "cpu-");
-                copyFileWithPrefix(dir, outDirAbsPath, "memory-");
-                copyFileWithPrefix(dir, outDirAbsPath, "network-");
-                copyFileWithPrefix(dir, outDirAbsPath, "disk-");
+                copyFile(srcDir, outDirAbsPath, "conf-copy.yaml");
+                copyFile(srcDir, outDirAbsPath, "count-latency.txt");
+                copyFile(srcDir, outDirAbsPath, "restart-cost.txt");
+                copyFile(srcDir, outDirAbsPath, "checkpoints.txt");
+                copyFile(srcDir, outDirAbsPath, "checkpoints.json");
+                copyFileWithPrefix(srcDir, outDirAbsPath, "cpu-");
+                copyFileWithPrefix(srcDir, outDirAbsPath, "memory-");
+                copyFileWithPrefix(srcDir, outDirAbsPath, "network-");
+                copyFileWithPrefix(srcDir, outDirAbsPath, "disk-");
 
-                analyzeLatency(dir, latencyResult);
-
+                //get tm hosts
+                List<String> tmHosts = new ArrayList<>();
                 for (int i = argIdx; i < args.length; i++) {
-                    analyzeThroughput(dir, args[i], throughputResult);
-                    copyFile(dir, outDirAbsPath, args[i]);
+                    tmHosts.add(args[i]);
                 }
+
+                LatencyResult latencyResult = new LatencyResult();
+                ThroughputResult throughputResult = new ThroughputResult();
+                for (String tmHost : tmHosts) {
+                    analyzeThroughput(srcDir, tmHost+".txt", throughputResult);
+                    copyFile(srcDir, outDirAbsPath, tmHost+".txt");
+                }
+
+                List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
+                parseRestartCost(srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt");
+
+                analyzeLatency(srcDir, latencyResult);
 
                 writeLatencyThroughputStat(latencyResult, throughputResult, outDirAbsPath, "latency_throughput.txt");
                 break;
             case "jm":
                 // jm outputDir logFileName
                 fileName = args[argIdx++];
-                parseRestartCost(fileName, dir, "restart-cost.txt");
-                parseCheckpoint(fileName, dir, "checkpoints.txt");
+                parseCheckpoint(fileName, srcDir, "checkpoints.txt");
                 break;
             case "tm":
                 // tm outputDir ...logFilePaths
-                FileWriter fw = new FileWriter(new File(dir, "throughputs.txt"));
+                FileWriter fw = new FileWriter(new File(srcDir, "throughputs.txt"));
                 fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
