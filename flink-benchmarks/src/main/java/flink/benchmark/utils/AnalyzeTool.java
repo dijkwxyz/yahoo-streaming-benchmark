@@ -688,22 +688,19 @@ public class AnalyzeTool {
         outputChannel.close();
     }
 
-    public static void copyFileWithPrefix(String srcDir, String dstDir, String prefix) throws IOException {
+    public static void copyFiles(String srcDir, String dstDir) throws IOException {
         Files.list(new File(srcDir).toPath()).forEach(
                 path -> {
-                    String fileName = path.getFileName().toString();
-                    if (fileName.startsWith(prefix)) {
+                    if (path.toFile().isFile()) {
                         try {
-                            copyFile(srcDir, dstDir, fileName);
+                            copyFile(srcDir, dstDir, path.getFileName().toString());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }
         );
-
     }
-
 
     public static void main(String[] args) throws IOException, ParseException {
         // jm outputDir logFileName
@@ -730,14 +727,8 @@ public class AnalyzeTool {
                     generatedDir.mkdir();
                 }
                 String outDirAbsPath = generatedDir.getAbsolutePath();
-                copyFile(srcDir, outDirAbsPath, "conf-copy.yaml");
-                copyFile(srcDir, outDirAbsPath, "count-latency.txt");
-                copyFile(srcDir, outDirAbsPath, "checkpoints.txt");
-                copyFile(srcDir, outDirAbsPath, "checkpoints.json");
-                copyFileWithPrefix(srcDir, outDirAbsPath, "cpu-");
-                copyFileWithPrefix(srcDir, outDirAbsPath, "memory-");
-                copyFileWithPrefix(srcDir, outDirAbsPath, "network-");
-                copyFileWithPrefix(srcDir, outDirAbsPath, "disk-");
+                copyFiles(srcDir, outDirAbsPath);
+
 
                 //get tm hosts
                 List<String> tmHosts = new ArrayList<>();
@@ -749,8 +740,6 @@ public class AnalyzeTool {
                 ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
                     analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
-                    copyFile(srcDir, outDirAbsPath, tmHost + ".txt");
-                    copyFile(srcDir, outDirAbsPath, tmHost + ".log");
                 }
 
                 List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
