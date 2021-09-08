@@ -383,48 +383,52 @@ public class AnalyzeTool {
 //                loadCheckpointIdx++;
 //            }
 
+            String recoveryStartTimeStr = "-1";
+            String recoveryEndTimeStr = "-1";
+            String checkpointId = "-1";
+
             //if no checkpoint to restore, set checkpoint id as -1
-            Tuple4<Date, Signal, String, String> restoreFrom = jmSignals.get(jmSignalsIdx++);
-            assert restoreFrom.f1 == Signal.noCheckpoint || restoreFrom.f1 == Signal.restoreFromCheckpoint;
-            String checkpointId = restoreFrom.f1 == Signal.noCheckpoint ? "-1" : restoreFrom.f2;
+            if (jmSignalsIdx < jmSignals.size() &&
+                    (jmSignals.get(jmSignalsIdx).f1 == Signal.noCheckpoint ||
+                            jmSignals.get(jmSignalsIdx).f1 == Signal.restoreFromCheckpoint)) {
+                Tuple4<Date, Signal, String, String> restoreFrom = jmSignals.get(jmSignalsIdx++);
+                checkpointId = restoreFrom.f1 == Signal.noCheckpoint ? "-1" : restoreFrom.f2;
 
-            if (taskCancelledIdx >= taskCancelledSignals.size()) {
-                break;
-            }
-
-            Tuple4<Date, Signal, String, String> nextFailedSignal = null;
-            if (jmSignalsIdx < jmSignals.size()) {
-                nextFailedSignal = jmSignals.get(jmSignalsIdx);
-                assert nextFailedSignal.f1 == Signal.taskFailed;
-            }
-            FindLastBeforeSignalParam findLastTaskCancelledParam =
-                    new FindLastBeforeSignalParam(taskCancelledIdx, taskCancelledSignals, nextFailedSignal);
-            Tuple4<Date, Signal, String, String> lastTaskCancelledBeforeNextFailed =
-                    findLastBeforeSignal(findLastTaskCancelledParam, -1);
-            //take out index
-            taskCancelledIdx = findLastTaskCancelledParam.toFindIndex;
-            String recoveryStartTimeStr = lastTaskCancelledBeforeNextFailed == null
-                    ? "-1":
-                    String.valueOf(lastTaskCancelledBeforeNextFailed.f0.getTime());
+                if (taskCancelledIdx < taskCancelledSignals.size()) {
+                    Tuple4<Date, Signal, String, String> nextFailedSignal = null;
+                    if (jmSignalsIdx < jmSignals.size()) {
+                        nextFailedSignal = jmSignals.get(jmSignalsIdx);
+                        assert nextFailedSignal.f1 == Signal.taskFailed;
+                    }
+                    FindLastBeforeSignalParam findLastTaskCancelledParam =
+                            new FindLastBeforeSignalParam(taskCancelledIdx, taskCancelledSignals, nextFailedSignal);
+                    Tuple4<Date, Signal, String, String> lastTaskCancelledBeforeNextFailed =
+                            findLastBeforeSignal(findLastTaskCancelledParam, -1);
+                    //take out index
+                    taskCancelledIdx = findLastTaskCancelledParam.toFindIndex;
+                    recoveryStartTimeStr = lastTaskCancelledBeforeNextFailed == null
+                            ? "-1" :
+                            String.valueOf(lastTaskCancelledBeforeNextFailed.f0.getTime());
 //            Tuple4<Date, Signal, String, String> taskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx++);
 //            Date recoveryStartTime = taskCancelledSignal.f0;
+                }
 
-            if (loadCheckpointIdx >= loadCheckpointCompleteSignals.size()) {
-                break;
+                if (loadCheckpointIdx < loadCheckpointCompleteSignals.size()) {
+                    Tuple4<Date, Signal, String, String> nextTaskCancelledSignal = null;
+                    if (taskCancelledIdx < taskCancelledSignals.size()) {
+                        nextTaskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx);
+                    }
+                    FindLastBeforeSignalParam findLastLoadCheckpointParam =
+                            new FindLastBeforeSignalParam(loadCheckpointIdx, loadCheckpointCompleteSignals, nextTaskCancelledSignal);
+                    Tuple4<Date, Signal, String, String> lastLoadCheckpointBeforeNextTaskCancelled =
+                            findLastBeforeSignal(findLastLoadCheckpointParam, 8);
+                    //take out index
+                    loadCheckpointIdx = findLastLoadCheckpointParam.toFindIndex;
+                    recoveryEndTimeStr = lastLoadCheckpointBeforeNextTaskCancelled == null
+                            ? "-1"
+                            : String.valueOf(lastLoadCheckpointBeforeNextTaskCancelled.f0.getTime());
+                }
             }
-            Tuple4<Date, Signal, String, String> nextTaskCancelledSignal = null;
-            if (taskCancelledIdx < taskCancelledSignals.size()) {
-                nextTaskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx);
-            }
-            FindLastBeforeSignalParam findLastLoadCheckpointParam =
-                    new FindLastBeforeSignalParam(loadCheckpointIdx, loadCheckpointCompleteSignals, nextTaskCancelledSignal);
-            Tuple4<Date, Signal, String, String> lastLoadCheckpointBeforeNextTaskCancelled =
-                    findLastBeforeSignal(findLastLoadCheckpointParam, 8);
-            //take out index
-            loadCheckpointIdx = findLastLoadCheckpointParam.toFindIndex;
-            String recoveryEndTimeStr = lastLoadCheckpointBeforeNextTaskCancelled == null
-                    ? "-1"
-                    : String.valueOf(lastLoadCheckpointBeforeNextTaskCancelled.f0.getTime());
 
             fw.write(checkpointId);
             fw.write(' ');
@@ -450,7 +454,7 @@ public class AnalyzeTool {
             this.nextSignal = nextSignal;
         }
     }
-    
+
     private static Tuple4<Date, Signal, String, String> findLastBeforeSignal(
             FindLastBeforeSignalParam param,
             int numSubTask
