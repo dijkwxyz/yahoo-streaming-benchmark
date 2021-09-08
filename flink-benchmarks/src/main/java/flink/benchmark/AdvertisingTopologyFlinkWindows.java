@@ -72,13 +72,13 @@ public class AdvertisingTopologyFlinkWindows {
 
         //=======================advertisement count=========================================
         //out (ad_id, count)
-//        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
-//                .map(new MapToImpressionCount())
-//                .keyBy(a -> a.f1)
-//                .timeWindow(Time.minutes(10))
-//                .aggregate(new AdAggregator());
-//
-//        adCount.addSink(new RedisAdCount(config));
+        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
+                .map(new MapToImpressionCount())
+                .keyBy(a -> a.f1)
+                .timeWindow(Time.minutes(10))
+                .aggregate(new AdAggregator());
+
+        adCount.addSink(new RedisAdCount(config));
 
         //=======================campaign count=========================================
         //out: (campaign id, event time)
