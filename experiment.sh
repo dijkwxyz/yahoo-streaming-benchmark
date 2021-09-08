@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1200}
+TEST_TIME=${TEST_TIME:-3600}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:-180000}
+MTTI_MS=${MTTI_MS:-240000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
@@ -100,8 +100,8 @@ xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 1; num += 1 )); do
-	for (( LOAD=60000; LOAD <= 80000; LOAD += 20000 )); do
+for (( num=0; num < 2; num += 1 )); do
+	for (( LOAD=60000; LOAD <= 60000; LOAD += 20000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
@@ -110,9 +110,7 @@ for (( num=0; num < 1; num += 1 )); do
 	  xsync $CONF_FILE
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
-	done
 
-	for (( LOAD=60000; LOAD <= 80000; LOAD += 20000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=false
 	  make_conf
