@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class KafkaDataGenerator {
+    public static final String END_OF_STREAM_ELEMENT = "SHUTDOWN";
     private int adsIdx = 0;
     private int eventsIdx = 0;
     private StringBuilder sb = new StringBuilder();
@@ -19,6 +20,8 @@ public class KafkaDataGenerator {
     private List<String> ads;
     private final Map<String, List<String>> campaigns;
 
+    private final boolean isStreamEndless;
+    private final long testEndTimeMs;
     private final int loadTargetHz;
     private final int timeSliceLengthMs;
     private final String topic;
@@ -33,15 +36,15 @@ public class KafkaDataGenerator {
     private final KafkaProducer<String, String> kafkaProducer;
 
     /**
-     *
      * @param config
-     * @param dstHost if not "", send to partitions with dstHost as leader
+     * @param dstHost      if not "", send to partitions with dstHost as leader
      * @param numCampaigns num ber campaign ids generated
      */
     public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns, int loadTargetHz) {
         this.loadTargetHz = loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
-
+        this.isStreamEndless = config.isStreamEndless;
+        this.testEndTimeMs = System.currentTimeMillis() + config.testTimeSeconds * 1000L;
         this.campaigns = generateCampaigns(numCampaigns);
         this.ads = flattenCampaigns();
 
@@ -61,8 +64,7 @@ public class KafkaDataGenerator {
                 System.out.print(p.partition());
             }
             System.out.print('\n');
-        }
-        else {
+        } else {
             System.out.print("Host: " + dstHost);
             System.out.print(". Send to partition: ");
             for (PartitionInfo p : partitionInfos) {
@@ -116,6 +118,7 @@ public class KafkaDataGenerator {
     public void stop() {
         running = false;
     }
+
     /**
      * Generate a random list of ads and campaigns
      */
@@ -154,6 +157,7 @@ public class KafkaDataGenerator {
     private long logFreq = 1_000_000;
     private long lastLogTimeMs = -1;
     private long elementSize = 240;
+
     public void recordThroughput() {
         numSent++;
         if (numSent % logFreq == 0) {
@@ -161,32 +165,39 @@ public class KafkaDataGenerator {
             long now = System.currentTimeMillis();
 
             // throughput for the last "logFreq" elements
-            if(lastLogTimeMs == -1) {
+            if (lastLogTimeMs == -1) {
                 // init (the first)
                 lastLogTimeMs = now;
                 lastnumSent = numSent;
             } else {
                 long timeDiff = now - lastLogTimeMs;
                 long elementDiff = numSent - lastnumSent;
-                double ex = (1000/(double)timeDiff);
+                double ex = (1000 / (double) timeDiff);
                 System.out.println(String.format("From %d to %d (%d ms), we've sent %d elements. That's %f elements/second/core. %f MB/sec/core. GB received %d",
-                        lastLogTimeMs, now, timeDiff, elementDiff, elementDiff*ex, elementDiff*ex*elementSize / 1024 / 1024, (numSent * elementSize) / 1024 / 1024 / 1024));
+                        lastLogTimeMs, now, timeDiff, elementDiff, elementDiff * ex, elementDiff * ex * elementSize / 1024 / 1024, (numSent * elementSize) / 1024 / 1024 / 1024));
                 // reinit
                 lastLogTimeMs = now;
                 lastnumSent = numSent;
             }
         }
     }
-    
+
     /**
      * The main loop
      */
     public void run() throws InterruptedException {
-        int elements = adjustLoad(loadPerTimeslice());
-        
+        int numElements = adjustLoad(loadPerTimeslice());
+
         while (running) {
             long emitStartTime = System.currentTimeMillis();
-            for (int i = 0; i < elements; i++) {
+            if (isStreamEndless && emitStartTime > testEndTimeMs) {
+                //time to end the stream
+                for (int i = 0; i < partitions.size(); i++) {
+                    collect(END_OF_STREAM_ELEMENT);
+                }
+                break;
+            }
+            for (int i = 0; i < numElements; i++) {
                 // recordThroughput();
                 collect(generateElement());
             }
@@ -197,7 +208,7 @@ public class KafkaDataGenerator {
             }
         }
         kafkaProducer.close();
-        System.out.println("closed");
+        System.out.println("Kafka Data Generator closed");
     }
 
     public void collect(String element) {

@@ -7,6 +7,7 @@ package flink.benchmark;
 import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
+import flink.benchmark.generator.KafkaDataGenerator;
 import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
@@ -15,6 +16,8 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.*;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.java.tuple.*;
@@ -33,7 +36,6 @@ import org.apache.flink.streaming.api.windowing.triggers.Trigger;
 import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -291,11 +293,31 @@ public class AdvertisingTopologyFlinkWindows {
         Properties properties = new Properties();
         properties.setProperty("bootstrap.servers", config.bootstrapServers);
         properties.setProperty("group.id", config.groupId);
-        FlinkKafkaConsumer011<String> consumer = new FlinkKafkaConsumer011<>(
+
+        DeserializationSchema<String> schema = config.isStreamEndless
+                ? new SimpleStringSchema()
+                : new EndableStingSchema();
+        return new FlinkKafkaConsumer011<>(
                 config.kafkaTopic,
-                new SimpleStringSchema(),
+                schema,
                 properties);
-        return consumer;
+    }
+
+    private static class EndableStingSchema extends SimpleStringSchema {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String deserialize(byte[] message) {
+            return super.deserialize(message);
+        }
+
+        @Override
+        public boolean isEndOfStream(String nextElement) {
+            if (KafkaDataGenerator.END_OF_STREAM_ELEMENT.equals(nextElement)) {
+                return true;
+            }
+            return super.isEndOfStream(nextElement);
+        }
     }
 
     /**

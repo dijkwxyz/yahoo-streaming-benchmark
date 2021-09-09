@@ -71,6 +71,8 @@ failure.start.delay.ms: $FAILURE_START_DELAY_MS
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
+stream.endless: true
+test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
