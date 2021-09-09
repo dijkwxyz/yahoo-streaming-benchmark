@@ -100,7 +100,7 @@ public class BenchmarkConfig implements Serializable {
         this.windowSlide = parameterTool.getLong("window.slide", 5);
         this.failureStartTimeDelayMs = parameterTool.getLong("failure.start.delay.ms", 0);
         this.isStreamEndless = parameterTool.getBoolean("stream.endless", true);
-        this.testTimeSeconds = parameterTool.getLong("test.time.seconds");
+        this.testTimeSeconds = parameterTool.getLong("test.time.seconds", 0);
 
         // Flink
         this.checkpointInterval = parameterTool.getLong("flink.checkpoint.interval", 0);

@@ -421,7 +421,7 @@ public class AnalyzeTool {
                     FindLastBeforeSignalParam findLastLoadCheckpointParam =
                             new FindLastBeforeSignalParam(loadCheckpointIdx, loadCheckpointCompleteSignals, nextTaskCancelledSignal);
                     Tuple4<Date, Signal, String, String> lastLoadCheckpointBeforeNextTaskCancelled =
-                            findLastBeforeSignal(findLastLoadCheckpointParam, 8);
+                            findLastBeforeSignal(findLastLoadCheckpointParam, 4);
                     //take out index
                     loadCheckpointIdx = findLastLoadCheckpointParam.toFindIndex;
                     recoveryEndTimeStr = lastLoadCheckpointBeforeNextTaskCancelled == null
@@ -712,7 +712,7 @@ public class AnalyzeTool {
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-        // args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 redis2".split(" ");
+        // args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
