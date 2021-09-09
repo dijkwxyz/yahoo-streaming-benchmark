@@ -159,7 +159,6 @@ public class KafkaDataGenerator {
     private long elementSize = 240;
 
     public void recordThroughput() {
-        numSent++;
         if (numSent % logFreq == 0) {
             // throughput over entire time
             long now = System.currentTimeMillis();
@@ -174,7 +173,7 @@ public class KafkaDataGenerator {
                 long elementDiff = numSent - lastnumSent;
                 double ex = (1000 / (double) timeDiff);
                 System.out.println(String.format("From %d to %d (%d ms), we've sent %d elements. That's %f elements/second/core. %f MB/sec/core. GB received %d",
-                        lastLogTimeMs, now, timeDiff, elementDiff, elementDiff * ex, elementDiff * ex * elementSize / 1024 / 1024, (numSent * elementSize) / 1024 / 1024 / 1024));
+                        lastLogTimeMs, now, timeDiff, elementDiff, elementDiff * ex, elementDiff * ex * elementSize / 1024 / 1024, (elementDiff * elementSize) / 1024 / 1024 / 1024));
                 // reinit
                 lastLogTimeMs = now;
                 lastnumSent = numSent;
@@ -198,8 +197,8 @@ public class KafkaDataGenerator {
                 break;
             }
             for (int i = 0; i < numElements; i++) {
-                // recordThroughput();
                 collect(generateElement());
+                // recordThroughput();
             }
             // Sleep for the rest of timeslice if needed
             long emitTime = System.currentTimeMillis() - emitStartTime;
@@ -208,12 +207,13 @@ public class KafkaDataGenerator {
             }
         }
         kafkaProducer.close();
-        System.out.println("Kafka Data Generator closed");
+        System.out.println("Kafka Data Generator is closed. Elements generated: " + numSent);
     }
 
     public void collect(String element) {
         kafkaProducer.send(new ProducerRecord<>(topic, partitions.get(currPartition), String.valueOf(currPartition), element));
         currPartition = (currPartition + 1) % partitions.size();
+        numSent++;
     }
 
     private int loadPerTimeslice() {
