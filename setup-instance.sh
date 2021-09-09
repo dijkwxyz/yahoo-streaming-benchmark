@@ -12,6 +12,6 @@ sudo yum -y install gcc
 
 
 #install lein
-sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -P ~/bin
-sudo chmod a+x ~/bin/lein
-lein
+#sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -P ~/bin
+#sudo chmod a+x ~/bin/lein
+#lein
