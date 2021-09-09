@@ -9,7 +9,7 @@ set -o errexit
 LEIN=${LEIN:-~/bin/lein}
 MVN=${MVN:-mvn}
 GIT=${GIT:-git}
-MAKE=${MAKE:-make}
+MAKE=${MAKE:-make MALLOC=libc}
 
 KAFKA_VERSION=${KAFKA_VERSION:-"0.11.0.0"}
 REDIS_VERSION=${REDIS_VERSION:-"6.2.1"}
