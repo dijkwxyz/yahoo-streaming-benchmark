@@ -112,22 +112,18 @@ run_command() {
      run_command "STOP_REDIS"
      run_command "STOP_KAFKA"
      run_command "STOP_FLINK"
-  elif [ "SCP" = "$OPERATION" ];
+  elif [ "ANALYZE_FLINK" = "$OPERATION" ];
   then
     echo "====== collecting checkpoint and recovery results from jm"
     analyze_on_host_jm flink1
     echo "====== collecting throughput results from tm"
     analyze_on_host_tm flink2
     analyze_on_host_tm flink3
-    analyze_on_host_tm redis2
+    analyze_on_host_tm flink4
+    analyze_on_host_tm flink5
   elif [ "ANALYZE" = "$OPERATION" ];
   then
-    echo "====== collecting checkpoint and recovery results from jm"
-    analyze_on_host_jm flink1
-    echo "====== collecting throughput results from tm"
-    analyze_on_host_tm flink2
-    analyze_on_host_tm flink3
-    analyze_on_host_tm redis2
+    run_command "ANALYZE_FLINK"
     echo "====== collecting latency results from redis"
     scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     echo "====== collecting cpu-network data"
@@ -138,14 +134,15 @@ run_command() {
     copy_cpu_network_log flink1
     copy_cpu_network_log flink2
     copy_cpu_network_log flink3
+    copy_cpu_network_log flink4
+    copy_cpu_network_log flink5
     copy_cpu_network_log kafka1
     copy_cpu_network_log kafka2
     copy_cpu_network_log redis1
-    copy_cpu_network_log redis2
     copy_cpu_network_log zk1
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 redis2
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5
   else
     if [ "HELP" != "$OPERATION" ];
     then
