@@ -274,4 +274,4 @@ taskmanager.memory.managed.size: 0
 high-availability: com.dijk.ha.MultilevelHighAvailabilityServicesFactory
 #DELEGATE_EMBEDDED 0, DELEGATE_STANDALONE 1, DELEGATE_ZK 2
 multilevel.ha.delegate: 1 
-heartbeat.timeout: 90000
+#heartbeat.timeout: 90000
