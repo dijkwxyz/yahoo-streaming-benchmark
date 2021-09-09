@@ -203,6 +203,7 @@ run() {
     rm -r /tmp/zookeeper
   elif [ "START_HDFS" = "$OPERATION" ];
   then
+    $HADOOP_DIR/bin/hdfs namenode -format
     $HADOOP_DIR/sbin/start-dfs.sh
   elif [ "STOP_HDFS" = "$OPERATION" ];
   then
