@@ -210,6 +210,7 @@ run() {
     $HADOOP_DIR/sbin/stop-dfs.sh
   elif [ "START_YARN" = "$OPERATION" ];
   then
+    echo "### this must be called on the node of ResourceManager ###"
     $HADOOP_DIR/sbin/start-yarn.sh
   elif [ "STOP_YARN" = "$OPERATION" ];
   then
