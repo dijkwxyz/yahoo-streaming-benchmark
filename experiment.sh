@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-3600}
+TEST_TIME=${TEST_TIME:-1200}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
@@ -87,8 +87,8 @@ multilevel.level2.statebackend: \"fs\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 multilevel.pattern: \"1,1,2\"
 singlelevel.statebackend: \"fs\"
-singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-#singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
+#singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
+singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 " > $CONF_FILE
 	}
 
@@ -103,16 +103,7 @@ xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d 
 
 
 for (( num=0; num < 2; num += 1 )); do
-	for (( LOAD=60000; LOAD <= 80000; LOAD += 10000 )); do
-	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
-	  make_conf
-	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	  cat $CONF_FILE | grep multilevel.enable
-	  xsync $CONF_FILE
-	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	  sleep 30
-
+	for (( LOAD=80000; LOAD <= 800000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=false
 	  make_conf
@@ -121,6 +112,7 @@ for (( num=0; num < 2; num += 1 )); do
 	  xsync $CONF_FILE
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
+
 	done
 done
 
