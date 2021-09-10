@@ -360,9 +360,9 @@ run() {
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
-          swap_flink_tm flink3 redis2
+          swap_flink_tm flink4 flink5
         else
-          swap_flink_tm redis2 flink3
+          swap_flink_tm flink5 flink4
         fi
       done
       if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then
@@ -402,7 +402,8 @@ run() {
     #ensure TMs are killed
     remote_operation flink2 "STOP_TM"
     remote_operation flink3 "STOP_TM"
-    remote_operation redis2 "STOP_TM"
+    remote_operation flink4 "STOP_TM"
+    remote_operation flink5 "STOP_TM"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "STOP_KAFKA"
     done
