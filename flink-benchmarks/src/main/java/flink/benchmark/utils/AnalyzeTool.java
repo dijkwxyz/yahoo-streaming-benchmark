@@ -357,8 +357,8 @@ public class AnalyzeTool {
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
         for (int i = 1; i < tmSignals.size(); i++) {
-            if (tmSignals.get(i).f1 != tmSignals.get(i-1).f1) {
-                deduplicatedTmSignals.add(tmSignals.get(i-1));
+            if (tmSignals.get(i).f1 != tmSignals.get(i - 1).f1) {
+                deduplicatedTmSignals.add(tmSignals.get(i - 1));
             }
         }
         //add last one
@@ -710,7 +710,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//         args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -727,6 +727,7 @@ public class AnalyzeTool {
                     if (path.toFile().isDirectory()) {
                         try {
                             String absolutePath = path.toFile().getAbsolutePath();
+                            System.out.println("processing " + absolutePath);
                             parseRestartCost(absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt");
                         } catch (IOException e) {
                             e.printStackTrace();
