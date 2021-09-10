@@ -22,7 +22,7 @@ echo pdir=$pdir
 user=`whoami`
 
 if ((pcount==1)); then
-for((host=1; host <=11; host++)); do
+for((host=5; host <=14; host++)); do
         echo -------------test$host ------------
         rsync -av $pdir/$fname $user@test$host:$pdir
 done
