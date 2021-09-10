@@ -347,9 +347,24 @@ public class AnalyzeTool {
             parseTmLogForRecoveryTime(srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
         }
 
+        ArrayList<Tuple4<Date, Signal, String, String>> tmSignals =
+                new ArrayList<>(taskCancelledSignals.size() + loadCheckpointCompleteSignals.size());
+        tmSignals.addAll(taskCancelledSignals);
+        tmSignals.addAll(loadCheckpointCompleteSignals);
         //sort by timestamp
-        taskCancelledSignals.sort(Comparator.comparing(a -> a.f0));
-        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
+//        taskCancelledSignals.sort(Comparator.comparing(a -> a.f0));
+//        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
+        tmSignals.sort(Comparator.comparing(a -> a.f0));
+        ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
+        for (int i = 1; i < tmSignals.size(); i++) {
+            if (tmSignals.get(i).f1 != tmSignals.get(i-1).f1) {
+                deduplicatedTmSignals.add(tmSignals.get(i-1));
+            }
+        }
+        //add last one
+        deduplicatedTmSignals.add(tmSignals.get(tmSignals.size() - 1));
+        //remove first load checkpoint signal on system startup
+        deduplicatedTmSignals.remove(0);
 
         //consider the same signals within 3 secs as deduplicates
 //        deduplicateWithinTimeDiff(taskCancelledSignals, 3000);
@@ -363,8 +378,7 @@ public class AnalyzeTool {
         fw.write("checkpointId failedTime RecoveryStartTime loadCheckpointCompleteTime\n");
 
         int jmSignalsIdx = 0;
-        int taskCancelledIdx = 0;
-        int loadCheckpointIdx = 0;
+        int tmSignalsIdx = 0;
         while (jmSignalsIdx < jmSignals.size()) {
             //starts with a taskFailed signal
             Tuple4<Date, Signal, String, String> signal = jmSignals.get(jmSignalsIdx++);
@@ -372,61 +386,43 @@ public class AnalyzeTool {
                 continue;
             }
             Date failedTime = signal.f0;
-//
-//            //skip initializing backend signal on first start-up
-//            while (loadCheckpointIdx < loadCheckpointCompleteSignals.size()) {
-//                Tuple4<Date, Signal, String, String> currLoadCheckpointSignal =
-//                        loadCheckpointCompleteSignals.get(loadCheckpointIdx);
-//                if (currLoadCheckpointSignal.f0.compareTo(failedTime) > 0) {
-//                    break;
-//                }
-//                loadCheckpointIdx++;
-//            }
 
             String recoveryStartTimeStr = "-1";
             String recoveryEndTimeStr = "-1";
             String checkpointId = "-1";
 
-            //if no checkpoint to restore, set checkpoint id as -1
             if (jmSignalsIdx < jmSignals.size() &&
-                    (jmSignals.get(jmSignalsIdx).f1 == Signal.noCheckpoint ||
-                            jmSignals.get(jmSignalsIdx).f1 == Signal.restoreFromCheckpoint)) {
+                    (Signal.noCheckpoint == jmSignals.get(jmSignalsIdx).f1 ||
+                            Signal.restoreFromCheckpoint == jmSignals.get(jmSignalsIdx).f1)) {
+                //if no checkpoint to restore, set checkpoint id as -1
                 Tuple4<Date, Signal, String, String> restoreFrom = jmSignals.get(jmSignalsIdx++);
-                checkpointId = restoreFrom.f1 == Signal.noCheckpoint ? "-1" : restoreFrom.f2;
+                checkpointId = Signal.noCheckpoint == restoreFrom.f1 ? "-1" : restoreFrom.f2;
 
-                if (taskCancelledIdx < taskCancelledSignals.size()) {
-                    Tuple4<Date, Signal, String, String> nextFailedSignal = null;
+                Tuple4<Date, Signal, String, String> cancelledSignal =
+                        tmSignalsIdx < deduplicatedTmSignals.size()
+                                ? deduplicatedTmSignals.get(tmSignalsIdx++)
+                                : null;
+                if (cancelledSignal != null) {
+                    assert Signal.taskCancelled == cancelledSignal.f1;
                     if (jmSignalsIdx < jmSignals.size()) {
-                        nextFailedSignal = jmSignals.get(jmSignalsIdx);
-                        assert nextFailedSignal.f1 == Signal.taskFailed;
+                        Tuple4<Date, Signal, String, String> nextTaskFailedSignal = jmSignals.get(jmSignalsIdx);
+                        assert Signal.taskFailed == nextTaskFailedSignal.f1;
+                        assert nextTaskFailedSignal.f0.compareTo(cancelledSignal.f0) > 0;
                     }
-                    FindLastBeforeSignalParam findLastTaskCancelledParam =
-                            new FindLastBeforeSignalParam(taskCancelledIdx, taskCancelledSignals, nextFailedSignal);
-                    Tuple4<Date, Signal, String, String> lastTaskCancelledBeforeNextFailed =
-                            findLastBeforeSignal(findLastTaskCancelledParam, -1);
-                    //take out index
-                    taskCancelledIdx = findLastTaskCancelledParam.toFindIndex;
-                    recoveryStartTimeStr = lastTaskCancelledBeforeNextFailed == null
-                            ? "-1" :
-                            String.valueOf(lastTaskCancelledBeforeNextFailed.f0.getTime());
-//            Tuple4<Date, Signal, String, String> taskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx++);
-//            Date recoveryStartTime = taskCancelledSignal.f0;
+                    recoveryStartTimeStr = String.valueOf(cancelledSignal.f0.getTime());
                 }
-
-                if (loadCheckpointIdx < loadCheckpointCompleteSignals.size()) {
-                    Tuple4<Date, Signal, String, String> nextTaskCancelledSignal = null;
-                    if (taskCancelledIdx < taskCancelledSignals.size()) {
-                        nextTaskCancelledSignal = taskCancelledSignals.get(taskCancelledIdx);
+                Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal =
+                        tmSignalsIdx < deduplicatedTmSignals.size()
+                                ? deduplicatedTmSignals.get(tmSignalsIdx++)
+                                : null;
+                if (loadCheckpointCompleteSignal != null) {
+                    assert Signal.loadCheckpointComplete == loadCheckpointCompleteSignal.f1;
+                    if (jmSignalsIdx < jmSignals.size()) {
+                        Tuple4<Date, Signal, String, String> nextTaskFailedSignal = jmSignals.get(jmSignalsIdx);
+                        assert Signal.taskFailed == nextTaskFailedSignal.f1;
+                        assert nextTaskFailedSignal.f0.compareTo(loadCheckpointCompleteSignal.f0) > 0;
                     }
-                    FindLastBeforeSignalParam findLastLoadCheckpointParam =
-                            new FindLastBeforeSignalParam(loadCheckpointIdx, loadCheckpointCompleteSignals, nextTaskCancelledSignal);
-                    Tuple4<Date, Signal, String, String> lastLoadCheckpointBeforeNextTaskCancelled =
-                            findLastBeforeSignal(findLastLoadCheckpointParam, 4);
-                    //take out index
-                    loadCheckpointIdx = findLastLoadCheckpointParam.toFindIndex;
-                    recoveryEndTimeStr = lastLoadCheckpointBeforeNextTaskCancelled == null
-                            ? "-1"
-                            : String.valueOf(lastLoadCheckpointBeforeNextTaskCancelled.f0.getTime());
+                    recoveryEndTimeStr = String.valueOf(loadCheckpointCompleteSignal.f0.getTime());
                 }
             }
 
@@ -712,12 +708,34 @@ public class AnalyzeTool {
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-        // args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+//         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+        // pc
+//         args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
         String fileName;
+        List<String> tmHosts;
         switch (mode) {
+            case "pc":
+                tmHosts = new ArrayList<>();
+                for (int i = argIdx; i < args.length; i++) {
+                    tmHosts.add(args[i]);
+                }
+                List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
+                Files.list(new File(srcDir).toPath()).forEach(path -> {
+                    if (path.toFile().isDirectory()) {
+                        try {
+                            String absolutePath = path.toFile().getAbsolutePath();
+                            parseRestartCost(absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                break;
             case "zk":
                 // zk resultDir ...tmFileNames
                 BenchmarkConfig config = new BenchmarkConfig(new File(srcDir, "conf-copy.yaml").getAbsolutePath());
@@ -735,7 +753,7 @@ public class AnalyzeTool {
 
 
                 //get tm hosts
-                List<String> tmHosts = new ArrayList<>();
+                tmHosts = new ArrayList<>();
                 for (int i = argIdx; i < args.length; i++) {
                     tmHosts.add(args[i]);
                 }
@@ -746,7 +764,7 @@ public class AnalyzeTool {
                     analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
                 }
 
-                List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
+                tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
                 parseRestartCost(srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt");
 
                 analyzeLatency(srcDir, latencyResult);
