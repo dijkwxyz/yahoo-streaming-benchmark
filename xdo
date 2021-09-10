@@ -8,7 +8,7 @@ prefix=test
 user=`whoami`
 
 echo "###### xdo $cmd ######"
-for((host=1; host <=17; host++)); do
+for((host=1; host <=14; host++)); do
         echo ------------ $prefix$host ------------
         ssh $user@$prefix$host "cd $BASE_DIR; $cmd"
 done
