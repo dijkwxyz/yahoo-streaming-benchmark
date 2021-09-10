@@ -1,0 +1,38 @@
+#! /bin/bash
+#1 get number of params. if non, exit
+pcount=$#
+if ((pcount!=1 && pcount!=2)); then
+echo "usage xsync <src-path> [dest-number]. example:"
+echo "xsync 1.txt";
+echo "xsync 1.txt 102";
+exit;
+fi
+
+#2 get file name
+p1=$1
+fname=`basename $p1` #basename 获得路径的最后一部分(basename /A/B/C 输出 C)
+echo fname=$fname
+
+#3 get abs path
+# cd -P track abs path
+pdir=`cd -P $(dirname $p1); pwd`
+echo pdir=$pdir
+
+# get curr username 
+user=`whoami`
+
+if ((pcount==1)); then
+for((host=1; host <=4; host++)); do
+        echo -------------test$host ------------
+        rsync -av $pdir/$fname $user@test$host:$pdir
+done
+for((host=13; host <=17; host++)); do
+        echo -------------test$host ------------
+        rsync -av $pdir/$fname $user@test$host:$pdir
+done
+elif ((pcount==2)); then
+        host=$2
+        echo -------------$host ------------
+        rsync -av $pdir/$fname $user@$host:$pdir
+fi
+

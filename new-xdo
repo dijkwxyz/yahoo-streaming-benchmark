@@ -1,0 +1,19 @@
+#!/bin/bash
+BASE_DIR=/home/ec2-user/yahoo-streaming-benchmark/
+
+cmd=$*
+
+prefix=test
+# get curr username
+user=`whoami`
+
+echo "###### xdo $cmd ######"
+
+for((host=1; host <=4; host++)); do
+        echo ------------ $prefix$host ------------
+        ssh $user@$prefix$host "cd $BASE_DIR; $cmd" &
+done
+for((host=13; host <=17; host++)); do
+        echo ------------ $prefix$host ------------
+        ssh $user@$prefix$host "cd $BASE_DIR; $cmd" &
+done

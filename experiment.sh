@@ -6,12 +6,12 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:-240000}
+MTTI_MS=${MTTI_MS:-300000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 
-WINDOW_SIZE=${WINDOW_SIZE:-90}
+WINDOW_SIZE=${WINDOW_SIZE:-60}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 LOAD=${LOAD:-100000}
@@ -103,7 +103,7 @@ xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d 
 
 
 for (( num=0; num < 2; num += 1 )); do
-	for (( LOAD=60000; LOAD <= 60000; LOAD += 20000 )); do
+	for (( LOAD=60000; LOAD <= 80000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf

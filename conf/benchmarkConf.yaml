@@ -2,7 +2,7 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 # ====== experiment.sh config ======
-# TEST_TIME=1200
+# TEST_TIME=3600
 # TM_FAILURE_INTERVAL=-1
 #
 # ============ kafka ============
@@ -27,7 +27,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 90
+window.size: 60
 window.slide: 1
 
 # ============ java load generator ============
@@ -41,7 +41,9 @@ num.campaigns: 100
 failure.start.delay.ms: 240000
 
 # ========== experiment parameters =============
-mtti.ms: 180000
+mtti.ms: 300000
+stream.endless: true
+test.time.seconds: 3600
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 180000

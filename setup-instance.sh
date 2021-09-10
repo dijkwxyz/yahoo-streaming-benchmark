@@ -10,6 +10,8 @@ sudo yum -y install gcc
 #setup benchmark environment
 ./stream-bench.sh INSTALL
 
+cd ~
+git clone https://github.com/magnific0/wondershaper.git
 
 #install lein
 #sudo wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -P ~/bin
