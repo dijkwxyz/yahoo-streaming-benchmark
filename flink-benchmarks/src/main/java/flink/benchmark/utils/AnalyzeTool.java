@@ -276,6 +276,7 @@ public class AnalyzeTool {
 
     //(timestamp, type, info, matched string)
     public static void parseTmLogForRecoveryTime(
+            String stateBackendName,
             String srcAbsPath,
             ArrayList<Tuple4<Date, Signal, String, String>> taskCancelledSignals,
             ArrayList<Tuple4<Date, Signal, String, String>> loadCheckpointCompleteSignals) throws IOException, ParseException {
@@ -284,8 +285,21 @@ public class AnalyzeTool {
         String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
         //2021-09-07 07:48:14,269 UTC INFO  org.apache.flink.runtime.taskexecutor.TaskExecutor           [] - Un-registering task and sending final execution state CANCELED to JobManager for task Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (6/8) d2e54e8977271191a9b4c7f5f4e6829c.
         Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state CANCELED to JobManager for task.*");
+        //2021-09-11 04:24:30,053 UTC INFO  org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - Discovered coordinator kafka1:9092 (id: 2147483647 rack: null) for group c8bb5d4a-bd4e-482d-99a2-24f8c8e4a9ae.
+        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Discovered coordinator.*");
         //2021-09-07 07:49:25,678 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing heap keyed state backend with stream factory.
-        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Initializing heap keyed state backend with stream factory.*");
+        //2021-09-11 05:03:45,987 UTC INFO  org.apache.flink.contrib.streaming.state.RocksDBStateBackend [] - Obtained shared RocksDB cache of size 0 bytes
+//        Pattern loadCheckpointCompletePattern;
+//        switch (stateBackendName) {
+//            case "fs":
+//                loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Initializing heap keyed state backend with stream factory.*");
+//                break;
+//            case "rocksDB":
+//                loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Obtained shared RocksDB cache of size.*");
+//                break;
+//            default:
+//                throw new IllegalArgumentException("invalid stateBackendName");
+//        }
 
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
@@ -331,6 +345,7 @@ public class AnalyzeTool {
 
     //(timestamp, type, info, matched string)
     public static void parseRestartCost(
+            String stateBackendName,
             String srcDir,
             String JmLog,
             List<String> tmLogs,
@@ -344,7 +359,7 @@ public class AnalyzeTool {
 
         for (String tmLog : tmLogs) {
             String srcAbsName = new File(srcDir, tmLog).getAbsolutePath();
-            parseTmLogForRecoveryTime(srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
+            parseTmLogForRecoveryTime(stateBackendName, srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
         }
 
         ArrayList<Tuple4<Date, Signal, String, String>> tmSignals =
@@ -726,9 +741,10 @@ public class AnalyzeTool {
                 Files.list(new File(srcDir).toPath()).forEach(path -> {
                     if (path.toFile().isDirectory()) {
                         try {
+                            BenchmarkConfig config = new BenchmarkConfig(new File(path.toFile(), "conf-copy.yaml").getAbsolutePath());
                             String absolutePath = path.toFile().getAbsolutePath();
                             System.out.println("processing " + absolutePath);
-                            parseRestartCost(absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt");
+                            parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt");
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (ParseException e) {
@@ -766,7 +782,7 @@ public class AnalyzeTool {
                 }
 
                 tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
-                parseRestartCost(srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt");
+                parseRestartCost(config.multilevelLevel2Type, srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt");
 
                 analyzeLatency(srcDir, latencyResult);
 
