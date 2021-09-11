@@ -6,12 +6,13 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:-240000}
+MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
+STATE_BACKEND=rocksDB
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 
-WINDOW_SIZE=${WINDOW_SIZE:-120}
+WINDOW_SIZE=${WINDOW_SIZE:-90}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 LOAD=${LOAD:-100000}
@@ -20,7 +21,8 @@ USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
 #1024*1024 = 1048576
-NET_THRESHOLD=${NET_THRESHOLD:-1048576}
+NET_THRESHOLD=${NET_THRESHOLD:-209600}
+#NET_THRESHOLD=${NET_THRESHOLD:-1048576}
 # other
 BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}
 CONF_FILE=${CONF_FILE:-${BASE_DIR}conf/benchmarkConf.yaml}
@@ -80,31 +82,41 @@ execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
 multilevel.enable: $MULTILEVEL_ENABLE
 #multilevel.level0.statebackend: \"memory\"
 #multilevel.level0.path: \"\"
-multilevel.level0.statebackend: \"fs\"
+multilevel.level0.statebackend: \"$STATE_BACKEND\"
 multilevel.level0.path: \"file:///dev/shm/flink/\"
-multilevel.level1.statebackend: \"fs\"
+multilevel.level1.statebackend: \"$STATE_BACKEND\"
 multilevel.level1.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
-multilevel.level2.statebackend: \"fs\"
+multilevel.level2.statebackend: \"$STATE_BACKEND\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 multilevel.pattern: \"1,1,2\"
-singlelevel.statebackend: \"fs\"
-#singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
+singlelevel.statebackend: \"$STATE_BACKEND\"
+singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
+#singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 " > $CONF_FILE
 	}
 
 
 # limit network bandwidth for experiment
-#for (( num=1; num <= 4; num += 1)); do
-#  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -c -a eth0"
-#  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u 202400 -d 404800"
-#done
-xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
-xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
+for (( num=1; num <= 4; num += 1)); do
+  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -c -a eth0"
+  ssh ec2-user@hadoop$num "sudo ~/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
+done
+#xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
+#xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
 for (( num=0; num < 2; num += 1 )); do
-	for (( LOAD=140000; LOAD <= 150000; LOAD += 10000 )); do
+	for (( LOAD=120000; LOAD <= 140000; LOAD += 10000 )); do
+	  ./clear-data.sh
+	  MULTILEVEL_ENABLE=true
+	  make_conf
+	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+	  cat $CONF_FILE | grep multilevel.enable
+	  xsync $CONF_FILE
+	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+	  sleep 30
+
+
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=false
 	  make_conf
@@ -113,7 +125,6 @@ for (( num=0; num < 2; num += 1 )); do
 	  xsync $CONF_FILE
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
-
 	done
 done
 
