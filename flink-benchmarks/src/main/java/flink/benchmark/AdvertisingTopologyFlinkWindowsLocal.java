@@ -8,7 +8,6 @@ import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.KafkaDataGenerator;
-import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLoggerProcessor;
@@ -20,7 +19,10 @@ import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.java.tuple.*;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple7;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -42,7 +44,8 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Properties;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
@@ -50,9 +53,9 @@ import java.util.*;
  * This job variant uses Flinks built-in windowing and triggering support to compute the windows
  * and trigger when each window is complete as well as once per second.
  */
-public class AdvertisingTopologyFlinkWindows {
+public class AdvertisingTopologyFlinkWindowsLocal {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AdvertisingTopologyFlinkWindows.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdvertisingTopologyFlinkWindowsLocal.class);
 
     public static void main(final String[] args) throws Exception {
 
@@ -80,44 +83,14 @@ public class AdvertisingTopologyFlinkWindows {
 
 
         //=======================advertisement count=========================================
-//        //out (ad_id, count)
-//        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
-//                .map(new MapToImpressionCount())
-//                .keyBy(a -> a.f1)
-//                .timeWindow(Time.minutes(10))
-//                .aggregate(new AdAggregator());
-//
-//        adCount.addSink(new RedisAdCount(config));
-
-        //=======================campaign count=========================================
-        //out: (campaign id, event time)
-        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config)); // campaign_id, event_time
-
-        //out: (campaign id, event time, 1)
-        WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
+        //out (ad_id, count)
+        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
                 .map(new MapToImpressionCount())
-                .keyBy((a) -> a.f0)
-                .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
+                .keyBy(a -> a.f1)
+                .timeWindow(Time.minutes(10))
+                .aggregate(new AdAggregator());
 
-        // set a custom trigger
-        windowStream.trigger(new EventAndProcessingTimeTrigger());
-
-        // campaign_id, window-end, count, trigger-time
-        DataStream<Tuple4<String, String, Long, String>> result =
-                windowStream.process(sumProcessFunction());
-//        DataStream<Tuple4<String, String, Long, String>> result =
-//                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
-
-//        result.print("process");
-//        result2.print("reduce");
-        // write result to redis
-//        if (config.getParameters().has("add.result.sink.optimized")) {
-        result.addSink(new RedisResultSinkOptimized(config));
-//        } else {
-//            result.addSink(new RedisResultSink(config));
-//        }
-
+        adCount.print();
         env.execute("AdvertisingTopologyFlinkWindows");
 //        env.execute("AdvertisingTopologyFlinkWindows " + config.parameters.toMap().toString());
     }
@@ -129,19 +102,9 @@ public class AdvertisingTopologyFlinkWindows {
         // Choose a source -- Either local generator or Kafka
         RichParallelSourceFunction<String> source;
         String sourceName;
-        if (config.useLocalEventGenerator) {
-            EventGeneratorSource eventGenerator = new EventGeneratorSource(config);
-            source = eventGenerator;
-            sourceName = "EventGenerator";
-
-//            Map<String, List<String>> campaigns = eventGenerator.getCampaigns();
-//            RedisHelper redisHelper = new RedisHelper(config);
-//            redisHelper.prepareRedis(campaigns);
-//            redisHelper.writeCampaignFile(campaigns);
-        } else {
-            source = kafkaSource(config);
-            sourceName = "Kafka";
-        }
+        EventGeneratorSource eventGenerator = new EventGeneratorSource(config);
+        source = eventGenerator;
+        sourceName = "EventGenerator";
 
         return env.addSource(source, sourceName);
     }
@@ -150,8 +113,9 @@ public class AdvertisingTopologyFlinkWindows {
      * Setup Flink environment
      */
     private static StreamExecutionEnvironment setupEnvironment(BenchmarkConfig config) throws IOException {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.getConfig().setGlobalJobParameters(config.getParameters());
+        Configuration configiguration = new Configuration();
+        configiguration.setString("rest.bind-port", "8088");
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configiguration);
 
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);

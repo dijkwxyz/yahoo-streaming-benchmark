@@ -360,9 +360,9 @@ run() {
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
-          swap_flink_tm flink4 flink5
+          swap_flink_tm flink5 flink6
         else
-          swap_flink_tm flink5 flink4
+          swap_flink_tm flink6 flink5
         fi
       done
       if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then

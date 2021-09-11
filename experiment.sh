@@ -76,6 +76,7 @@ test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
+execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
 multilevel.enable: $MULTILEVEL_ENABLE
 #multilevel.level0.statebackend: \"memory\"
 #multilevel.level0.path: \"\"
