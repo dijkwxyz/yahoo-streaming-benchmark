@@ -10,9 +10,10 @@ MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 STATE_BACKEND=rocksDB
+#STATE_BACKEND=fs
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 
-WINDOW_SIZE=${WINDOW_SIZE:-90}
+WINDOW_SIZE=${WINDOW_SIZE:-300}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 LOAD=${LOAD:-100000}
@@ -21,8 +22,8 @@ USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
 #1024*1024 = 1048576
-NET_THRESHOLD=${NET_THRESHOLD:-209600}
-#NET_THRESHOLD=${NET_THRESHOLD:-1048576}
+#NET_THRESHOLD=${NET_THRESHOLD:-209600}
+NET_THRESHOLD=${NET_THRESHOLD:-1048576}
 # other
 BASE_DIR=${BASE_DIR:-/home/ec2-user/yahoo-streaming-benchmark/}
 CONF_FILE=${CONF_FILE:-${BASE_DIR}conf/benchmarkConf.yaml}
@@ -35,7 +36,7 @@ make_conf() {
 # ====== experiment.sh config ======
 # TEST_TIME=$TEST_TIME
 # TM_FAILURE_INTERVAL=$TM_FAILURE_INTERVAL
-#
+# NET_THRESHOLD=$NET_THRESHOLD
 # ============ kafka ============
 kafka.brokers:
     - \"kafka1\"
@@ -106,7 +107,7 @@ done
 
 
 for (( num=0; num < 2; num += 1 )); do
-	for (( LOAD=120000; LOAD <= 140000; LOAD += 10000 )); do
+	for (( LOAD=60000; LOAD <= 60000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
