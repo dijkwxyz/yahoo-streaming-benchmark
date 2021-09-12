@@ -71,10 +71,13 @@ redis.flush: $REDIS_FLUSH
 # number of events per second
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
-failure.start.delay.ms: $FAILURE_START_DELAY_MS
+
+# ========== others =============
+throughput.log.freq: $LOAD
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
+failure.start.delay.ms: $FAILURE_START_DELAY_MS
 stream.endless: $STREAM_ENDLESS
 test.time.seconds: $TEST_TIME
 
