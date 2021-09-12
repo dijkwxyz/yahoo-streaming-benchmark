@@ -2,20 +2,21 @@
 
 # used for stream-bench.sh
 TEST_TIME=${TEST_TIME:-1800}
-TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
+TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-300}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
 MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
-STATE_BACKEND=rocksDB
+STATE_BACKEND=fs
 #STATE_BACKEND=fs
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
 
-WINDOW_SIZE=${WINDOW_SIZE:-300}
+WINDOW_SIZE=${WINDOW_SIZE:-90}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
+STREAM_ENDLESS=false
 LOAD=${LOAD:-100000}
 NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-640}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
@@ -67,14 +68,14 @@ window.slide: $WINDOW_SLIDE
 use.local.event.generator: $USE_LOCAL_GENERATOR
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: $REDIS_FLUSH
-# number of events per second, per source node
+# number of events per second
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 failure.start.delay.ms: $FAILURE_START_DELAY_MS
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
-stream.endless: true
+stream.endless: $STREAM_ENDLESS
 test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
@@ -107,7 +108,7 @@ done
 
 
 for (( num=0; num < 2; num += 1 )); do
-	for (( LOAD=60000; LOAD <= 60000; LOAD += 10000 )); do
+	for (( LOAD=100000; LOAD <= 100000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
@@ -116,7 +117,6 @@ for (( num=0; num < 2; num += 1 )); do
 	  xsync $CONF_FILE
 	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
-
 
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=false
