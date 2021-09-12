@@ -21,7 +21,8 @@ public class KafkaDataGenerator {
     private final Map<String, List<String>> campaigns;
 
     private final boolean isStreamEndless;
-    private final long testEndTimeMs;
+    private final long generateDataTimeSec;
+    private final long numToGenerate;
     private final int loadTargetHz;
     private final int timeSliceLengthMs;
     private final String topic;
@@ -44,7 +45,8 @@ public class KafkaDataGenerator {
         this.loadTargetHz = loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
         this.isStreamEndless = config.isStreamEndless;
-        this.testEndTimeMs = System.currentTimeMillis() + config.testTimeSeconds * 1000L;
+        this.generateDataTimeSec = config.testTimeSeconds * 2 / 3;
+        this.numToGenerate = generateDataTimeSec * loadTargetHz;
         this.campaigns = generateCampaigns(numCampaigns);
         this.ads = flattenCampaigns();
 
@@ -189,7 +191,7 @@ public class KafkaDataGenerator {
 
         while (running) {
             long emitStartTime = System.currentTimeMillis();
-            if (isStreamEndless && emitStartTime > testEndTimeMs) {
+            if (isStreamEndless && numSent >= numToGenerate) {
                 //time to end the stream
                 for (int i = 0; i < partitions.size(); i++) {
                     collect(END_OF_STREAM_ELEMENT);
