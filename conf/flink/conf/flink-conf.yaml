@@ -58,7 +58,7 @@ taskmanager.memory.process.size: 10gb
 
 # The number of task slots that each TaskManager offers. Each slot runs one parallel pipeline.
 
-taskmanager.numberOfTaskSlots: 4
+taskmanager.numberOfTaskSlots: 2
 
 # The parallelism used for programs that did not specify and other parallelism.
 
@@ -261,7 +261,7 @@ env.java.home: /home/ec2-user/yahoo-streaming-benchmark/jdk1.8.0_261
 env.java.opts: -Xloggc:/home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/log/gc.log -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -XX:+PrintGCTimeStamps -XX:+UseG1GC
 #env.java.opts: -XX:+UseG1GC
 
-state.checkpoints.num-retained: 3
+state.checkpoints.num-retained: 1
 web.checkpoints.history: 99999999
 
 ### heap based state backend
