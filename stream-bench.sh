@@ -56,6 +56,7 @@ TM_FAIL_INTERVAL=${TM_FAIL_INTERVAL:--1}
 TM_START_BUFFER=${TM_START_BUFFER:-10}
 
 swap_flink_tm() {
+  echo "### START_TM on $2, STOP_TM on $1"
   remote_operation $2 "START_TM"
   sleep $TM_START_BUFFER
   remote_operation $1 "STOP_TM"
