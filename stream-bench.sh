@@ -292,11 +292,9 @@ run() {
     fi
   elif [ "START_TM" = "$OPERATION" ];
   then
-    echo "### `date`: starting new TM $2"
     $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
   elif [ "STOP_TM" = "$OPERATION" ];
   then
-    echo "### `date`: killing TM $1"
     stop_if_needed TaskManagerRunner TaskManager
   elif [ "FLINK_DEBUG_SINGLELEVEL" = "$OPERATION" ];
   then
@@ -375,7 +373,6 @@ run() {
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
-    echo "### `date`: CLUSTER_START"
     cp $CONF_FILE $RESULTS_DIR/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
@@ -392,7 +389,6 @@ run() {
     done
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
-    echo "### `date`: CLUSTER_STOP"
 #    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
@@ -464,6 +460,7 @@ run() {
 
 if [ $# -lt 3 ];
 then
+  echo "### `date`: $@"
   run $@
 else
   TEST_TIME=$1
