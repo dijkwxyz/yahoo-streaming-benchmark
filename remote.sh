@@ -123,6 +123,7 @@ run_command() {
     analyze_on_host_tm flink3
     analyze_on_host_tm flink4
     analyze_on_host_tm flink5
+    analyze_on_host_tm flink6
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     run_command "ANALYZE_FLINK"
@@ -138,13 +139,14 @@ run_command() {
     copy_cpu_network_log flink3
     copy_cpu_network_log flink4
     copy_cpu_network_log flink5
+    copy_cpu_network_log flink6
     copy_cpu_network_log kafka1
     copy_cpu_network_log kafka2
     copy_cpu_network_log redis1
     copy_cpu_network_log zk1
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6
   else
     if [ "HELP" != "$OPERATION" ];
     then
