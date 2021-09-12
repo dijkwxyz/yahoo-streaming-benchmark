@@ -43,7 +43,7 @@ YARN_HOST="hadoop4"
 FLINK_HOST="flink1"
 REDIS_HOST="redis1"
 
-FLINK_PARALLELISM=16
+FLINK_PARALLELISM=8
 TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${FLINK_PARALLELISM}
 LOAD=${LOAD:-5000000}
@@ -293,7 +293,7 @@ run() {
     fi
   elif [ "START_TM" = "$OPERATION" ];
   then
-    $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
+    start_if_needed TaskManagerRunner TaskManagerRunner 3 $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
   elif [ "STOP_TM" = "$OPERATION" ];
   then
     stop_if_needed TaskManagerRunner TaskManager
