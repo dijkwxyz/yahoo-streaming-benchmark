@@ -293,7 +293,7 @@ run() {
     fi
   elif [ "START_TM" = "$OPERATION" ];
   then
-    $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
+    start_if_needed TaskManagerRunner TaskManagerRunner 3 $BASE_DIR/$FLINK_DIR/bin/taskmanager.sh start
   elif [ "STOP_TM" = "$OPERATION" ];
   then
     stop_if_needed TaskManagerRunner TaskManager
