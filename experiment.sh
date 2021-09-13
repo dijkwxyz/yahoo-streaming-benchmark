@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1800}
-TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-300}
+TEST_TIME=${TEST_TIME:-3600}
+TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-990}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
-MTTI_MS=${MTTI_MS:-180000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-300000}
+MTTI_MS=${MTTI_MS:--1}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 STATE_BACKEND=fs
@@ -83,7 +83,7 @@ test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
-execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
+#execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
 multilevel.enable: $MULTILEVEL_ENABLE
 #multilevel.level0.statebackend: \"memory\"
 #multilevel.level0.path: \"\"
@@ -93,7 +93,7 @@ multilevel.level1.statebackend: \"$STATE_BACKEND\"
 multilevel.level1.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 multilevel.level2.statebackend: \"$STATE_BACKEND\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-multilevel.pattern: \"1,1,2\"
+multilevel.pattern: \"1,2,1\"
 singlelevel.statebackend: \"$STATE_BACKEND\"
 singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 #singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
@@ -110,7 +110,7 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 2; num += 1 )); do
+for (( num=0; num < 4; num += 1 )); do
 	for (( LOAD=100000; LOAD <= 100000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
