@@ -3,8 +3,8 @@
 
 # ====== experiment.sh config ======
 # TEST_TIME=3600
-# TM_FAILURE_INTERVAL=-1
-#
+# TM_FAILURE_INTERVAL=990
+# NET_THRESHOLD=1048576
 # ============ kafka ============
 kafka.brokers:
     - "kafka1"
@@ -27,7 +27,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 60
+window.size: 90
 window.slide: 1
 
 # ============ java load generator ============
@@ -35,19 +35,23 @@ window.slide: 1
 use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
-# number of events per second, per source node
-load.target.hz: 80000
-num.campaigns: 100
-failure.start.delay.ms: 240000
+# number of events per second
+load.target.hz: 100000
+num.campaigns: 640
+
+# ========== others =============
+throughput.log.freq: 100000
 
 # ========== experiment parameters =============
-mtti.ms: 300000
-stream.endless: true
+mtti.ms: -1
+failure.start.delay.ms: 240000
+stream.endless: false
 test.time.seconds: 3600
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 180000
-multilevel.enable: false
+#execution.checkpointing.min-pause: 180000
+multilevel.enable: true
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
 multilevel.level0.statebackend: "fs"
