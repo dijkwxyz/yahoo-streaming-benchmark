@@ -401,6 +401,7 @@ run() {
     remote_operation flink3 "STOP_TM"
     remote_operation flink4 "STOP_TM"
     remote_operation flink5 "STOP_TM"
+    remote_operation flink6 "STOP_TM"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "STOP_KAFKA"
     done
