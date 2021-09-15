@@ -2,11 +2,11 @@
 
 # used for stream-bench.sh
 TEST_TIME=${TEST_TIME:-3600}
-TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-990}
+TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-300000}
-MTTI_MS=${MTTI_MS:--1}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
+MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 STATE_BACKEND=fs
@@ -93,7 +93,7 @@ multilevel.level1.statebackend: \"$STATE_BACKEND\"
 multilevel.level1.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 multilevel.level2.statebackend: \"$STATE_BACKEND\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-multilevel.pattern: \"1,2,1\"
+multilevel.pattern: \"1,1,2\"
 singlelevel.statebackend: \"$STATE_BACKEND\"
 singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 #singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
