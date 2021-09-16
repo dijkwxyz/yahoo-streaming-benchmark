@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1800}
-TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-300}
+TEST_TIME=${TEST_TIME:-3600}
+TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-180000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
 MTTI_MS=${MTTI_MS:-180000}
 let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
@@ -71,16 +71,19 @@ redis.flush: $REDIS_FLUSH
 # number of events per second
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
-failure.start.delay.ms: $FAILURE_START_DELAY_MS
+
+# ========== others =============
+throughput.log.freq: $LOAD
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
+failure.start.delay.ms: $FAILURE_START_DELAY_MS
 stream.endless: $STREAM_ENDLESS
 test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
-execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
+#execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
 multilevel.enable: $MULTILEVEL_ENABLE
 #multilevel.level0.statebackend: \"memory\"
 #multilevel.level0.path: \"\"
@@ -107,7 +110,7 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 2; num += 1 )); do
+for (( num=0; num < 4; num += 1 )); do
 	for (( LOAD=100000; LOAD <= 100000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
