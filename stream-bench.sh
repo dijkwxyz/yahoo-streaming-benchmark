@@ -418,8 +418,8 @@ run() {
     run "STOP_ZK"
   elif [ "KILL" = "$OPERATION" ];
   then
-    local name = $1
-    local PID=`pid_match "$match"`
+    local name = $2
+    local PID=`pid_match "$name"`
     if [[ "$PID" -ne "" ]];
     then
       sudo kill "$PID"

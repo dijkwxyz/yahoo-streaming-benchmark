@@ -371,9 +371,15 @@ public class AnalyzeTool {
 //        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
+        int ct = 0;
+        int NUM_SIGNALS = 8;
         for (int i = 1; i < tmSignals.size(); i++) {
+            ct++;
             if (tmSignals.get(i).f1 != tmSignals.get(i - 1).f1) {
-                deduplicatedTmSignals.add(tmSignals.get(i - 1));
+                if (ct == NUM_SIGNALS) {
+                    deduplicatedTmSignals.add(tmSignals.get(i - 1));
+                }
+                ct = 0;
             }
         }
         //add last one
@@ -725,7 +731,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];

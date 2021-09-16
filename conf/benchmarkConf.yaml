@@ -27,7 +27,11 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
+<<<<<<< Updated upstream
 window.size: 90
+=======
+window.size: 10
+>>>>>>> Stashed changes
 window.slide: 1
 
 # ============ java load generator ============
@@ -35,6 +39,7 @@ window.slide: 1
 use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
+<<<<<<< Updated upstream
 # number of events per second
 load.target.hz: 100000
 num.campaigns: 640
@@ -51,17 +56,32 @@ test.time.seconds: 3600
 # ============ checkpointing ============
 flink.checkpoint.interval: 180000
 #execution.checkpointing.min-pause: 180000
+=======
+# number of events per second, per source node
+load.target.hz: 10000
+num.campaigns: 100
+failure.start.delay.ms: 10000
+
+# ========== experiment parameters =============
+mtti.ms: 20000
+stream.endless: true
+test.time.seconds: 3600
+
+# ============ checkpointing ============
+flink.checkpoint.interval: 10000
+>>>>>>> Stashed changes
 multilevel.enable: true
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
-multilevel.level0.statebackend: "fs"
+multilevel.level0.statebackend: "rocksDB"
 multilevel.level0.path: "file:///dev/shm/flink/"
-multilevel.level1.statebackend: "fs"
+multilevel.level1.statebackend: "rocksDB"
 multilevel.level1.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
-multilevel.level2.statebackend: "fs"
-multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
+multilevel.level2.statebackend: "rocksDB"
+#multilevel.level2.path: "hdfs://hadoop1:9000/flink/checkpoints"
+multilevel.level2.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 multilevel.pattern: "1,1,2"
-singlelevel.statebackend: "fs"
+singlelevel.statebackend: "rocksDB"
 singlelevel.path: "hdfs://hadoop1:9000/flink/checkpoints"
 #singlelevel.path: "file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs"
 
