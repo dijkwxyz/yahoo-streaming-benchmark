@@ -415,6 +415,14 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+  elif [ "KILL" = "$OPERATION" ];
+  then
+    local name = $1
+    local PID=`pid_match "$match"`
+    if [[ "$PID" -ne "" ]];
+    then
+      sudo kill "$PID"
+    fi
   else
     if [ "HELP" != "$OPERATION" ];
     then
