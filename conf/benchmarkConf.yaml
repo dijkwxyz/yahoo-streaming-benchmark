@@ -27,11 +27,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-<<<<<<< Updated upstream
 window.size: 90
-=======
-window.size: 10
->>>>>>> Stashed changes
 window.slide: 1
 
 # ============ java load generator ============
@@ -39,24 +35,7 @@ window.slide: 1
 use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
-<<<<<<< Updated upstream
-# number of events per second
-load.target.hz: 100000
-num.campaigns: 640
 
-# ========== others =============
-throughput.log.freq: 100000
-
-# ========== experiment parameters =============
-mtti.ms: -1
-failure.start.delay.ms: 240000
-stream.endless: false
-test.time.seconds: 3600
-
-# ============ checkpointing ============
-flink.checkpoint.interval: 180000
-#execution.checkpointing.min-pause: 180000
-=======
 # number of events per second, per source node
 load.target.hz: 10000
 num.campaigns: 100
@@ -64,12 +43,11 @@ failure.start.delay.ms: 10000
 
 # ========== experiment parameters =============
 mtti.ms: 20000
-stream.endless: true
-test.time.seconds: 3600
+stream.endless: false
+test.time.seconds: 3
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 10000
->>>>>>> Stashed changes
 multilevel.enable: true
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""

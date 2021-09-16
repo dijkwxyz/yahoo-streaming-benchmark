@@ -191,7 +191,7 @@ public class KafkaDataGenerator {
 
         while (running) {
             long emitStartTime = System.currentTimeMillis();
-            if (isStreamEndless && numSent >= numToGenerate) {
+            if (!isStreamEndless && numSent >= numToGenerate) {
                 //time to end the stream
                 for (int i = 0; i < partitions.size(); i++) {
                     collect(END_OF_STREAM_ELEMENT);
@@ -226,8 +226,7 @@ public class KafkaDataGenerator {
      * usage: main <yaml-path> <partition-leader-id> <num-producer>
      */
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
-//        String path = "conf/benchmarkConf.yaml";
-//        args = new String[]{path};
+//        args = "conf/benchmarkConf.yaml \"\" 2".split(" ");
 
         //take args[0]
         BenchmarkConfig config = BenchmarkConfig.fromArgs(args);
