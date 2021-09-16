@@ -6,8 +6,10 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-180000}
-let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
+MTTI_MS=${MTTI_MS:-540000}
+INJECT_WITH_PROBABILITY=false
+let "FAILURE_START_DELAY_MS=0"
+#let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
 STATE_BACKEND=fs
 #STATE_BACKEND=fs
@@ -77,6 +79,7 @@ throughput.log.freq: $LOAD
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
+failure.inject.useProbability: $INJECT_WITH_PROBABILITY
 failure.start.delay.ms: $FAILURE_START_DELAY_MS
 stream.endless: $STREAM_ENDLESS
 test.time.seconds: $TEST_TIME
