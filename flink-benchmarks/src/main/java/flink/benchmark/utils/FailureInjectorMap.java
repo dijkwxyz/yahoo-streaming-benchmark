@@ -27,6 +27,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
      * MTTI in milliseconds for the whole application
      */
     private long globalMttiMilliSeconds;
+    private final boolean injectWithProbability;
     /**
      * parallelismof application
      */
@@ -40,9 +41,10 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     /**
      * @param globalMttiMs mean time to interrupt in milliseconds
      */
-    public FailureInjectorMap(long globalMttiMs, int parallelism, long startTimeDelayMs) throws IOException {
+    public FailureInjectorMap(long globalMttiMs, boolean injectWithProbability, int parallelism, long startTimeDelayMs) throws IOException {
         this.parallelism = parallelism;
         this.globalMttiMilliSeconds = globalMttiMs;
+        this.injectWithProbability = injectWithProbability;
         this.localFailureRatePerMs = 1.0 / globalMttiMs / parallelism;
         this.injectFailures = globalMttiMs > 0;
         this.startTimeDelayMs = startTimeDelayMs;
@@ -54,19 +56,23 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
      *
      * @param args
      */
-    public static void main(String[] args) throws IOException {
-        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(100, 1, 0L);
-        DescriptiveStatistics ds = new DescriptiveStatistics();
+    public static void main(String[] args) throws Exception {
         long prev = System.currentTimeMillis();
-        //get 100 failures and calculate MTTI
-        while (ds.getN() < 100) {
-            if (failureInjectorMap.test()) {
-                long curr = System.currentTimeMillis();
-                ds.addValue(curr - prev);
-                prev = curr;
-            }
+        System.out.println(prev);
+        FailureInjectorMap failureInjectorMap = new FailureInjectorMap(1000, false,1, 0L);
+        DescriptiveStatistics ds = new DescriptiveStatistics();
+        while (true) {
+            failureInjectorMap.map(1);
         }
-        System.out.println(ds.getMean());
+        //get 100 failures and calculate MTTI
+//        while (ds.getN() < 100) {
+//            if (failureInjectorMap.test()) {
+//                long curr = System.currentTimeMillis();
+//                ds.addValue(curr - prev);
+//                prev = curr;
+//            }
+//        }
+//        System.out.println(ds.getMean());
     }
     /**
      * inject failure based on failure rate
@@ -80,11 +86,16 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
             double roll = new Random().nextDouble();
             if (roll < (currTime - prevTime) * getLocalFailureRatePerMs()) {
                 startTimeMs = startTimeDelayMs + System.currentTimeMillis();
-                throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, time slice %d ms, timestamp %d",
-                        globalMttiMilliSeconds, parallelism, currTime - prevTime, currTime));
+                injectFailure(currTime);
+                return;
             }
             prevTime = currTime;
         }
+    }
+
+    private void injectFailure(long currTime) {
+        throw new RuntimeException(String.format("Injecting artificial failure with global mtti %d ms, parallelism %d, time slice %d ms, timestamp %d",
+                globalMttiMilliSeconds, parallelism, currTime - prevTime, currTime));
     }
 
     public boolean test() {
@@ -110,8 +121,20 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
 
     @Override
     public T map(T value) throws Exception {
-        if (System.currentTimeMillis() > startTimeMs && injectFailures) {
-            maybeInjectFailure();
+        if (!injectFailures) {
+            return value;
+        }
+
+        if (injectWithProbability) {
+            if (System.currentTimeMillis() > startTimeMs) {
+                maybeInjectFailure();
+            }
+        }
+        else {
+            long currentTimeMillis = System.currentTimeMillis();
+            if (currentTimeMillis > startTimeMs + globalMttiMilliSeconds) {
+                injectFailure(currentTimeMillis);
+            }
         }
         return value;
     }

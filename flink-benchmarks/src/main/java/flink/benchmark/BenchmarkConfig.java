@@ -66,6 +66,7 @@ public class BenchmarkConfig implements Serializable {
     public final String singlelevelStateBackend;
     public final int maxMemStateSize;
     public final long mttiMs;
+    public final boolean injectWithProbability;
     public final int throughputLogFreq;
     /**
      * Create a config starting with an instance of ParameterTool
@@ -131,6 +132,7 @@ public class BenchmarkConfig implements Serializable {
         this.maxMemStateSize = parameterTool.getInt("max.memory.state.size", 5242880);
 
         this.mttiMs = parameterTool.getLong("mtti.ms", 20_000);
+        this.injectWithProbability = parameterTool.getBoolean("failure.inject.useProbability");
 
         this.throughputLogFreq = parameterTool.getInt("throughput.log.freq", loadTargetHz * 5);
     }

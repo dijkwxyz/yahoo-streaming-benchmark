@@ -70,7 +70,7 @@ public class AdvertisingTopologyFlinkWindows {
         SingleOutputStreamOperator<Tuple2<String, String>> adIdEventTime = rawMessageStream
                 .flatMap(new DeserializeBolt())
                 .filter(new EventFilterBolt())
-                .map(new FailureInjectorMap<>(config.mttiMs, env.getParallelism(), config.failureStartTimeDelayMs))
+                .map(new FailureInjectorMap<>(config.mttiMs, config.injectWithProbability, env.getParallelism(), config.failureStartTimeDelayMs))
                 .<Tuple2<String, String>>project(2, 5)
                 .assignTimestampsAndWatermarks(WatermarkStrategy.
                         <Tuple2<String, String>>forMonotonousTimestamps().

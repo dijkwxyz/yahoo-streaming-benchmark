@@ -43,6 +43,7 @@ failure.start.delay.ms: 10000
 
 # ========== experiment parameters =============
 mtti.ms: 20000
+failure.inject.useProbability: false
 stream.endless: false
 test.time.seconds: 3
 
