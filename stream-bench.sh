@@ -418,7 +418,7 @@ run() {
     run "STOP_ZK"
   elif [ "KILL" = "$OPERATION" ];
   then
-    local name = $2
+    local name=$2
     local PID=`pid_match "$name"`
     if [[ "$PID" -ne "" ]];
     then
