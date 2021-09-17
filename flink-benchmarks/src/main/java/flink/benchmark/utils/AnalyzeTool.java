@@ -286,9 +286,9 @@ public class AnalyzeTool {
         //2021-09-07 07:48:14,269 UTC INFO  org.apache.flink.runtime.taskexecutor.TaskExecutor           [] - Un-registering task and sending final execution state CANCELED to JobManager for task Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (6/8) d2e54e8977271191a9b4c7f5f4e6829c.
         Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state CANCELED to JobManager for task.*");
         //2021-09-11 04:24:30,053 UTC INFO  org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - Discovered coordinator kafka1:9092 (id: 2147483647 rack: null) for group c8bb5d4a-bd4e-482d-99a2-24f8c8e4a9ae.
-        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Discovered coordinator.*");
-        //2021-09-07 07:49:25,678 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing heap keyed state backend with stream factory.
-        //2021-09-11 05:03:45,987 UTC INFO  org.apache.flink.contrib.streaming.state.RocksDBStateBackend [] - Obtained shared RocksDB cache of size 0 bytes
+//        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Discovered coordinator.*");
+        //2021-09-16 15:19:05,345 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing keyed state backend with stream factory.
+        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Initializing keyed state backend with stream factory.*");
 //        Pattern loadCheckpointCompletePattern;
 //        switch (stateBackendName) {
 //            case "fs":
@@ -375,9 +375,11 @@ public class AnalyzeTool {
         int NUM_SIGNALS = 8;
         for (int i = 1; i < tmSignals.size(); i++) {
             ct++;
-            if (tmSignals.get(i).f1 != tmSignals.get(i - 1).f1) {
-                if (ct == NUM_SIGNALS) {
-                    deduplicatedTmSignals.add(tmSignals.get(i - 1));
+            Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
+            if (tmSignals.get(i).f1 != prevSignal.f1) {
+                if ((Signal.loadCheckpointComplete == prevSignal.f1 && ct == NUM_SIGNALS)
+                || Signal.taskCancelled == prevSignal.f1) {
+                    deduplicatedTmSignals.add(prevSignal);
                 }
                 ct = 0;
             }
