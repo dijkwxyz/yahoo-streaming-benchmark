@@ -6,7 +6,7 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-540000}
+MTTI_MS=${MTTI_MS:-360000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
 #let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
@@ -86,7 +86,7 @@ test.time.seconds: $TEST_TIME
 
 # ============ checkpointing ============
 flink.checkpoint.interval: $CHECKPOINT_INTERVAL_MS
-#execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
+execution.checkpointing.min-pause: $CHECKPOINT_INTERVAL_MS
 multilevel.enable: $MULTILEVEL_ENABLE
 #multilevel.level0.statebackend: \"memory\"
 #multilevel.level0.path: \"\"
@@ -114,7 +114,7 @@ done
 
 
 for (( num=0; num < 4; num += 1 )); do
-	for (( LOAD=100000; LOAD <= 100000; LOAD += 10000 )); do
+	for (( LOAD=60000; LOAD <= 60000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
