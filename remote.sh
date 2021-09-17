@@ -43,6 +43,7 @@ analyze_on_host_jm() {
   scp ec2-user@$host:$FLINK_LOG_DIR/gc.log ec2-user@zk1:$RESULTS_DIR/$host-gc.log
   scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.json ec2-user@zk1:$RESULTS_DIR/checkpoints.json
+  scp ec2-user@$host:$RESULTS_DIR/job.json ec2-user@zk1:$RESULTS_DIR/job.json
   scp ec2-user@$host:$RESULTS_DIR/checkpoints.txt ec2-user@zk1:$RESULTS_DIR/checkpoints.txt
 }
 
