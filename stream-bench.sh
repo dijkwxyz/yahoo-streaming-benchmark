@@ -145,6 +145,7 @@ get_checkpoint_history() {
   local JOB_ID=$1
   echo "Obtaining checkpoint history for job $JOB_ID"
   curl "localhost:8080/jobs/$JOB_ID/checkpoints" -o $RESULTS_DIR/checkpoints.json
+  curl "localhost:8080/jobs/$JOB_ID" -o $RESULTS_DIR/job.json
 }
 
 sample_resource() {
