@@ -372,7 +372,7 @@ public class AnalyzeTool {
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
         int ct = 0;
-        int NUM_SIGNALS = 8;
+        int NUM_SIGNALS = 16;
         for (int i = 1; i < tmSignals.size(); i++) {
             ct++;
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
@@ -733,7 +733,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
