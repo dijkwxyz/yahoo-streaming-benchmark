@@ -804,7 +804,7 @@ public class AnalyzeTool {
             case "tm":
                 // tm outputDir ...logFilePaths
                 FileWriter fw = new FileWriter(new File(srcDir, "throughputs.txt"));
-                fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived\n");
+                fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
                     gatherThroughputData(fileName, fw);
