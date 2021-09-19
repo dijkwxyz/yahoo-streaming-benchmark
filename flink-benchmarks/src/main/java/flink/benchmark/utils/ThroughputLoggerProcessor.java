@@ -6,6 +6,9 @@ import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
+
 public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThroughputLoggerProcessor.class);
@@ -47,6 +50,9 @@ public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
                         elementDiff * ex * elementSize / 1024 / 1024,
                         (totalReceived * elementSize) / 1024 / 1024 / 1024,
                         getRuntimeContext().getIndexOfThisSubtask()));
+
+                MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                System.out.println(String.format("MMMMM%d,%d,%d,%dMMMMM", heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
 
                 // reinit
                 lastLogTimeMs = now;
