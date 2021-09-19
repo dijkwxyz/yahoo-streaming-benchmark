@@ -18,7 +18,7 @@ DISK_FILE=$BASE_DIR/disk
 #iotop: disk
 #1630893722428 Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
 
-sed -i 's/ \+/ /gp' $NETWORK_FILE-*.txt
+sed -i 's/ \+/ /g' $NETWORK_FILE-*.txt
 sed -i "1itimestamp interface recv_bytes recv_packets recv_errs recv_dropped recv_fifo recv_frame recv_compressed recv_multicast sent_bytes sent_packets sent_errs sent_dropped sent_fifo sent_frame sent_compressed sent_multicast" $NETWORK_FILE-*.txt
 
 sed -i 's/[^0-9\.,:]//g' $CPU_FILE-*.txt
