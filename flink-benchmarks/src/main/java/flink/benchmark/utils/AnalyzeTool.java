@@ -28,21 +28,26 @@ public class AnalyzeTool {
         Map<String, DescriptiveStatistics> perHostThr = new HashMap<>();
     }
 
-    public static void gatherThroughputData(String logFileName, FileWriter fw) throws IOException {
+    public static void gatherThroughputData(String logFileName, FileWriter throughputFw, FileWriter heapFw) throws IOException {
         File file = new File(logFileName);
         if (!file.exists()) {
             return;
         }
         Scanner sc = new Scanner(file);
         Pattern dataPattern = Pattern.compile(".*#####(.+)&&&&&.*");
+        Pattern heapPattern = Pattern.compile(".*MMMMM(.+)MMMMM.*");
         while (sc.hasNextLine()) {
 //            From 1618917151330 to 1618917160712 (9382 ms), we received 1000000 elements. That's 106587.08164570454 elements/second/core. 24.395846934289064 MB/sec/core. GB received 0
 //            "- #####1618917151330,1618917160712,9382,1000000,106587.08164570454,24.395846934289064,0&&&&&"
             String l = sc.nextLine();
             Matcher tpMatcher = dataPattern.matcher(l);
+            Matcher heapMatcher = heapPattern.matcher(l);
             if (tpMatcher.matches()) {
-                fw.write(tpMatcher.group(1));
-                fw.write('\n');
+                throughputFw.write(tpMatcher.group(1));
+                throughputFw.write('\n');
+            } else if (heapMatcher.matches()) {
+                heapFw.write(heapMatcher.group(1));
+                heapFw.write('\n');
             }
         }
         sc.close();
@@ -803,13 +808,15 @@ public class AnalyzeTool {
                 break;
             case "tm":
                 // tm outputDir ...logFilePaths
-                FileWriter fw = new FileWriter(new File(srcDir, "throughputs.txt"));
-                fw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
+                FileWriter throughputFw = new FileWriter(new File(srcDir, "throughputs.txt"));
+                FileWriter heapFw = new FileWriter(new File(srcDir, "heap.txt"));
+                throughputFw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
-                    gatherThroughputData(fileName, fw);
+                    gatherThroughputData(fileName, throughputFw, heapFw);
                 }
-                fw.close();
+                throughputFw.close();
+                heapFw.close();
                 break;
             default:
                 break;

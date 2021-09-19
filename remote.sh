@@ -28,10 +28,13 @@ analyze_on_host_tm() {
   shift
   # since tm will be killed, there may be multiple log files
   ssh $host "java -cp $JAR_PATH $ANALYZE_MAIN_CLASS tm $RESULTS_DIR/ $FLINK_LOG_DIR/*.out* "
+  ssh $host "cat $FLINK_LOG_DIR/flink-*.out* > $RESULTS_DIR/$host.out"
   ssh $host "cat $FLINK_LOG_DIR/flink-*.log* > $RESULTS_DIR/$host.log"
   scp ec2-user@$host:$FLINK_LOG_DIR/gc.log ec2-user@zk1:$RESULTS_DIR/$host-gc.log
   scp ec2-user@$host:$RESULTS_DIR/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
+  scp ec2-user@$host:$RESULTS_DIR/heap.txt ec2-user@zk1:$RESULTS_DIR/$host-heap.txt
   scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
+  scp ec2-user@$host:$RESULTS_DIR/$host.out ec2-user@zk1:$RESULTS_DIR/$host.out
 }
 
 analyze_on_host_jm() {
