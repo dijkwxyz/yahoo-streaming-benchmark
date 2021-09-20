@@ -743,7 +743,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink8 flink9".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -762,7 +762,7 @@ public class AnalyzeTool {
                             BenchmarkConfig config = new BenchmarkConfig(new File(path.toFile(), "conf-copy.yaml").getAbsolutePath());
                             String absolutePath = path.toFile().getAbsolutePath();
                             System.out.println("processing " + absolutePath);
-                            parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink7.log", tmLogs, absolutePath, "restart-cost.txt", config);
+                            parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt", config);
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (ParseException e) {
