@@ -377,12 +377,12 @@ public class AnalyzeTool {
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
         int ct = 0;
-        int NUM_SIGNALS = 16;
+        int NUM_SIGNALS_PER_TASK = 2;
         for (int i = 1; i < tmSignals.size(); i++) {
             ct++;
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
             if (tmSignals.get(i).f1 != prevSignal.f1) {
-                if ((Signal.loadCheckpointComplete == prevSignal.f1 && ct == NUM_SIGNALS)
+                if ((Signal.loadCheckpointComplete == prevSignal.f1 && (ct % NUM_SIGNALS_PER_TASK == 0))
                 || Signal.taskCancelled == prevSignal.f1) {
                     deduplicatedTmSignals.add(prevSignal);
                 }
@@ -811,6 +811,7 @@ public class AnalyzeTool {
                 FileWriter throughputFw = new FileWriter(new File(srcDir, "throughputs.txt"));
                 FileWriter heapFw = new FileWriter(new File(srcDir, "heap.txt"));
                 throughputFw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
+                heapFw.write("timestamp,init,used,committed,max\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
                     gatherThroughputData(fileName, throughputFw, heapFw);
