@@ -1,14 +1,14 @@
 #!/bin/bash
 # used for stream-bench.sh
+TEST_TIME=${TEST_TIME:-1200}
 LOAD=${LOAD:-15000}
 FLINK_PARALLELISM=3
-TEST_TIME=${TEST_TIME:-600}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
 #CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-90000}
+MTTI_MS=${MTTI_MS:-1350000}
 #MTTI_MS=${MTTI_MS:-240000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
@@ -78,7 +78,7 @@ load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 
 # ========== others =============
-throughput.log.freq: $(( $LOAD / 16 ))
+throughput.log.freq: $(( $LOAD / $FLINK_PARALLELISM ))
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
