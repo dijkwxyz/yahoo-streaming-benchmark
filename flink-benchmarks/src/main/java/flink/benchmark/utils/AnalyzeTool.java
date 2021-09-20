@@ -743,7 +743,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];

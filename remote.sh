@@ -132,6 +132,12 @@ run_command() {
     analyze_on_host_tm flink8
     analyze_on_host_tm flink9
     analyze_on_host_tm flink10
+    analyze_on_host_tm flink11
+    analyze_on_host_tm flink12
+    analyze_on_host_tm flink13
+    analyze_on_host_tm flink14
+    analyze_on_host_tm flink15
+    analyze_on_host_tm flink16
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     run_command "ANALYZE_FLINK"
@@ -142,6 +148,10 @@ run_command() {
     copy_cpu_network_log hadoop2
     copy_cpu_network_log hadoop3
     copy_cpu_network_log hadoop4
+    copy_cpu_network_log zk1
+    copy_cpu_network_log redis1
+    copy_cpu_network_log kafka1
+    copy_cpu_network_log kafka2
     copy_cpu_network_log flink1
     copy_cpu_network_log flink2
     copy_cpu_network_log flink3
@@ -151,13 +161,17 @@ run_command() {
     copy_cpu_network_log flink7
     copy_cpu_network_log flink8
     copy_cpu_network_log flink9
-    copy_cpu_network_log kafka1
-    copy_cpu_network_log kafka2
-    copy_cpu_network_log redis1
-    copy_cpu_network_log zk1
+    copy_cpu_network_log flink10
+    copy_cpu_network_log flink11
+    copy_cpu_network_log flink12
+    copy_cpu_network_log flink13
+    copy_cpu_network_log flink14
+    copy_cpu_network_log flink15
+    copy_cpu_network_log flink16
+
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16
   else
     if [ "HELP" != "$OPERATION" ];
     then
