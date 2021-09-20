@@ -47,6 +47,7 @@ public class BenchmarkConfig implements Serializable {
 
     // Flink
     public final long checkpointInterval;
+    public final long checkpointMinPause;
     public final boolean checkpointsEnabled;
 //  public final String checkpointUri;
 //  public boolean checkpointToUri;
@@ -68,6 +69,7 @@ public class BenchmarkConfig implements Serializable {
     public final long mttiMs;
     public final boolean injectWithProbability;
     public final int throughputLogFreq;
+    public final int parallelism;
     /**
      * Create a config starting with an instance of ParameterTool
      */
@@ -105,6 +107,7 @@ public class BenchmarkConfig implements Serializable {
 
         // Flink
         this.checkpointInterval = parameterTool.getLong("flink.checkpoint.interval", 0);
+        this.checkpointMinPause = parameterTool.getLong("flink.checkpoint.min-pause", 0);
         this.checkpointsEnabled = checkpointInterval > 0;
 //        this.checkpointUri = parameterTool.get("flink.checkpoint.uri", "");
 //    this.checkpointToUri = checkpointUri.length() > 0;
@@ -135,6 +138,7 @@ public class BenchmarkConfig implements Serializable {
         this.injectWithProbability = parameterTool.getBoolean("failure.inject.useProbability");
 
         this.throughputLogFreq = parameterTool.getInt("throughput.log.freq", loadTargetHz * 5);
+        this.parallelism = parameterTool.getInt("test.parallelism");
     }
 
     /**

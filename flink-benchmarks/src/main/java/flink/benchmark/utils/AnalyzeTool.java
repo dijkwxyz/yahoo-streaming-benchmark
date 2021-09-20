@@ -355,7 +355,8 @@ public class AnalyzeTool {
             String JmLog,
             List<String> tmLogs,
             String dstDir,
-            String dstFileName) throws IOException, ParseException {
+            String dstFileName,
+            BenchmarkConfig config) throws IOException, ParseException {
 
         //(timestamp, type, info, matched string)
         ArrayList<Tuple4<Date, Signal, String, String>> jmSignals = new ArrayList<>();
@@ -364,7 +365,11 @@ public class AnalyzeTool {
 
         for (String tmLog : tmLogs) {
             String srcAbsName = new File(srcDir, tmLog).getAbsolutePath();
-            parseTmLogForRecoveryTime(stateBackendName, srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
+            try {
+                parseTmLogForRecoveryTime(stateBackendName, srcAbsName, taskCancelledSignals, loadCheckpointCompleteSignals);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         ArrayList<Tuple4<Date, Signal, String, String>> tmSignals =
@@ -377,7 +382,7 @@ public class AnalyzeTool {
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
         int ct = 0;
-        int NUM_SIGNALS_PER_TASK = 2;
+        int NUM_SIGNALS_PER_TASK = config.parallelism;
         for (int i = 1; i < tmSignals.size(); i++) {
             ct++;
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
@@ -738,7 +743,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink8 flink9".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -757,7 +762,7 @@ public class AnalyzeTool {
                             BenchmarkConfig config = new BenchmarkConfig(new File(path.toFile(), "conf-copy.yaml").getAbsolutePath());
                             String absolutePath = path.toFile().getAbsolutePath();
                             System.out.println("processing " + absolutePath);
-                            parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt");
+                            parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink7.log", tmLogs, absolutePath, "restart-cost.txt", config);
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (ParseException e) {
@@ -795,7 +800,7 @@ public class AnalyzeTool {
                 }
 
                 tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
-                parseRestartCost(config.multilevelLevel2Type, srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt");
+                parseRestartCost(config.multilevelLevel2Type, srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt", config);
 
                 analyzeLatency(srcDir, latencyResult);
 

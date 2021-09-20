@@ -155,6 +155,8 @@ public class AdvertisingTopologyFlinkWindows {
 
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);
+            env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+            env.getCheckpointConfig().setMinPauseBetweenCheckpoints(config.checkpointMinPause);
 
             String[] patternString = config.multilevelPattern.split(",");
             int[] pattern = new int[patternString.length];

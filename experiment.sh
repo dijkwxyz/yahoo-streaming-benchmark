@@ -67,6 +67,7 @@ redis.host: \"redis1\"
 # ============ Flink ============
 window.size: $WINDOW_SIZE
 window.slide: $WINDOW_SLIDE
+test.parallelism: $FLINK_PARALLELISM
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
