@@ -8,7 +8,7 @@ KAFKA_HOST_PREFIX="kafka"
 KAFKA_HOST_NUM=2
 HADOOP_HOST="hadoop1"
 YARN_HOST="hadoop4"
-FLINK_HOST="flink7"
+FLINK_HOST="flink1"
 REDIS_HOST="redis1"
 
 JAR_PATH=$BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
@@ -128,7 +128,7 @@ run_command() {
     analyze_on_host_tm flink4
     analyze_on_host_tm flink5
     analyze_on_host_tm flink6
-#    analyze_on_host_tm flink7
+    analyze_on_host_tm flink7
     analyze_on_host_tm flink8
     analyze_on_host_tm flink9
     analyze_on_host_tm flink10
@@ -142,7 +142,7 @@ run_command() {
     copy_cpu_network_log hadoop2
     copy_cpu_network_log hadoop3
     copy_cpu_network_log hadoop4
-#    copy_cpu_network_log flink1
+    copy_cpu_network_log flink1
     copy_cpu_network_log flink2
     copy_cpu_network_log flink3
     copy_cpu_network_log flink4
@@ -151,14 +151,13 @@ run_command() {
     copy_cpu_network_log flink7
     copy_cpu_network_log flink8
     copy_cpu_network_log flink9
-    copy_cpu_network_log flink10
     copy_cpu_network_log kafka1
     copy_cpu_network_log kafka2
     copy_cpu_network_log redis1
     copy_cpu_network_log zk1
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9
   else
     if [ "HELP" != "$OPERATION" ];
     then
