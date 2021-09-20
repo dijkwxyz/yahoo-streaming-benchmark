@@ -79,7 +79,8 @@ load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 
 # ========== others =============
-throughput.log.freq: $(( $LOAD / $FLINK_PARALLELISM ))
+# sample roughly every 3 seconds
+throughput.log.freq: $(( $LOAD * 3 / $FLINK_PARALLELISM ))
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
