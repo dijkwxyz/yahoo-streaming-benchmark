@@ -8,7 +8,7 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
 #CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-105000}
+MTTI_MS=${MTTI_MS:-120000}
 #MTTI_MS=${MTTI_MS:-240000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
@@ -118,9 +118,9 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 5; num += 1 )); do
+for (( num=0; num < 3; num += 1 )); do
     #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
-    for (( FLINK_PARALLELISM=2; FLINK_PARALLELISM <= 4; FLINK_PARALLELISM += 2 )); do
+    for (( FLINK_PARALLELISM=2; FLINK_PARALLELISM <= 16; FLINK_PARALLELISM += 2 )); do
 	  LOAD=$(( $FLINK_PARALLELISM * 5000 ))
 
 	  ./clear-data.sh
@@ -133,7 +133,7 @@ for (( num=0; num < 5; num += 1 )); do
 	  sleep 30
 
 	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
+	  MULTILEVEL_ENABLE=false
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
