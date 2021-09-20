@@ -1,6 +1,6 @@
 #!/bin/bash
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-600}
+TEST_TIME=${TEST_TIME:-1200}
 LOAD=${LOAD:-15000}
 FLINK_PARALLELISM=3
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
@@ -8,7 +8,7 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 # used for conf/benchmarkConf.yaml
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
 #CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-75000}
+MTTI_MS=${MTTI_MS:-120000}
 #MTTI_MS=${MTTI_MS:-240000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
@@ -79,7 +79,8 @@ load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 
 # ========== others =============
-throughput.log.freq: $(( $LOAD / $FLINK_PARALLELISM ))
+# sample roughly every 3 seconds
+throughput.log.freq: $(( $LOAD * 3 / $FLINK_PARALLELISM ))
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
@@ -117,8 +118,11 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 1; num += 1 )); do
-#	for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
+for (( num=0; num < 3; num += 1 )); do
+    #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
+    for (( FLINK_PARALLELISM=2; FLINK_PARALLELISM <= 16; FLINK_PARALLELISM += 2 )); do
+	  LOAD=$(( $FLINK_PARALLELISM * 5000 ))
+
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
@@ -129,14 +133,14 @@ for (( num=0; num < 1; num += 1 )); do
 	  sleep 30
 
 	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
+	  MULTILEVEL_ENABLE=false
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
 	  FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
-#	done
+    done
 done
 
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
