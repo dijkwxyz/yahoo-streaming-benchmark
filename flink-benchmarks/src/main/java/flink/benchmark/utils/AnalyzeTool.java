@@ -811,7 +811,7 @@ public class AnalyzeTool {
                 FileWriter throughputFw = new FileWriter(new File(srcDir, "throughputs.txt"));
                 FileWriter heapFw = new FileWriter(new File(srcDir, "heap.txt"));
                 throughputFw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
-                heapFw.write("timestamp,init,used,committed,max\n");
+                heapFw.write("timestamp init used committed max\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
                     gatherThroughputData(fileName, throughputFw, heapFw);
