@@ -1,16 +1,19 @@
 #!/bin/bash
 
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-3600}
+TEST_TIME=${TEST_TIME:-600}
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-360000}
+CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
+#CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
+MTTI_MS=${MTTI_MS:--1}
+#MTTI_MS=${MTTI_MS:-240000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
 #let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
 
+FLINK_PARALLELISM=${FLINK_PARALLELISM:-1} 
 STATE_BACKEND=fs
 #STATE_BACKEND=fs
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
@@ -39,6 +42,7 @@ make_conf() {
 # ====== experiment.sh config ======
 # TEST_TIME=$TEST_TIME
 # TM_FAILURE_INTERVAL=$TM_FAILURE_INTERVAL
+# FLINK_PARALLELISM=$FLINK_PARALLELISM
 # NET_THRESHOLD=$NET_THRESHOLD
 # ============ kafka ============
 kafka.brokers:
@@ -75,7 +79,7 @@ load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
 
 # ========== others =============
-throughput.log.freq: $LOAD
+throughput.log.freq: $(( $LOAD / 16 ))
 
 # ========== experiment parameters =============
 mtti.ms: $MTTI_MS
@@ -96,7 +100,7 @@ multilevel.level1.statebackend: \"$STATE_BACKEND\"
 multilevel.level1.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
 multilevel.level2.statebackend: \"$STATE_BACKEND\"
 multilevel.level2.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
-multilevel.pattern: \"1,1,2\"
+multilevel.pattern: \"1,2\"
 singlelevel.statebackend: \"$STATE_BACKEND\"
 singlelevel.path: \"hdfs://hadoop1:9000/flink/checkpoints\"
 #singlelevel.path: \"file:///home/ec2-user/yahoo-streaming-benchmark/flink-1.11.2/data/checkpoints/fs\"
@@ -113,24 +117,24 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
 
-for (( num=0; num < 4; num += 1 )); do
-	for (( LOAD=60000; LOAD <= 60000; LOAD += 10000 )); do
+for (( num=0; num < 1; num += 1 )); do
+	for (( LOAD=80000; LOAD <= 80000; LOAD += 10000 )); do
 	  ./clear-data.sh
 	  MULTILEVEL_ENABLE=true
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+	  FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 
 	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=false
+	  MULTILEVEL_ENABLE=true
 	  make_conf
 	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	  cat $CONF_FILE | grep multilevel.enable
 	  xsync $CONF_FILE
-	  ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+	  FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
 	  sleep 30
 	done
 done

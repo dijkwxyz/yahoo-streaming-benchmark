@@ -43,7 +43,7 @@ YARN_HOST="hadoop4"
 FLINK_HOST="flink1"
 REDIS_HOST="redis1"
 
-FLINK_PARALLELISM=4
+FLINK_PARALLELISM=${FLINK_PARALLELISM:-4}
 TOPIC=${TOPIC:-"ad-events"}
 PARTITIONS=${FLINK_PARALLELISM}
 LOAD=${LOAD:-5000000}
@@ -71,14 +71,14 @@ remote_operation() {
   local host="$1"
   shift
   local cmd="$@"
-  ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd" &
+  ssh ec2-user@$host "cd $BASE_DIR; FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $cmd" &
 }
 
 remote_operation_sync() {
   local host="$1"
   shift
   local cmd="$@"
-  ssh ec2-user@$host "cd $BASE_DIR; ./stream-bench.sh $cmd"
+  ssh ec2-user@$host "cd $BASE_DIR; FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $cmd"
 }
 
 start_if_needed() {
