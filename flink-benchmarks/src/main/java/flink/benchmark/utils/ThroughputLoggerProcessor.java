@@ -52,7 +52,7 @@ public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
                         getRuntimeContext().getIndexOfThisSubtask()));
 
                 MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-                System.out.println(String.format("MMMMM%d,%d,%d,%d,%dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
+                System.out.println(String.format("MMMMM%d %d %d %d %dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
 
                 // reinit
                 lastLogTimeMs = now;
