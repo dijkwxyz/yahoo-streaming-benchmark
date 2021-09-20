@@ -27,9 +27,15 @@ public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
     @Override
     public void processElement(T t, Context context, Collector<Integer> collector) throws Exception {
         totalReceived++;
+        long now = System.currentTimeMillis();
+
+        if (now - lastLogTimeMs == 1000) {
+            MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+            System.out.println(String.format("MMMMM%d %d %d %d %dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
+        }
+
         if (totalReceived % logfreq == 0) {
             // throughput over entire time
-            long now = System.currentTimeMillis();
 
             // throughput for the last "logfreq" elements
             if (lastLogTimeMs == -1) {
@@ -50,9 +56,6 @@ public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
                         elementDiff * ex * elementSize / 1024 / 1024,
                         (totalReceived * elementSize) / 1024 / 1024 / 1024,
                         getRuntimeContext().getIndexOfThisSubtask()));
-
-                MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-                System.out.println(String.format("MMMMM%d %d %d %d %dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
 
                 // reinit
                 lastLogTimeMs = now;
