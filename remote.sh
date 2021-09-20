@@ -8,7 +8,7 @@ KAFKA_HOST_PREFIX="kafka"
 KAFKA_HOST_NUM=2
 HADOOP_HOST="hadoop1"
 YARN_HOST="hadoop4"
-FLINK_HOST="flink1"
+FLINK_HOST="flink7"
 REDIS_HOST="redis1"
 
 JAR_PATH=$BASE_DIR/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
