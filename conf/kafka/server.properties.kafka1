@@ -18,7 +18,7 @@
 ############################# Server Basics #############################
 
 # The id of the broker. This must be set to a unique integer for each broker.
-broker.id=1
+broker.id=0
 
 # Switch to enable topic deletion or not, default value is false
 #delete.topic.enable=true
@@ -31,7 +31,7 @@ broker.id=1
 #     listeners = listener_name://host_name:port
 #   EXAMPLE:
 #     listeners = PLAINTEXT://your.host.name:9092
-listeners=PLAINTEXT://kafka2:9092
+listeners=PLAINTEXT://kafka1:9092
 
 # Hostname and port the broker will advertise to producers and consumers. If not set, 
 # it uses the value for "listeners" if configured.  Otherwise, it will use the value
@@ -103,7 +103,7 @@ transaction.state.log.min.isr=1
 # from the end of the log.
 
 # The minimum age of a log file to be eligible for deletion due to age
-log.retention.minutes:2
+log.retention.minutes:20
 
 # A size-based retention policy for logs. Segments are pruned from the log as long as the remaining
 # segments don't drop below log.retention.bytes. Functions independently of log.retention.hours.
