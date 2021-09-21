@@ -397,7 +397,9 @@ public class AnalyzeTool {
         //add last one
         deduplicatedTmSignals.add(tmSignals.get(tmSignals.size() - 1));
         //remove first load checkpoint signal on system startup
-        deduplicatedTmSignals.remove(0);
+        if (deduplicatedTmSignals.get(0).f1 == Signal.loadCheckpointComplete) {
+            deduplicatedTmSignals.remove(0);
+        }
 
         //consider the same signals within 3 secs as deduplicates
 //        deduplicateWithinTimeDiff(taskCancelledSignals, 3000);
