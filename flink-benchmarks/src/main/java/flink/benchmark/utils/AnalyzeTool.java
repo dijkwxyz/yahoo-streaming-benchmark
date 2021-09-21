@@ -384,7 +384,6 @@ public class AnalyzeTool {
         int ct = 0;
         int NUM_SIGNALS_PER_TASK = config.parallelism;
         for (int i = 1; i < tmSignals.size(); i++) {
-            ct++;
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
             if (tmSignals.get(i).f1 != prevSignal.f1) {
                 if ((Signal.loadCheckpointComplete == prevSignal.f1 && (ct % NUM_SIGNALS_PER_TASK == 0))
@@ -393,6 +392,7 @@ public class AnalyzeTool {
                 }
                 ct = 0;
             }
+            ct++;
         }
         //add last one
         deduplicatedTmSignals.add(tmSignals.get(tmSignals.size() - 1));
@@ -743,7 +743,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\tofix flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16 flink17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
