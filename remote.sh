@@ -141,7 +141,7 @@ run_command() {
     copy_cpu_network_log kafka1
     copy_cpu_network_log kafka2
     for ((num=1; num <= 17; num++)); do
-      copy_cpu_network_log flink1
+      copy_cpu_network_log flink$num
     done
 
     ./cpu-network-format.sh
