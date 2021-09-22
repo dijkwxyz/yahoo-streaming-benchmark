@@ -58,7 +58,7 @@ taskmanager.memory.process.size: 6gb
 
 # The number of task slots that each TaskManager offers. Each slot runs one parallel pipeline.
 
-taskmanager.numberOfTaskSlots: 1
+taskmanager.numberOfTaskSlots: 2
 
 # The parallelism used for programs that did not specify and other parallelism.
 
@@ -279,4 +279,7 @@ high-availability: com.dijk.ha.MultilevelHighAvailabilityServicesFactory
 multilevel.ha.delegate: 1 
 #heartbeat.timeout: 90000
 
+execution.buffer-timeout: 300ms
+
 #state.backend.local-recovery: true
+
