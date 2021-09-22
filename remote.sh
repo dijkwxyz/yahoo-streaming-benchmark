@@ -123,22 +123,9 @@ run_command() {
     echo "====== collecting checkpoint and recovery results from jm"
     analyze_on_host_jm $FLINK_HOST
     echo "====== collecting throughput results from tm"
-    analyze_on_host_tm flink2
-    analyze_on_host_tm flink3
-    analyze_on_host_tm flink4
-    analyze_on_host_tm flink5
-    analyze_on_host_tm flink6
-    analyze_on_host_tm flink7
-    analyze_on_host_tm flink8
-    analyze_on_host_tm flink9
-    analyze_on_host_tm flink10
-    analyze_on_host_tm flink11
-    analyze_on_host_tm flink12
-    analyze_on_host_tm flink13
-    analyze_on_host_tm flink14
-    analyze_on_host_tm flink15
-    analyze_on_host_tm flink16
-    analyze_on_host_tm flink17
+    for ((num=2; num<=17; num++)); do
+      analyze_on_host_tm "flink$num"
+    done
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     run_command "ANALYZE_FLINK"
@@ -153,27 +140,13 @@ run_command() {
     copy_cpu_network_log redis1
     copy_cpu_network_log kafka1
     copy_cpu_network_log kafka2
-    copy_cpu_network_log flink1
-    copy_cpu_network_log flink2
-    copy_cpu_network_log flink3
-    copy_cpu_network_log flink4
-    copy_cpu_network_log flink5
-    copy_cpu_network_log flink6
-    copy_cpu_network_log flink7
-    copy_cpu_network_log flink8
-    copy_cpu_network_log flink9
-    copy_cpu_network_log flink10
-    copy_cpu_network_log flink11
-    copy_cpu_network_log flink12
-    copy_cpu_network_log flink13
-    copy_cpu_network_log flink14
-    copy_cpu_network_log flink15
-    copy_cpu_network_log flink16
-    copy_cpu_network_log flink17
+    for ((num=1; num <= 17; num++)); do
+      copy_cpu_network_log flink1
+    done
 
     ./cpu-network-format.sh
     echo "====== analyzing data"
-    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16 flink17
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ 2 17
   else
     if [ "HELP" != "$OPERATION" ];
     then

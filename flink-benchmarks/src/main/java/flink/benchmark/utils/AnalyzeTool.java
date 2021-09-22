@@ -737,15 +737,26 @@ public class AnalyzeTool {
         );
     }
 
+    private static List<String> getTmHosts(String[] args, int argIdx) {
+        List<String> tmHosts;
+        tmHosts = new ArrayList<>();
+        int start = Integer.valueOf(args[argIdx++]);
+        int end = Integer.valueOf(args[argIdx++]);
+        for (int i = start; i <= end; i++) {
+            tmHosts.add("flink" + i);
+        }
+        return tmHosts;
+    }
+
     public static void main(String[] args) throws IOException, ParseException {
         // jm outputDir logFileName
         // args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log".split(" ");
         // tm outputDir ...logFilePaths
         // args = "tm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink2.log C:\\Users\\46522\\Downloads\\results\\flink3.log".split(" ");
         // zk resultDir ...tmFileNames
-//         args = "zk C:\\Users\\joinp\\Downloads\\results flink2 flink3 flink4 flink5".split(" ");
+//         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\tofix flink2 flink3 flink4 flink5 flink6 flink7 flink8 flink9 flink10 flink11 flink12 flink13 flink14 flink15 flink16 flink17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -753,10 +764,9 @@ public class AnalyzeTool {
         List<String> tmHosts;
         switch (mode) {
             case "pc":
-                tmHosts = new ArrayList<>();
-                for (int i = argIdx; i < args.length; i++) {
-                    tmHosts.add(args[i]);
-                }
+
+                tmHosts = getTmHosts(args, argIdx);
+
                 List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
                 Files.list(new File(srcDir).toPath()).forEach(path -> {
                     if (path.toFile().isDirectory()) {
@@ -788,12 +798,8 @@ public class AnalyzeTool {
                 String outDirAbsPath = generatedDir.getAbsolutePath();
                 copyFiles(srcDir, outDirAbsPath);
 
-
                 //get tm hosts
-                tmHosts = new ArrayList<>();
-                for (int i = argIdx; i < args.length; i++) {
-                    tmHosts.add(args[i]);
-                }
+                tmHosts = getTmHosts(args, argIdx);
 
                 LatencyResult latencyResult = new LatencyResult();
                 ThroughputResult throughputResult = new ThroughputResult();
@@ -831,5 +837,6 @@ public class AnalyzeTool {
         }
 
     }
+
 
 }
