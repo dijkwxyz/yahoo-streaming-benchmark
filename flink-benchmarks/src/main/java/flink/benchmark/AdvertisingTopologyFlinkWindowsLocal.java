@@ -72,22 +72,22 @@ public class AdvertisingTopologyFlinkWindowsLocal {
         //out (ad_id, event_time)
         SingleOutputStreamOperator<Tuple2<String, String>> adIdEventTime = rawMessageStream
                 .flatMap(new DeserializeBolt())
+                .assignTimestampsAndWatermarks(WatermarkStrategy.
+                        <Tuple7<String, String, String, String, String, String, String>>forMonotonousTimestamps().
+                        withTimestampAssigner(
+                                (event, timestamp) -> Long.parseLong(event.f5))) // extract timestamps and generate watermarks from event_time
                 .filter(new EventFilterBolt())
                 .map(new FailureInjectorMap<>(config.mttiMs, config.injectWithProbability, env.getParallelism(), config.failureStartTimeDelayMs))
-                .<Tuple2<String, String>>project(2, 5)
-                .assignTimestampsAndWatermarks(WatermarkStrategy.
-                        <Tuple2<String, String>>forMonotonousTimestamps().
-                        withTimestampAssigner(
-                                (Tuple2<String, String> event, long timestamp) ->
-                                        Long.parseLong(event.f1))); // extract timestamps and generate watermarks from event_time
+                .<Tuple2<String, String>>project(2, 5);
 
+//        adIdEventTime.print("adIdEventTime");
 
         //=======================advertisement count=========================================
         //out (ad_id, count)
         SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
                 .map(new MapToImpressionCount())
                 .keyBy(a -> a.f1)
-                .timeWindow(Time.minutes(10))
+                .timeWindow(Time.seconds(3))
                 .aggregate(new AdAggregator());
 
         adCount.print();

@@ -381,7 +381,7 @@ public class AnalyzeTool {
 //        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
         tmSignals.sort(Comparator.comparing(a -> a.f0));
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
-        int ct = 0;
+        int ct = 1;
         int NUM_SIGNALS_PER_TASK = config.parallelism;
         for (int i = 1; i < tmSignals.size(); i++) {
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
@@ -447,7 +447,8 @@ public class AnalyzeTool {
                     recoveryStartTimeStr = String.valueOf(cancelledSignal.f0.getTime());
                 }
                 Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal =
-                        tmSignalsIdx < deduplicatedTmSignals.size()
+                        tmSignalsIdx < deduplicatedTmSignals.size() &&
+                                deduplicatedTmSignals.get(tmSignalsIdx).f1 == Signal.loadCheckpointComplete
                                 ? deduplicatedTmSignals.get(tmSignalsIdx++)
                                 : null;
                 if (loadCheckpointCompleteSignal != null) {
@@ -764,7 +765,6 @@ public class AnalyzeTool {
         List<String> tmHosts;
         switch (mode) {
             case "pc":
-
                 tmHosts = getTmHosts(args, argIdx);
 
                 List<String> tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
