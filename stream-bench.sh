@@ -276,7 +276,8 @@ run() {
 #    $LEIN run -g --configPath ../$CONF_FILE || true
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
-    "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+#    "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
     sleep 3
   elif [ "START_FLINK_SINGLELEVEL" = "$OPERATION" ];
   then

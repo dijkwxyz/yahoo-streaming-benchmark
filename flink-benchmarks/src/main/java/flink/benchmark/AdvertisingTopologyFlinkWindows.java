@@ -150,7 +150,9 @@ public class AdvertisingTopologyFlinkWindows {
     private static StreamExecutionEnvironment setupEnvironment(BenchmarkConfig config) throws IOException {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(config.getParameters());
-
+        env.setParallelism(config.parallelism);
+        env.setMaxParallelism(config.parallelism);
+        
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);
             env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
