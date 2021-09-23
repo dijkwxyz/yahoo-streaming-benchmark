@@ -62,6 +62,13 @@ swap_flink_tm() {
   remote_operation $1 "STOP_TM"
 }
 
+restart_flink_tm() {
+  echo "### KILL AND RESTART_TM on $1"
+  remote_operation $1 "STOP_TM"
+  sleep 3
+  remote_operation $1 "START_TM"
+}
+
 pid_match() {
    local VAL=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
    echo $VAL
@@ -361,9 +368,11 @@ run() {
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
-          swap_flink_tm flink5 flink6
+          #swap_flink_tm flink5 flink6
+          restart_flink_tm flink2
         else
-          swap_flink_tm flink6 flink5
+          #swap_flink_tm flink6 flink5
+          restart_flink_tm flink2
         fi
       done
       if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then
