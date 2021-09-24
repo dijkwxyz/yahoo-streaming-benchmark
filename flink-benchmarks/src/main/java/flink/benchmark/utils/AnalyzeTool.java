@@ -289,7 +289,7 @@ public class AnalyzeTool {
 
         String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
         //2021-09-07 07:48:14,269 UTC INFO  org.apache.flink.runtime.taskexecutor.TaskExecutor           [] - Un-registering task and sending final execution state CANCELED to JobManager for task Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (6/8) d2e54e8977271191a9b4c7f5f4e6829c.
-        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state CANCELED to JobManager for task.*");
+        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state.*");
         //2021-09-11 04:24:30,053 UTC INFO  org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - Discovered coordinator kafka1:9092 (id: 2147483647 rack: null) for group c8bb5d4a-bd4e-482d-99a2-24f8c8e4a9ae.
 //        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Discovered coordinator.*");
         //2021-09-16 15:19:05,345 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing keyed state backend with stream factory.
@@ -391,6 +391,9 @@ public class AnalyzeTool {
                     deduplicatedTmSignals.add(prevSignal);
                 }
                 ct = 0;
+            } else if ((ct % NUM_SIGNALS_PER_TASK == 0) && Signal.taskCancelled == prevSignal.f1) {
+                ct = 0;
+                deduplicatedTmSignals.add(prevSignal);
             }
             ct++;
         }
@@ -435,15 +438,30 @@ public class AnalyzeTool {
 
                 Tuple4<Date, Signal, String, String> cancelledSignal =
                         tmSignalsIdx < deduplicatedTmSignals.size()
-                                ? deduplicatedTmSignals.get(tmSignalsIdx++)
+                                ? deduplicatedTmSignals.get(tmSignalsIdx)
                                 : null;
                 if (cancelledSignal != null) {
                     assert Signal.taskCancelled == cancelledSignal.f1;
                     if (jmSignalsIdx < jmSignals.size()) {
-                        Tuple4<Date, Signal, String, String> nextTaskFailedSignal = jmSignals.get(jmSignalsIdx);
+                        Tuple4<Date, Signal, String, String> nextTaskFailedSignal =
+                                jmSignals.get(jmSignalsIdx);
                         assert Signal.taskFailed == nextTaskFailedSignal.f1;
-                        assert nextTaskFailedSignal.f0.compareTo(cancelledSignal.f0) > 0;
+
+                        // if next task failed signal is earlier than next TM signal,
+                        // then this recovery must be a failed one. so skip the curr jm signal
+                        if (tmSignalsIdx + 1 < deduplicatedTmSignals.size()) {
+                            Tuple4<Date, Signal, String, String> nextTmSignal =
+                                    deduplicatedTmSignals.get(tmSignalsIdx + 1);
+                            if (nextTmSignal.f1 == Signal.loadCheckpointComplete &&
+                                    nextTaskFailedSignal.f0.compareTo(nextTmSignal.f0) < 0) {
+                                writeRecoveryData(fw, checkpointId, failedTime, recoveryStartTimeStr, recoveryEndTimeStr);
+                                continue;
+                            }
+
+                        }
+//                        assert nextTaskFailedSignal.f0.compareTo(cancelledSignal.f0) > 0;
                     }
+                    tmSignalsIdx++;
                     recoveryStartTimeStr = String.valueOf(cancelledSignal.f0.getTime());
                 }
                 Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal =
@@ -462,17 +480,21 @@ public class AnalyzeTool {
                 }
             }
 
-            fw.write(checkpointId);
-            fw.write(' ');
-            fw.write(String.valueOf(failedTime.getTime()));
-            fw.write(' ');
-            fw.write(recoveryStartTimeStr);
-            fw.write(' ');
-            fw.write(recoveryEndTimeStr);
-            fw.write('\n');
+            writeRecoveryData(fw, checkpointId, failedTime, recoveryStartTimeStr, recoveryEndTimeStr);
         }
 
         fw.close();
+    }
+
+    private static void writeRecoveryData(FileWriter fw, String checkpointId, Date failedTime, String recoveryStartTimeStr, String recoveryEndTimeStr) throws IOException {
+        fw.write(checkpointId);
+        fw.write(' ');
+        fw.write(String.valueOf(failedTime.getTime()));
+        fw.write(' ');
+        fw.write(recoveryStartTimeStr);
+        fw.write(' ');
+        fw.write(recoveryEndTimeStr);
+        fw.write('\n');
     }
 
     private static class FindLastBeforeSignalParam {
