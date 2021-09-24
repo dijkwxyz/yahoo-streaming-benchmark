@@ -361,6 +361,11 @@ run() {
     if [ $TM_FAIL_INTERVAL -gt 0 ]; then
       echo "### This test will Inject TM Failures"
       for ((TIME=0; TIME < $TEST_TIME / $TM_FAIL_INTERVAL; TIME += 1)); do
+        if (($TIME % 2 == 0)); then
+	  remote_operation flink16 START_TM
+        else
+	  remote_operation flink2 START_TM
+        fi
         if (( $TM_FAIL_INTERVAL > $TM_START_BUFFER )); then
           sample_resource $(($TM_FAIL_INTERVAL - $TM_START_BUFFER))
         else
@@ -368,11 +373,13 @@ run() {
         fi
         echo "### `date`: Injecting TM Failure"
         if (($TIME % 2 == 0)); then
-          swap_flink_tm flink2 flink16
+          #swap_flink_tm flink2 flink16
           #restart_flink_tm flink2
+	  remote_operation flink2 STOP_TM
         else
-          swap_flink_tm flink16 flink2
+          #swap_flink_tm flink16 flink2
           #restart_flink_tm flink2
+	  remote_operation flink16 STOP_TM
         fi
       done
       if (( $TM_FAIL_INTERVAL * $TIME < $TEST_TIME )); then
