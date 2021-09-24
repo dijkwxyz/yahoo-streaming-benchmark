@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[17]:
 
 
 from IPython.display import display, HTML
@@ -39,10 +39,10 @@ scope = PlotlyScope()
 
 plotly.__version__
 
-FIGURE_DIR = "C:\\Users\\joinp\\Downloads\\Figures\\"
+FIGURE_DIR = "C:\\Wenzhong\\我的坚果云\\实验\\Figures\\"
 
 
-# In[2]:
+# In[18]:
 
 
 def latency_df(result_dir, dir_prefix, minTime):
@@ -99,7 +99,7 @@ def resource_df(result_dir, dir_prefix, resource, host, minTime, length):
     return resource_data
 
 
-# In[38]:
+# In[75]:
 
 
 def export_plots(path, fig_name, fig):
@@ -137,7 +137,7 @@ def throughput_plot(result_dir, dir_prefix, minTime, length, tm_list):
         y = res["elements/second"], 
         line_width=1,
 #         mode="markers", marker=dict(symbol="triangle-up", size=3),
-        name = "Throughput")
+        name = "Input Throughput")
 
 def output_throughput_plot(latency_data):
     groups = pd.cut(latency_data["time"], np.arange(latency_data["time"].min(), latency_data["time"].max(), 1000))
@@ -146,7 +146,7 @@ def output_throughput_plot(latency_data):
     return go.Scatter(
         x = res["startTimeFromZero"],
         y = res["elements/second"], 
-        line_width=1,
+        line=dict(width=1, color="rgba(0,255,255,0.5)"),
 #         mode="markers", marker=dict(symbol="triangle-up", size=3),
         name = "Output Throughput")
 
@@ -304,7 +304,7 @@ def failed_checkpoints_plot(successful_checkpoints, showlegend):
     return res
 
 
-# In[42]:
+# In[76]:
 
 
 TIME_BEGIN, TIME_END = 0, 4000000
@@ -541,112 +541,276 @@ def resource_plot(result_dir, dir_prefix, host, export=False, include_title=True
     
 
 
-# In[43]:
+# In[77]:
 
 
-# case study
-result_dir="C:\\Users\\joinp\\Downloads\\problematic\\"
-result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# result_dir="C:\\Users\\joinp\\Downloads\\tofix\\"
-dir_prefix="09-23_15-43-41_load-10000-multi"
-TIME_BEGIN, TIME_END = 0, 1000000
+# show column head
+
+# result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results\\"
+# dir_prefix="case-study-low-level-failure-load-80000-multi"
+# TIME_BEGIN, TIME_END = 110000, 300000
+
+# zk_cpu = zk1_cpu_df(result_dir, dir_prefix)
+# minTime = zk_cpu["timestamp"].min()
+
+# latency_data = latency_df(result_dir, dir_prefix, minTime)
+# length = latency_data.index.max()
+
+# tm = "flink2"
+# host = tm
+# resource="cpu"
+
+# print("zk_cpu")
+# display(zk_cpu.head(1))
+# print("latency_data")
+# display(latency_data.head(1))
+# print("throughput_df")
+# display(throughput_df(result_dir, dir_prefix, tm+".txt", minTime, length).head(1))
+# print("failure_df")
+# display(failure_df(result_dir, dir_prefix, minTime, length).head(1))
+# print("checkpoint_df")
+# display(checkpoint_df(result_dir, dir_prefix, minTime, length).head(1))
+# print("resource_df")
+# display(resource_df(result_dir, dir_prefix, resource, host, minTime, length).head(1))
+
+# zk_cpu["timeFromZero"]
+
+
+# In[78]:
+
+
+# result_dir="C:\\Users\\joinp\\Downloads\\results\\"
+# result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results\\"
+# dir_prefix="failure-break-the-app-load-80000-single"
+# # hosts=["flink2"]
+# hosts=["hadoop1","hadoop2","hadoop3","hadoop4","flink1","flink2","flink3","flink4","flink5","kafka1","kafka2","redis1","zk1"]
+
+# export=True
+
+# def gc_box(fig, start, cost): 
+#     color = '#AB63FA'
+#     fig.add_vrect(
+#         x0=start, x1=start + cost,
+#         fillcolor=color, 
+#         opacity=0.5,
+#         layer="below",
+#         line_color = color,
+#         line_width=1,
+#         row="all", col="all"
+#     )
+        
+# TIME_BEGIN = 0
+# TIME_END = 2000000
+# # fig = latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, export=export, marker_mode=True, include_title=False)
+# fig = latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, export=export, marker_mode=export, include_title=~export)
+# gc_box(fig, 1730534, 20668)
+# gc_box(fig, 1752169, 19970)
+# fig.show(scale=2)
+
+# for host in hosts:
+#     fig = resource_plot(result_dir, dir_prefix, host, export=export, include_title=~export)
+#     gc_box(fig, 1730534, 20668)
+#     gc_box(fig, 1752169, 19970)
+#     fig.show(scale=2)
+
+
+# In[86]:
+
+
+# case study (zoom in failure)
+result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results\\"
+dir_prefix="case-study-low-level-failure-load-80000-multi"
+# TIME_BEGIN, TIME_END = 0, 3000000
+TIME_BEGIN, TIME_END = 100000, 400000
 # hosts=["flink" + str(num) for num in range(2,18)]
-hosts=[]
-# hosts = ["flink1"]
-export = False
-latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, marker_mode=False, export=export).show(scale=2)
+hosts=["flink2"]
+# hosts=["hadoop2","flink2","kafka1","redis1"]
+FIGURE_DIR = "C:\\Wenzhong\\我的坚果云\\实验\\Figures\\results\\preliminary\\"
+export = True
+latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, marker_mode=export, export=export, include_title=not(export)).show(scale=2)
+for host in hosts:
+    resource_plot(result_dir, dir_prefix, host, export=export, include_title=not(export)).show(scale=2)
+
+
+# In[ ]:
+
+
+# case study (zoom in good time)
+result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results\\"
+dir_prefix="case-study-low-level-failure-load-80000-multi"
+TIME_BEGIN, TIME_END = 100000, 300000
+# hosts=["flink" + str(num) for num in range(2,18)]
+# hosts=[]
+hosts=["hadoop2","flink2","kafka1","redis1"]
+FIGURE_DIR = "C:\\Wenzhong\\我的坚果云\\实验\\Figures\\results\\preliminary\\"
+export = True
+latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, marker_mode=export, export=export, include_title=not(export)).show(scale=2)
+for host in hosts:
+    resource_plot(result_dir, dir_prefix, host, export=export, include_title=not(export)).show(scale=2)
+
+
+# In[25]:
+
+
+# result_dir="C:\\Users\\joinp\\Downloads\\results\\"
+# result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results\\"
+# dir_prefix="async-cp-study-load-100000-single"
+# hosts=["flink2"]
+# # hosts=["hadoop1","hadoop2","hadoop3","hadoop4","flink1","flink2","flink3","flink4","flink5","kafka1","kafka2","redis1","zk1"]
+
+# export=True
+ 
+# TIME_BEGIN = 0
+# TIME_END = 2000000
+
+# fig = latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, export=export, marker_mode=True, include_title=False)
+# fig.show(scale=2)
+
+# for host in hosts:
+#     fig = resource_plot(result_dir, dir_prefix, host, export=export, include_title=False)
+#     fig.show(scale=2)
+
+
+# In[ ]:
+
+
+# methodology about multi-level
+def show_methodology(starts, costs, y, name, showlegend, color="green"):
+    res=[]
+    for i, (start, cost) in enumerate(zip(starts, costs)):
+        res.append(go.Scatter(
+            x=[start, cost],
+            y=[y, y],
+            name=name,
+            legendgroup=name,
+            marker=dict(symbol='line-ns', color=color, size=7, line=dict(color=color, width=1)),
+            showlegend= i == 0 if showlegend else False))  
+    return res
+
+def multilevel_costs(starts):
+    costs = np.copy(starts)
+    for i in range(len(starts)):
+        if i % 2 == 0:
+            costs[i] = starts[i] + HIGH_LEVEL_COST
+        else:
+            costs[i] = starts[i] + LOW_LEVEL_COST
+    return costs
+
+interval = 8
+LOW_LEVEL_COST = interval / 8
+HIGH_LEVEL_COST = interval / 2
+min_x = 0
+max_x = min_x + interval * 5
+
+fig = go.Figure()
+fig.update_layout(
+    height = 300,
+    xaxis=dict(
+        title="Time (min)",
+        showline=True,
+        showgrid=False,
+        showticklabels=True,
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
+        ticks='outside',
+        dtick=interval / 2,
+        tickfont=dict(
+            family='Arial',
+            size=12,
+            color='rgb(82, 82, 82)',
+        ),
+    ),
+    yaxis=dict(
+        showgrid=False,
+        zeroline=False,
+        showline=False,
+        showticklabels=False,
+    ),
+    autosize=False,
+    margin=dict(
+        autoexpand=False,
+        l=0,
+        r=0,
+        t=0,
+    ),
+    showlegend=False,
+    plot_bgcolor='white',
+)
+
+annotations = []
+
+
+starts = np.arange(min_x, max_x, interval)
+y = 1
+name = "3. Single-level -- half interval"
+pad_x = 0.0
+pad_y = 0.2
+xanchor = "left"
+
+
+fig.add_traces(show_methodology(starts, starts + HIGH_LEVEL_COST, y, name, True))
+annotations.append(dict(xref='paper', x=pad_x, y=y + pad_y,
+                                  xanchor=xanchor, yanchor='middle',
+                                  text=name,
+                                  font=dict(family='Arial',
+                                            size=16),
+                                  showarrow=False))
+
+starts = np.arange(min_x, max_x, interval)
+costs = multilevel_costs(starts)
+y = 2
+name = "2. Multi-level -- half interval"
+fig.add_traces(show_methodology(starts, costs, y, name, True, color="red"))
+annotations.append(dict(xref='paper', x=pad_x, y=y + pad_y,
+                                  xanchor=xanchor, yanchor='middle',
+                                  text=name,
+                                  font=dict(family='Arial',
+                                            size=16),
+                                  showarrow=False))
+
+starts = np.arange(min_x, max_x, interval * 2)
+y = 3
+name = "1. Single-level"
+fig.add_traces(show_methodology(starts, starts + HIGH_LEVEL_COST, y, name, True))
+annotations.append(dict(xref='paper', x=pad_x, y=y + pad_y,
+                                  xanchor=xanchor, yanchor='middle',
+                                  text=name,
+                                  font=dict(family='Arial',
+                                            size=16),
+                                  showarrow=False))
+
+fig.update_layout(annotations=annotations)
+
+fig.show() 
+
+export_plots(FIGURE_DIR, "methodology_multilevel", fig)
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+# 1c4g nodes. flink7: JM, flink8-10: TM.
+# show the recovery process is CPU bound
+result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results"
+dir_prefix="1c4g-3node-15000-multi"
+
+TIME_BEGIN, TIME_END = 0, 4000000
+
+hosts=["flink" + str(num) for num in range(7,11)]
+export = True
+
+latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, marker_mode=export, export=export).show(scale=2)
 for host in hosts:
     resource_plot(result_dir, dir_prefix, host, export=export).show(scale=2)
 
 
-# In[27]:
-
-
-# draw all
-result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# result_dir="C:\\Users\\joinp\\Downloads\\tofix\\"
-# TIME_BEGIN, TIME_END = 40000, 100000
-TIME_BEGIN, TIME_END = 0, 10000000
-
-hosts=[]
-# hosts=["flink2","hadoop2","kafka2"]
-# hosts=["hadoop1","hadoop2","hadoop3","hadoop4","flink1","flink2","flink3","flink4","flink5","kafka1","kafka2","redis1","zk1"]
-export = False
-for dir_prefix in os.listdir(result_dir):
-    if os.path.isdir(result_dir+dir_prefix):
-        print(dir_prefix)
-        latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, export=export, marker_mode=False).show(scale=2)
-        for host in hosts:
-            resource_plot(result_dir, dir_prefix, host, export=export).show(scale=2)
-
-
-# In[6]:
-
-
-# # average latency under no failures
-# result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# TIME_BEGIN, TIME_END = 0, 10000000
-
-# hosts=[]
-# # hosts=["flink2","hadoop2","kafka2"]
-# # hosts=["hadoop1","hadoop2","hadoop3","hadoop4","flink1","flink2","flink3","flink4","flink5","kafka1","kafka2","redis1","zk1"]
-# export = False
-# for dir_prefix in os.listdir(result_dir):
-#     if os.path.isdir(result_dir+dir_prefix):
-#         print(dir_prefix)
-#         zk_cpu = zk1_cpu_df(result_dir, dir_prefix)
-#         zk_cpu = zk_cpu[(TIME_BEGIN <= zk_cpu["timeFromZero"]) & (zk_cpu["timeFromZero"] <= TIME_END)]
-#         minTime = zk_cpu["timestamp"].min()
-#         if minTime is np.nan:
-#             minTime = 0
-
-#         latency_data = latency_df(result_dir, dir_prefix, minTime)
-#         length = min(latency_data["time"].max(), TIME_END)
-#         latency_data = latency_data[(TIME_BEGIN <= latency_data["time"]) & (latency_data["time"] <= length)]
-#         display(latency_data[latency_data["latency"] < 1000].mean()["latency"].round())
-
-
-# In[7]:
-
-
-# case study
-# result_dir="C:\\Users\\joinp\\Downloads\\problematic\\"
-# result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# # result_dir="C:\\Users\\joinp\\Downloads\\tofix\\"
-# dir_prefix="09-22_21-21-15_load-80000-multi"
-# TIME_BEGIN, TIME_END = 0, 4000000
-# hosts=["flink" + str(num) for num in range(2,18)]
-# # hosts=[]
-# # hosts = ["flink1"]
-# export = False
-# latency_throughput_plot(os.path.abspath(result_dir), dir_prefix, marker_mode=False, export=export).show(scale=2)
-# for host in hosts:
-#     resource_plot(result_dir, dir_prefix, host, export=export).show(scale=2)
-
-
-# In[8]:
-
-
-# result_dir="C:\\Users\\joinp\\Downloads\\problematic\\"
-# result_dir="C:\\Users\\joinp\\Downloads\\result-9\\"
-# dir_prefix="09-22_04-24-38_load-30000-multi"
-# dir_prefix= "09-20_15-33-13_load-15000-multi"
-# cpu = zk1_cpu_df(result_dir, dir_prefix)
-# cpu = cpu[(TIME_BEGIN <= cpu["timeFromZero"]) & (cpu["timeFromZero"] <= TIME_END)]
-# minTime = cpu["timestamp"].min()
-# if minTime is np.nan:
-#     minTime = 0
-
-
-# In[9]:
-
-
-# result_dir = "C:\\Users\\joinp\\Downloads\\results\\"
-# dirs = os.listdir(result_dir)
-# [path for path in dirs if os.path.isdir(result_dir+path)]
-
-
-# In[10]:
+# In[ ]:
 
 
 SLOT_PER_NODE = 2
@@ -671,16 +835,15 @@ def recover_cost_df(result_dir, dir_prefix, minTime, length, parallelism):
     })
 
 
-def checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism, failure_data=None):
+def checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism, drop_during_failure=False):
     checkpoint_data = checkpoint_df(result_dir, dir_prefix, minTime, length)
-    checkpoint_data = checkpoint_data[checkpoint_data["size_bytes"] > 0]
-    
     # drop checkpoints during failure (they are too long than normal checkpoints)
-    if failure_data is not None:
+    if drop_during_failure:
         checkpoint_data["endTimeFromZero"] = checkpoint_data["startTimeFromZero"] + checkpoint_data["timeCost_ms"]
         chechpoint_during_failure = checkpoint_data.apply(
             lambda row: np.any(
-                ((failure_data["failedTimeFromZero"] <= row["startTimeFromZero"]) & (failure_data["recoveredTimeFromZero"] >= row["startTimeFromZero"]))
+                ((failure_data["failedTimeFromZero"] <= row["startTimeFromZero"]) & (failure_data["recoveredTimeFromZero"] >= row["startTimeFromZero"])) | \
+                ((failure_data["failedTimeFromZero"] <= row["endTimeFromZero"]) & (failure_data["recoveredTimeFromZero"] >= row["endTimeFromZero"]))
             ),
             axis=1)
         checkpoint_data = checkpoint_data[~chechpoint_during_failure]
@@ -708,386 +871,45 @@ def grep_config(file, toSearch):
 
 # grep_config("C:\\Users\\joinp\\Downloads\\results\\09-21_00-22-26_load-70000-single\\conf-copy.yaml", "multilevel.pattern")
 
+result_dir="C:\\Wenzhong\\我的坚果云\\实验\\results"
+dir_prefix="1c4g-3node-15000-multi"
 
-# In[11]:
+TIME_BEGIN, TIME_END = 0, 4000000
 
+hosts=["flink" + str(num) for num in range(7,11)]
+export = True
 
-def add_checkpoint_level(config_file, df, id_key):
-    multilevel_enabled = grep_config(config_file, "multilevel.enable:")
-    if multilevel_enabled == "true":
-        multilevel_pattern = grep_config(config_file, "multilevel.pattern:").split(',')
-        df["level"] = df.apply(
-            lambda row : int(multilevel_pattern[int(row[id_key] - 1) % len(multilevel_pattern)]),
-            axis = 1)
-    else:
-        df["level"] = 2
+latency_data = latency_df(result_dir, dir_prefix)
+minTime = latency_data["currTime"].min()
+length = latency_data["time"].max()
 
-def checkpoint_recovery_cost(result_dir):
-    checkpoint_cost = None
-    recovery_cost = None
-    for dir_prefix in os.listdir(result_dir):    
-        if os.path.isdir(result_dir+dir_prefix):
-            cpu_data = zk1_cpu_df(result_dir, dir_prefix)
-            minTime = cpu_data["timestamp"].min()
-            length = cpu_data["timeFromZero"].max()
+parallelism = grep_parallelism(os.path.join(result_dir, dir_prefix, "conf-copy.yaml"))
 
-
-            config_file = os.path.join(result_dir, dir_prefix, "conf-copy.yaml")
-            parallelism = grep_parallelism(config_file)
-            
-            failure_data = recover_cost_df(result_dir, dir_prefix, minTime, 4000000, parallelism)
-            add_checkpoint_level(config_file, failure_data, "checkpointId")
-                
-            recovery_data = failure_data[[
-                "failedTimeFromZero",
-                "checkpointId",
-                "checkpoint size per node (MB)",
-                "checkpoint cost (ms)",
-                "recovery cost (ms)",
-                "checkpoint speed per node (MB/Sec)",
-                "recovery speed per node (MB/Sec)",
-                "level",
-                "parallelism",
-            ]]
-
-            checkpoint_data = checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism, failure_data=failure_data)
-            checkpoint_data = checkpoint_data[2:-2] # usually the first and last few checkpoints are small
-            checkpoint_data = checkpoint_data[(checkpoint_data["size_bytes"] > 0) & (checkpoint_data["timeCost_ms"] > 0)]
-            add_checkpoint_level(config_file, checkpoint_data, "id")
-           
-            checkpoint_data = checkpoint_data[["id",
-                    "size per node (MB)",
-                    "time cost (s)",
-                    "speed per node (MB/s)",
-                    "level",
-                    "parallelism",
-                   ]]
-            
-            if checkpoint_cost is None:
-                checkpoint_cost = checkpoint_data
-            else:
-                checkpoint_cost = checkpoint_cost.append(checkpoint_data)
-
-            if recovery_cost is None:
-                recovery_cost = recovery_data
-            else:
-                recovery_cost = recovery_cost.append(recovery_data)
-
-    return checkpoint_cost, recovery_cost
-
-def checkpoint_cost_all(result_dir):
-    checkpoint_cost = None
-    for dir_prefix in os.listdir(result_dir):    
-        if os.path.isdir(result_dir+dir_prefix):
-            latency_data = latency_df(result_dir, dir_prefix)
-            minTime = latency_data["currTime"].min()
-            length = latency_data["time"].max()
-
-            config_file = os.path.join(result_dir, dir_prefix, "conf-copy.yaml")
-            parallelism = grep_parallelism(os.path.join(result_dir, dir_prefix, "conf-copy.yaml"))
-
-def mean_and_error_bar(df, mean_df):
-    max_val = df.max()
-    min_val = df.min()
-    
-    print(max_val, min_val)
-    
-    error_up = max_val - mean_df
-    error_down = mean_df - min_val
-    return error_up, error_down
-
-def avg_cost_by_parallelism(cost_df):
-    LOW_LEVEL_SIGN = 1
-    HIGH_LEVEL_SIGN = 2
-
-    low_level_cost = cost_df[cost_df["level"] == LOW_LEVEL_SIGN]
-    high_level_cost = cost_df[cost_df["level"] == HIGH_LEVEL_SIGN]
-
-    group_cost_low = low_level_cost.groupby(low_level_cost["parallelism"])
-    group_cost_high = high_level_cost.groupby(high_level_cost["parallelism"])
-    #return mean and std-err
-    low_mean = group_cost_low.mean()
-    low_mean["count"] = group_cost_low.count()["level"]
-    high_mean = group_cost_high.mean()
-    high_mean["count"] = group_cost_high.count()["level"]
-    return low_mean, group_cost_low.sem(), high_mean, group_cost_high.sem()
-
-# checkpoint_cost, recovery_cost = checkpoint_recovery_cost(result_dir)
-# display(recovery_cost)
-# display(checkpoint_cost)
-
-
-# In[12]:
-
-
-# LOW_LEVEL_SIGN = 1
-# HIGH_LEVEL_SIGN = 2
-# checkpoint_cost, recovery_cost = checkpoint_recovery_cost(result_dir)
-# cost_df = checkpoint_cost
-
-# mean_cost_low, std_err_low, mean_cost_high, std_err_high = avg_cost_by_parallelism(cost_df)
-# display(mean_cost_low)
-# display(std_err_low)
-# display(mean_cost_high)
-# std_err_high
-
-
-# In[13]:
-
-
-# result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# dir_prefix="09-21_16-12-38_load-80000-multi"
-# cpu_data = zk1_cpu_df(result_dir, dir_prefix)
-# minTime = cpu_data["timestamp"].min()
-# length = cpu_data["timeFromZero"].max()
-# display(minTime, length)
-
-# config_file = os.path.join(result_dir, dir_prefix, "conf-copy.yaml")
-# parallelism = grep_parallelism(config_file)
-
-# failure_data = recover_cost_df(result_dir, dir_prefix, minTime, 4000000, parallelism)
-# add_checkpoint_level(config_file, failure_data, "checkpointId")
-
-# recovery_data = failure_data[[
-#     "failedTimeFromZero",
-#     "checkpointId",
-#     "checkpoint size per node (MB)",
-#     "checkpoint cost (ms)",
-#     "recovery cost (ms)",
-#     "checkpoint speed per node (MB/Sec)",
-#     "recovery speed per node (MB/Sec)",
-#     "level",
-#     "parallelism",
-# ]]
-
-# checkpoint_data = checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism, failure_data=failure_data)
-# checkpoint_data["endTimeFromZero"] = checkpoint_data["startTimeFromZero"] + checkpoint_data["timeCost_ms"]
-
-# chechpoint_during_failure = checkpoint_data.apply(
-#     lambda row: np.any(
-#         ((failure_data["failedTimeFromZero"] <= row["startTimeFromZero"]) & (failure_data["recoveredTimeFromZero"] >= row["startTimeFromZero"])) | \
-#         ((failure_data["failedTimeFromZero"] <= row["endTimeFromZero"]) & (failure_data["recoveredTimeFromZero"] >= row["endTimeFromZero"]))
-#     ),
-#     axis=1)
-# checkpoint_data[~chechpoint_during_failure]
-
-
-# In[14]:
-
-
-result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-# result_dir="C:\\Users\\joinp\\Downloads\\2-slot-300ms-buffer\\"
-
-x_start = 4
-interval = 4
-
-checkpoint_cost, recovery_cost = checkpoint_recovery_cost(result_dir)
-
-keys_recovery = "checkpointId,checkpoint size per node (MB),checkpoint cost (ms),recovery cost (ms),checkpoint speed per node (MB/Sec),recovery speed per node (MB/Sec),level".split(',')
-recovery_low_mean, recovery_low_err, recovery_high_mean, recovery_high_err = avg_cost_by_parallelism(recovery_cost)
-
-keys_checkpoint = "id,size_bytes,level".split(',')
-checkpoint_low_mean, checkpoint_low_err, checkpoint_high_mean, checkpoint_high_err = avg_cost_by_parallelism(checkpoint_cost)
-
-def mean_cost_plot(df, df_err, key, legend_name):
-    return go.Bar(
-#     return go.Scatter(
-        x=df.index,
-        y=df[key],
-        name=legend_name,
-        error_y=dict(
-            type='data', # use exact value instead of percentage
-            array=df_err[key]),
-    )
-
-x_axes_layout = dict(
-        tickmode = 'linear',
-        tick0 = x_start,
-        dtick = interval,
-        title = "Parallelism"
-    )
-
-cr_cost_fig= go.Figure()
-# checkpoint speed
-cr_cost_fig.add_trace(mean_cost_plot(checkpoint_low_mean, checkpoint_low_err, "speed per node (MB/s)", "Low Level Checkpoint Speed"))
-cr_cost_fig.add_trace(mean_cost_plot(checkpoint_high_mean, checkpoint_high_err, "speed per node (MB/s)", "High Level Checkpoint Speed"))
-# recovery speed
-cr_cost_fig.add_trace(mean_cost_plot(recovery_low_mean, recovery_low_err, "recovery speed per node (MB/Sec)", "Low Level Recovery Speed"))
-cr_cost_fig.add_trace(mean_cost_plot(recovery_high_mean, recovery_high_err, "recovery speed per node (MB/Sec)", "High Level Recovery Speed"))
-
-cr_cost_fig.update_layout(xaxis = x_axes_layout, margin=dict(t=0))
-cr_cost_fig.update_yaxes(title_text="Speed per node (MB/Sec)", title_font = {"size": 15})
-
-# checkpoint_cost_fig = go.Figure()
-# checkpoint_cost_fig.add_trace(mean_cost_plot(checkpoint_low_mean, checkpoint_low_err, "speed per node (MB/s)", "Low-level (actual)"))
-# checkpoint_cost_fig.add_trace(mean_cost_plot(checkpoint_high_mean, checkpoint_high_err, "speed per node (MB/s)", "High-level (actual)"))
-# checkpoint_cost_fig.update_layout(xaxis = x_axes_layout, margin=dict(t=0))
-# checkpoint_cost_fig.update_yaxes(title_text="Checkpoint speed per node (MB/Sec)", title_font = {"size": 15})
-
-# rate_fig= go.Figure()
-# rate = checkpoint_low / checkpoint_high
-# rate_fig.add_trace(go.Scatter(
-#     x=rate.index,
-#     y=rate["speed per node (MB/s)"],
-#     name="low / high"
-# ))
-# rate_fig.update_layout(xaxis = x_axes_layout)
-# rate_fig.update_yaxes(title_text="Checkpoint speed ratio (low/high)", title_font = {"size": 15})
-
-
-def ideal_line(x, y, legend_name):
-    return go.Scatter(
-        x = x,
-        y = y,
-        name=legend_name
-    )
-
-x = np.arange(x_start, 36, interval)
-
-# 1Gbits = 125MB/s, 2 hadoop data node, so 250 bandwidth shared by x subtasks
-# highest_net_speed = 250
-highest_disk_speed = 55
-# ideal_speed_high = highest_net_speed / x
-ideal_speed_high = highest_disk_speed * 4 / x
-ideal_speed_low = [highest_disk_speed] * len(x)
-
-cr_cost_fig.add_trace(ideal_line(x, ideal_speed_low, "low-level (ideal trend)"))
-cr_cost_fig.add_trace(ideal_line(x, ideal_speed_high, "high-level (ideal trend)"))    
-
-# highest_checkpoint_speed = 60
-# ideal_checkpoint_speed_high = highest_checkpoint_speed * (0.5 ** np.arange(0, 8))
-# ideal_checkpoint_speed_low = np.zeros(8)
-# ideal_checkpoint_speed_low.fill(highest_checkpoint_speed)
-
-# checkpoint_cost_fig.add_trace(ideal_line(x, ideal_checkpoint_speed_low, "Low-level (ideal trend)"))
-# checkpoint_cost_fig.add_trace(ideal_line(x, ideal_checkpoint_speed_high, "High-level (ideal trend)"))
-
-highest_checkpoint_speed
+failure_data = recover_cost_df(result_dir, dir_prefix, minTime, length, parallelism)
+failure_data = failure_data.round(2)
+print(dir_prefix)
+display(failure_data[[
+    "failedTimeFromZero",
+    "checkpointId",
+    "checkpoint size per node (MB)",
+    "checkpoint cost (ms)",
+    "recovery cost (ms)",
+    "checkpoint speed per node (MB/Sec)",
+    "recovery speed per node (MB/Sec)",
+]])
 
 
 # In[ ]:
 
 
+latency_data = latency_df(result_dir, dir_prefix)
+minTime = latency_data["currTime"].min()
+length = latency_data["time"].max()
 
-# checkpoint_cost_fig.show()
-# recovery_cost_fig.show()
-# export_plots(FIGURE_DIR, "mean_checkpoint_cost_fig", checkpoint_fig)
-# export_plots(FIGURE_DIR, "mean_recovery_cost_fig", recovery_fig)
+print(dir_prefix)
+parallelism = grep_parallelism(os.path.join(result_dir, dir_prefix, "conf-copy.yaml"))
 
-cr_cost_fig.show()
-# export_plots(FIGURE_DIR, "mean_checkpoint_recovery_cost_fig", cr_cost_fig)
-
-display("recovery_low_mean")
-display(recovery_low_mean)
-display("recovery_high_mean")
-display(recovery_high_mean)
-display("checkpoint_low_mean")
-display(checkpoint_low_mean)
-display("checkpoint_high_mean")
-display(checkpoint_high_mean)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-
-for dir_prefix in os.listdir(result_dir):
-    if os.path.isdir(result_dir+dir_prefix):
-        cpu_data = zk1_cpu_df(result_dir, dir_prefix)
-        minTime = cpu_data["timestamp"].min()
-        length = cpu_data["timeFromZero"].max()
-
-        parallelism = grep_parallelism(os.path.join(result_dir, dir_prefix, "conf-copy.yaml"))
-        
-        failure_data = recover_cost_df(result_dir, dir_prefix, minTime, length, parallelism)
-        failure_data = failure_data.round(2)
-        print(dir_prefix)
-        display(failure_data[[
-            "failedTimeFromZero",
-            "checkpointId",
-            "checkpoint size per node (MB)",
-            "checkpoint cost (ms)",
-            "recovery cost (ms)",
-            "checkpoint speed per node (MB/Sec)",
-            "recovery speed per node (MB/Sec)",
-        ]])
-
-
-# In[ ]:
-
-
-# show average cp speed
-# result_dir="C:\\Users\\joinp\\Downloads\\2-slot-300ms-buffer\\"
-
-# dirs = os.listdir(result_dir)
-# for dir_prefix in dirs:
-#     if os.path.isdir(result_dir+dir_prefix):
-#         cpu_data = zk1_cpu_df(result_dir, dir_prefix)
-#         minTime = cpu_data["timestamp"].min()
-#         length = cpu_data["timeFromZero"].max()
-        
-#         parallelism = grep_parallelism(os.path.join(result_dir, dir_prefix, "conf-copy.yaml"))
-        
-#         failure_data = recover_cost_df(result_dir, dir_prefix, minTime, length, parallelism)
-#         res = checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism, failure_data=failure_data).round(2)
-# #         display(res[(res["speed per node (MB/s)"] < 120) & (res["id"] % 2 == 1)])
-#         print(dir_prefix)
-# #         display(res)
-#         display(res[res["id"] % 2==1]["speed per node (MB/s)"].mean())
-#         #find experiments with too small states
-#         res = res[(res["size per node (MB)"] < 120) & (res["id"] > 2)]
-#         if (len(res) > 0):
-#             print(dir_prefix)
-#             display(res)
-
-
-# In[ ]:
-
-
-result_dir="C:\\Users\\joinp\\Downloads\\results\\"
-dir_prefix="09-23_15-43-41_load-10000-multi"
-
-zk_cpu = zk1_cpu_df(result_dir, dir_prefix)
-zk_cpu = zk_cpu[(TIME_BEGIN <= zk_cpu["timeFromZero"]) & (zk_cpu["timeFromZero"] <= TIME_END)]
-minTime = zk_cpu["timestamp"].min()
-
-latency_data = latency_df(result_dir, dir_prefix, minTime)
-length = min(latency_data["time"].max(), TIME_END)
-latency_data = latency_data[(TIME_BEGIN <= latency_data["time"]) & (latency_data["time"] <= length)]
-
-# selected = latency_data[(latency_data["currTime"] >= 1631167972449) & (latency_data["currTime"] <= 1631168018052)]
-# time_len = latency_data["currTime"].max() - latency_data["currTime"].min()
-# density_during_recovery = selected["currTime"].count() / (1631168018052 - 1631167972449)
-# density_all = latency_data.count() / time_len
-# print(density_all)
-# print(density_during_recovery)
-# density_all / density_during_recovery
-
-failure_data = failure_df(result_dir, dir_prefix, minTime)
-failure_data.head()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
+res = checkpoint_cost_df(result_dir, dir_prefix, minTime, length, parallelism).round(2)
+#         display(res[(res["speed per node (MB/s)"] < 40) & (res["id"] % 2 == 1)])
+display(res)
 
