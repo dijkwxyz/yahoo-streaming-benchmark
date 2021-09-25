@@ -233,7 +233,8 @@ public class AnalyzeTool {
         restoreFromCheckpoint,
         noCheckpoint,
         taskCancelled,
-        loadCheckpointComplete
+        loadCheckpointComplete,
+        loadCheckpointFailed,
     }
 
     //(timestamp, type, info, matched string)
@@ -386,14 +387,17 @@ public class AnalyzeTool {
         for (int i = 1; i < tmSignals.size(); i++) {
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
             if (tmSignals.get(i).f1 != prevSignal.f1) {
-                if ((Signal.loadCheckpointComplete == prevSignal.f1 && (ct % NUM_SIGNALS_PER_TASK == 0))
-                || Signal.taskCancelled == prevSignal.f1) {
+                if (Signal.loadCheckpointComplete == prevSignal.f1) {
+                    if (ct % NUM_SIGNALS_PER_TASK == 0) {
+                        deduplicatedTmSignals.add(prevSignal);
+                    } else {
+                        prevSignal.f1 = Signal.loadCheckpointFailed;
+                        deduplicatedTmSignals.add(prevSignal);
+                    }
+                } else if (Signal.taskCancelled == prevSignal.f1) {
                     deduplicatedTmSignals.add(prevSignal);
                 }
                 ct = 0;
-            } else if ((ct % NUM_SIGNALS_PER_TASK == 0) && Signal.taskCancelled == prevSignal.f1) {
-                ct = 0;
-                deduplicatedTmSignals.add(prevSignal);
             }
             ct++;
         }
@@ -447,13 +451,15 @@ public class AnalyzeTool {
                                 jmSignals.get(jmSignalsIdx);
                         assert Signal.taskFailed == nextTaskFailedSignal.f1;
 
-                        // if next task failed signal is earlier than next TM signal,
-                        // then this recovery must be a failed one. so skip the curr jm signal
+                        // if next task failed signal is earlier than the loadCheckpointComplete signal,
+                        // then this failed signal is not recovered. so skip this one.
                         if (tmSignalsIdx + 1 < deduplicatedTmSignals.size()) {
-                            Tuple4<Date, Signal, String, String> nextTmSignal =
+                            Tuple4<Date, Signal, String, String> nextLoadCheckpointCompleteSignal =
                                     deduplicatedTmSignals.get(tmSignalsIdx + 1);
-                            if (nextTmSignal.f1 == Signal.loadCheckpointComplete &&
-                                    nextTaskFailedSignal.f0.compareTo(nextTmSignal.f0) < 0) {
+                            assert nextLoadCheckpointCompleteSignal.f1 == Signal.loadCheckpointComplete ||
+                                    nextLoadCheckpointCompleteSignal.f1 == Signal.loadCheckpointFailed;
+
+                            if (nextTaskFailedSignal.f0.compareTo(nextLoadCheckpointCompleteSignal.f0) < 0) {
                                 writeRecoveryData(fw, checkpointId, failedTime, recoveryStartTimeStr, recoveryEndTimeStr);
                                 continue;
                             }
@@ -486,7 +492,8 @@ public class AnalyzeTool {
         fw.close();
     }
 
-    private static void writeRecoveryData(FileWriter fw, String checkpointId, Date failedTime, String recoveryStartTimeStr, String recoveryEndTimeStr) throws IOException {
+    private static void writeRecoveryData(FileWriter fw, String checkpointId, Date failedTime, String
+            recoveryStartTimeStr, String recoveryEndTimeStr) throws IOException {
         fw.write(checkpointId);
         fw.write(' ');
         fw.write(String.valueOf(failedTime.getTime()));
@@ -615,7 +622,8 @@ public class AnalyzeTool {
         return throughputResult;
     }
 
-    public static LatencyResult analyzeLatency(String path, LatencyResult latencyResult) throws FileNotFoundException {
+    public static LatencyResult analyzeLatency(String path, LatencyResult latencyResult) throws
+            FileNotFoundException {
         Scanner sc = new Scanner(new File(path, "count-latency.txt"));
         while (sc.hasNextLine()) {
             String[] l = sc.nextLine().split(" ");
@@ -640,7 +648,8 @@ public class AnalyzeTool {
         return latencyResult;
     }
 
-    public static void writeLatencyStat(LatencyResult latencyResult, FileWriter statisticsWriter) throws IOException {
+    public static void writeLatencyStat(LatencyResult latencyResult, FileWriter statisticsWriter) throws
+            IOException {
         DescriptiveStatistics eventTimeLatencies = latencyResult.eventTimeLatencies;
 //        DescriptiveStatistics processingTimeLatencies = latencyResult.processingTimeLatencies;
 
