@@ -492,9 +492,9 @@ public class AnalyzeTool {
             assert Signal.loadCheckpointFailed == four.f1 || Signal.loadCheckpointComplete == four.f1;
 
             String faildTimeStr = String.valueOf(one.f0.getTime());
-            String checkpointId = Signal.noCheckpoint == two.f1 ? "-1" : two.f2;
+            String checkpointId = two.f0 == null || two.f1 == Signal.noCheckpoint ? "-1" : two.f2;
             //use two's time
-            String recoveryStartTimeStr = String.valueOf(two.f0.getTime());
+            String recoveryStartTimeStr = two.f0 == null ? "-1" : String.valueOf(two.f0.getTime());
             String recoveryEndTimeStr = four.f0 == null ? "-1" : String.valueOf(four.f0.getTime());
 
             fw.write(checkpointId);
@@ -801,7 +801,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
