@@ -384,10 +384,14 @@ public class AnalyzeTool {
         ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
         int ct = 1;
         int NUM_SIGNALS_PER_TASK = config.parallelism;
+        long firstLoadCpTime = 0L;
         for (int i = 1; i < tmSignals.size(); i++) {
             Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
             if (tmSignals.get(i).f1 != prevSignal.f1) {
                 if (Signal.loadCheckpointComplete == prevSignal.f1) {
+                    prevSignal.f2 = String.valueOf(firstLoadCpTime);
+                    firstLoadCpTime = 0L;
+
                     if (ct % NUM_SIGNALS_PER_TASK == 0) {
                         deduplicatedTmSignals.add(prevSignal);
                     } else {
@@ -395,6 +399,7 @@ public class AnalyzeTool {
                         deduplicatedTmSignals.add(prevSignal);
                     }
                 } else if (Signal.taskCancelled == prevSignal.f1) {
+                    firstLoadCpTime = tmSignals.get(i).f0.getTime();
                     deduplicatedTmSignals.add(prevSignal);
                 }
                 ct = 0;
@@ -417,7 +422,7 @@ public class AnalyzeTool {
         //write results
         FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
         fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
-        fw.write("checkpointId failedTime RecoveryStartTime loadCheckpointCompleteTime\n");
+        fw.write("checkpointId failedTime RecoveryStartTime firstLoadCheckpointCompleteTime loadCheckpointCompleteTime\n");
 
         int jmSignalsIdx = 0;
         int tmSignalsIdx = 0;
@@ -495,7 +500,8 @@ public class AnalyzeTool {
             String checkpointId = two.f0 == null || two.f1 == Signal.noCheckpoint ? "-1" : two.f2;
             //use two's time
             String recoveryStartTimeStr = two.f0 == null ? "-1" : String.valueOf(two.f0.getTime());
-            String recoveryEndTimeStr = four.f0 == null ? "-1" : String.valueOf(four.f0.getTime());
+            String recoveryEndFirst = four.f0 == null ? "-1" : four.f2;
+            String recoveryEndLast = four.f0 == null ? "-1" : String.valueOf(four.f0.getTime());
 
             fw.write(checkpointId);
             fw.write(' ');
@@ -503,7 +509,9 @@ public class AnalyzeTool {
             fw.write(' ');
             fw.write(recoveryStartTimeStr);
             fw.write(' ');
-            fw.write(recoveryEndTimeStr);
+            fw.write(recoveryEndFirst);
+            fw.write(' ');
+            fw.write(recoveryEndLast);
             fw.write('\n');
         }
 
@@ -801,7 +809,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
