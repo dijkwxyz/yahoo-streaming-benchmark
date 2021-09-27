@@ -447,8 +447,8 @@ public class AnalyzeTool {
 
                 cancelledSignal = tmSignalsIdx < deduplicatedTmSignals.size()
                         ? deduplicatedTmSignals.get(tmSignalsIdx)
-                        : null;
-                if (cancelledSignal != null) {
+                        : new Tuple4<>();
+                if (cancelledSignal.f0 != null) {
                     assert Signal.taskCancelled == cancelledSignal.f1;
                     if (jmSignalsIdx < jmSignals.size()) {
                         Tuple4<Date, Signal, String, String> nextTaskFailedSignal =
@@ -474,14 +474,11 @@ public class AnalyzeTool {
                     tmSignalsIdx++;
 //                    recoveryStartTimeStr = String.valueOf(cancelledSignal.f0.getTime());
                 }
-                Tuple4<Date, Signal, String, String> completeOrFailSignal = tmSignalsIdx < deduplicatedTmSignals.size()
+                loadCheckpointCompleteSignal = tmSignalsIdx < deduplicatedTmSignals.size()
                         ? deduplicatedTmSignals.get(tmSignalsIdx++)
-                        : null;
-                assert completeOrFailSignal.f1 == Signal.loadCheckpointComplete ||
-                        completeOrFailSignal.f1 == Signal.loadCheckpointFailed;
-                if (completeOrFailSignal.f1 == Signal.loadCheckpointComplete) {
-                    loadCheckpointCompleteSignal = completeOrFailSignal;
-                }
+                        : new Tuple4<>();
+                assert loadCheckpointCompleteSignal.f1 == Signal.loadCheckpointComplete ||
+                        loadCheckpointCompleteSignal.f1 == Signal.loadCheckpointFailed;
             }
             addSignals(allSignals, signal, restoreFrom, cancelledSignal, loadCheckpointCompleteSignal);
         }
@@ -501,7 +498,8 @@ public class AnalyzeTool {
             //use two's time
             String recoveryStartTimeStr = two.f0 == null ? "-1" : String.valueOf(two.f0.getTime());
             String recoveryEndFirst = four.f0 == null ? "-1" : four.f2;
-            String recoveryEndLast = four.f0 == null ? "-1" : String.valueOf(four.f0.getTime());
+            String recoveryEndLast = four.f0 == null || four.f1 == Signal.loadCheckpointFailed ?
+                    "-1" : String.valueOf(four.f0.getTime());
 
             fw.write(checkpointId);
             fw.write(' ');
@@ -801,6 +799,38 @@ public class AnalyzeTool {
         return tmHosts;
     }
 
+    public static void parseGcLogForMemory(String srcdir, String srcFileName, String dstFileName) throws IOException {
+        File srcFile = new File(srcdir, srcFileName);
+        if (!srcFile.exists()) {
+            return;
+        }
+        Scanner sc = new Scanner(srcFile);
+        FileWriter fw = new FileWriter(new File(srcdir, dstFileName));
+        fw.write("before after total timeCostMs\n");
+        //377.107: [GC pause (G1 Evacuation Pause) (young) 4477M->4276M(4620M), 0.0661060 secs]
+        //383.534: [Full GC (Allocation Failure)  4614M->3617M(4620M), 7.8944123 secs]
+        //2010-04-22T18:12:27.828+0200: 22.348: [GC 4614M->3617M(4620M), 0.0021595 secs]
+        String dateStampPattern = ".*(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[\\+|-]\\d{4})";
+        Pattern memoryPattern = Pattern.compile(dateStampPattern + ".*(\\d+)M->(\\d+)M\\((\\d+)M\\), (\\d+\\.\\d+) secs.*");
+
+        while (sc.hasNextLine()) {
+            String l = sc.nextLine();
+            Matcher memoryMatcher = memoryPattern.matcher(l);
+            if (memoryMatcher.matches()) {
+                int before = Integer.parseInt(memoryMatcher.group(1));
+                int after = Integer.parseInt(memoryMatcher.group(2));
+                int total = Integer.parseInt(memoryMatcher.group(3));
+                double timeCost = Double.parseDouble(memoryMatcher.group(4));
+                long timeCostMs = Math.round(timeCost * 1000);
+                fw.write(String.format("%d %d %d %d\n", before, after, total, timeCostMs));
+                fw.write(String.format("%d %d %d %d\n", before, after, total, timeCostMs));
+            }
+        }
+
+        fw.close();
+        sc.close();
+    }
+
     public static void main(String[] args) throws IOException, ParseException {
         // jm outputDir logFileName
         // args = "jm C:\\Users\\46522\\Downloads\\results\\ C:\\Users\\46522\\Downloads\\results\\flink-ec2-user-standalonesession-0-multilevel-benchmark-5.novalocal.log".split(" ");
@@ -809,7 +839,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -827,6 +857,9 @@ public class AnalyzeTool {
                             String absolutePath = path.toFile().getAbsolutePath();
                             System.out.println("processing " + absolutePath);
                             parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt", config);
+                            for (String tmHost : tmHosts) {
+                                parseGcLogForMemory(absolutePath, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (ParseException e) {
@@ -856,6 +889,7 @@ public class AnalyzeTool {
                 LatencyResult latencyResult = new LatencyResult();
                 ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
+                    parseGcLogForMemory(srcDir, tmHost+"-gc.log", "gcmem-" + tmHost + ".txt");
                     analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
                 }
 
