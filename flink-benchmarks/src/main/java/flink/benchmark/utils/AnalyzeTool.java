@@ -806,12 +806,12 @@ public class AnalyzeTool {
         }
         Scanner sc = new Scanner(srcFile);
         FileWriter fw = new FileWriter(new File(srcdir, dstFileName));
-        fw.write("timestamp before after total timeCostMs\n");
+        fw.write("timestamp used total\n");
         //377.107: [GC pause (G1 Evacuation Pause) (young) 4477M->4276M(4620M), 0.0661060 secs]
         //383.534: [Full GC (Allocation Failure)  4614M->3617M(4620M), 7.8944123 secs]
         //2010-04-22T18:12:27.828+0200: 22.348: [GC 4614M->3617M(4620M), 0.0021595 secs]
         String dateStampPattern = ".*(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[\\+|-]\\d{4})";
-        Pattern memoryPattern = Pattern.compile(dateStampPattern + ".*(\\d+)M->(\\d+)M\\((\\d+)M\\), (\\d+\\.\\d+) secs.*");
+        Pattern memoryPattern = Pattern.compile(dateStampPattern + ".* (\\d+)M->(\\d+)M\\((\\d+)M\\), (\\d+\\.\\d+) secs.*");
         SimpleDateFormat gcDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZZZZZ");
 
         while (sc.hasNextLine()) {
@@ -900,9 +900,9 @@ public class AnalyzeTool {
                 tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());
                 parseRestartCost(config.multilevelLevel2Type, srcDir, "flink1.log", tmLogs, outDirAbsPath, "restart-cost.txt", config);
 
-                analyzeLatency(srcDir, latencyResult);
+//                analyzeLatency(srcDir, latencyResult);
 
-                writeLatencyThroughputStat(latencyResult, throughputResult, outDirAbsPath, "latency_throughput.txt");
+//                writeLatencyThroughputStat(latencyResult, throughputResult, outDirAbsPath, "latency_throughput.txt");
                 break;
             case "jm":
                 // jm outputDir logFileName
