@@ -799,31 +799,35 @@ public class AnalyzeTool {
         return tmHosts;
     }
 
-    public static void parseGcLogForMemory(String srcdir, String srcFileName, String dstFileName) throws IOException {
+    public static void parseGcLogForMemory(String srcdir, String srcFileName, String dstFileName) throws IOException, ParseException {
         File srcFile = new File(srcdir, srcFileName);
         if (!srcFile.exists()) {
             return;
         }
         Scanner sc = new Scanner(srcFile);
         FileWriter fw = new FileWriter(new File(srcdir, dstFileName));
-        fw.write("before after total timeCostMs\n");
+        fw.write("timestamp before after total timeCostMs\n");
         //377.107: [GC pause (G1 Evacuation Pause) (young) 4477M->4276M(4620M), 0.0661060 secs]
         //383.534: [Full GC (Allocation Failure)  4614M->3617M(4620M), 7.8944123 secs]
         //2010-04-22T18:12:27.828+0200: 22.348: [GC 4614M->3617M(4620M), 0.0021595 secs]
         String dateStampPattern = ".*(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[\\+|-]\\d{4})";
         Pattern memoryPattern = Pattern.compile(dateStampPattern + ".*(\\d+)M->(\\d+)M\\((\\d+)M\\), (\\d+\\.\\d+) secs.*");
+        SimpleDateFormat gcDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZZZZZ");
 
         while (sc.hasNextLine()) {
             String l = sc.nextLine();
             Matcher memoryMatcher = memoryPattern.matcher(l);
             if (memoryMatcher.matches()) {
-                int before = Integer.parseInt(memoryMatcher.group(1));
-                int after = Integer.parseInt(memoryMatcher.group(2));
-                int total = Integer.parseInt(memoryMatcher.group(3));
-                double timeCost = Double.parseDouble(memoryMatcher.group(4));
+                int groupIdx = 1;
+                String dateStamp = memoryMatcher.group(groupIdx++).replace('T', ' ');
+                Date parse = gcDateFormat.parse(dateStamp);
+                int before = Integer.parseInt(memoryMatcher.group(groupIdx++));
+                int after = Integer.parseInt(memoryMatcher.group(groupIdx++));
+                int total = Integer.parseInt(memoryMatcher.group(groupIdx++));
+                double timeCost = Double.parseDouble(memoryMatcher.group(groupIdx++));
                 long timeCostMs = Math.round(timeCost * 1000);
-                fw.write(String.format("%d %d %d %d\n", before, after, total, timeCostMs));
-                fw.write(String.format("%d %d %d %d\n", before, after, total, timeCostMs));
+                fw.write(String.format("%d %d %d\n", parse.getTime() - timeCostMs, before, total));
+                fw.write(String.format("%d %d %d\n", parse.getTime(), after, total));
             }
         }
 
