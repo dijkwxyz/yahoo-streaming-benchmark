@@ -357,6 +357,7 @@ public class AnalyzeTool {
     private static boolean isTmLoadCpSignal(Signal signal) {
         return signal == Signal.loadCheckpointComplete || signal == Signal.loadCheckpointFailed;
     }
+
     //(timestamp, type, info, matched string)
     public static void parseRestartCost(
             String stateBackendName,
@@ -408,7 +409,7 @@ public class AnalyzeTool {
                         firstLoadCpTime = curr.f0.getTime();
                     }
                     loadCpSignal = curr;
-                } else if (curr.f1 == Signal.taskFailed){
+                } else if (curr.f1 == Signal.taskFailed) {
                     failedSignal = curr;
                 } else {
                     throw new IllegalStateException("Invalid signal: " + curr.f1.name());
@@ -417,7 +418,7 @@ public class AnalyzeTool {
             }
             if (loadCpSignal == null) {
                 res.add(new Tuple4<>());
-            }else {
+            } else {
                 if (numLoadCpSignal < NUM_SIGNALS_PER_TASK) {
                     loadCpSignal.f1 = Signal.loadCheckpointFailed;
                 }
@@ -444,8 +445,8 @@ public class AnalyzeTool {
 
         for (int i = 0; i < res.size(); i += 3) {
             Tuple4<Date, Signal, String, String> one = res.get(i);
-            Tuple4<Date, Signal, String, String> two = res.get(i + 1);
-            Tuple4<Date, Signal, String, String> three = res.get(i + 2);
+            Tuple4<Date, Signal, String, String> two = i + 1 < res.size() ? res.get(i + 1) : new Tuple4<>();
+            Tuple4<Date, Signal, String, String> three = i + 2 < res.size() ? res.get(i + 2) : new Tuple4<>();
 
             String faildTimeStr = String.valueOf(one.f0.getTime());
             String checkpointId = two.f0 == null || two.f1 == Signal.noCheckpoint ? "-1" : two.f2;
@@ -797,7 +798,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
