@@ -847,7 +847,7 @@ public class AnalyzeTool {
                 LatencyResult latencyResult = new LatencyResult();
                 ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
-                    parseGcLogForMemory(srcDir, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
+                    parseGcLogForMemory(outDirAbsPath, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
                     analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
                 }
 
