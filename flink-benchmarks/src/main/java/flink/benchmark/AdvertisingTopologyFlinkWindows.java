@@ -103,7 +103,7 @@ public class AdvertisingTopologyFlinkWindows {
         windowStream.trigger(new EventAndProcessingTimeTrigger());
 
         // campaign_id, window-end, count, trigger-time
-        DataStream<Tuple4<String, String, Long, String>> result =
+        DataStream<Tuple5<String, String, Long, String, String>> result =
                 windowStream.process(sumProcessFunction());
 //        DataStream<Tuple4<String, String, Long, String>> result =
 //                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
@@ -153,7 +153,7 @@ public class AdvertisingTopologyFlinkWindows {
         env.getConfig().setGlobalJobParameters(config.getParameters());
         env.setParallelism(config.parallelism);
         env.setMaxParallelism(config.parallelism);
-        
+
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);
             env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
@@ -203,29 +203,34 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
-        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
+    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple5<String, String, Long, String, String>, String, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple5<String, String, Long, String, String>, String, TimeWindow>() {
             @Override
-            public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple5<String, String, Long, String, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
-                Tuple4<String, String, Long, String> res = new Tuple4<>();
-                HashMap<String, Integer> adCountMap = new HashMap<>();
+                Tuple5<String, String, Long, String, String> res = new Tuple5<>();
                 for (Tuple3<String, String, Long> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
+                }
+
+                HashMap<String, Integer> adCountMap = new HashMap<>();
+                for (Tuple3<String, String, Long> e : elements) {
                     adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
                 }
-                List<Map.Entry<String, Integer>> sortedAdCount =
+                String sortedAdByCount =
                         adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
-                                .collect(Collectors.toList());
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.joining("-"));
 
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());
+                res.f4 = sortedAdByCount;
                 out.collect(res);
             }
         };
@@ -454,7 +459,7 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Simplified version of Redis data structure
      */
-    private static class RedisResultSinkOptimized extends RichSinkFunction<Tuple4<String, String, Long, String>> {
+    private static class RedisResultSinkOptimized extends RichSinkFunction<Tuple5<String, String, Long, String, String>> {
         private final BenchmarkConfig config;
         private Jedis flushJedis;
 
@@ -470,21 +475,28 @@ public class AdvertisingTopologyFlinkWindows {
         }
 
         @Override
-        public void invoke(Tuple4<String, String, Long, String> result) throws Exception {
+        public void invoke(Tuple5<String, String, Long, String, String> result) throws Exception {
             long currTime = System.currentTimeMillis();
             //currTime - the timestamp that generates the watermark which triggeres this window
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
-            StringBuilder sb = new StringBuilder();
-            sb.append(result.f2); //count
-            sb.append(' ');
-            sb.append(eventTimeLatency);
-            sb.append(' ');
-            sb.append(currTime);
-            sb.append(' ');
-            sb.append(getRuntimeContext().getIndexOfThisSubtask() + 1);
-            flushJedis.hset(result.f0, result.f1,
-                    sb.toString()
-            );
+            String out = String.format("%d %d %d %d %s",
+                    result.f2, eventTimeLatency, currTime, getRuntimeContext().getIndexOfThisSubtask() + 1,
+                    result.f4);
+
+            flushJedis.hset(result.f0, result.f1, out);
+
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(result.f2); //count
+//            sb.append(' ');
+//            sb.append(eventTimeLatency);
+//            sb.append(' ');
+//            sb.append(currTime);
+//            sb.append(' ');
+//            sb.append(getRuntimeContext().getIndexOfThisSubtask() + 1);
+//            sb.append(' ');
+//            sb.append(result.f4);
+//            flushJedis.hset(result.f0, result.f1, sb.toString());
+
             // System.out.println(sb.toString());
         }
 
