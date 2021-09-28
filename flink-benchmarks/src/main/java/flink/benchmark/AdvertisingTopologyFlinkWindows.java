@@ -44,6 +44,7 @@ import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
@@ -89,19 +90,13 @@ public class AdvertisingTopologyFlinkWindows {
 //        adCount.addSink(new RedisAdCount(config));
 
         //=======================campaign count=========================================
-        //out: (campaign id, event time, ad_count, ad_id)
-        DataStream<Tuple4<String, String, Long, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time, ad_id
-                .map(a -> new Tuple4<>(a.f0, a.f1, 1L, a.f2))
-                .keyBy(a -> a.f2)
-                .reduce((a, b) -> new Tuple4<>(
-                        a.f0,
-                        String.valueOf(Math.max(Long.parseLong(a.f1), Long.parseLong(b.f1))),
-                        a.f2 + b.f2,
-                        a.f3));
+        //out: (campaign id, event time, ad_id)
+        DataStream<Tuple3<String, String, String>> joinedAdImpressions = adIdEventTime
+                .flatMap(new RedisJoinBolt(config)); // campaign_id, event_time, ad_id
 
         //out: (campaign id, event time, 1)
         WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
+                .map(a -> new Tuple4<>(a.f0, a.f1, 1L, a.f2))
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
@@ -110,7 +105,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         // campaign_id, window-end, count, trigger-time
         DataStream<Tuple4<String, String, Long, String>> result =
-                windowStream.process(sumProcessFunction());
+                windowStream.process(sumProcessFunction(config.numAdPerCampaign));
 //        DataStream<Tuple4<String, String, Long, String>> result =
 //                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
 
@@ -209,7 +204,7 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
+    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction(int numAdPerCampaign) {
         return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
             public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
@@ -217,18 +212,18 @@ public class AdvertisingTopologyFlinkWindows {
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
-                PriorityQueue<Tuple4<String, String, Long, String>> heap =
-                        new PriorityQueue<>(32, Comparator.comparingLong(a -> a.f2));
+                HashMap<String, Integer> adCountMap = new HashMap<>(numAdPerCampaign);
                 for (Tuple4<String, String, Long, String> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
-                    if (heap.size() == 100) {
-                        heap.poll();
-                    }
-                    heap.add(e);
+                    adCountMap.put(e.f3, adCountMap.getOrDefault(e.f3, 0) + 1);
                 }
+                List<Map.Entry<String, Integer>> sortedAdCount =
+                        adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+                        .collect(Collectors.toList());
+
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());

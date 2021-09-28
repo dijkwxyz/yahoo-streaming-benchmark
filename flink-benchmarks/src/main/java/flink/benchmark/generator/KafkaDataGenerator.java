@@ -25,6 +25,7 @@ public class KafkaDataGenerator {
     private final long numToGenerate;
     private final int loadTargetHz;
     private final int timeSliceLengthMs;
+    private final int numAdPerCampaign;
     private final String topic;
     private boolean running = true;
     private final List<Integer> partitions = new ArrayList<>();
@@ -47,9 +48,9 @@ public class KafkaDataGenerator {
         this.isStreamEndless = config.isStreamEndless;
         this.generateDataTimeSec = config.testTimeSeconds * 2 / 3;
         this.numToGenerate = generateDataTimeSec * loadTargetHz;
+        this.numAdPerCampaign = config.numAdPerCampaign;
         this.campaigns = generateCampaigns(numCampaigns);
         this.ads = flattenCampaigns();
-
         this.topic = config.kafkaTopic;
 
         //kafka producer
@@ -125,14 +126,13 @@ public class KafkaDataGenerator {
      * Generate a random list of ads and campaigns
      */
     private Map<String, List<String>> generateCampaigns(int numCampaigns) {
-        int numAdsPerCampaign = 10;
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
             String campaign = String.valueOf(i);
             ArrayList<String> ads = new ArrayList<>();
             adsByCampaign.put(campaign, ads);
-            for (int j = 0; j < numAdsPerCampaign; j++) {
+            for (int j = 0; j < numAdPerCampaign; j++) {
                 ads.add(UUID.randomUUID().toString());
             }
         }

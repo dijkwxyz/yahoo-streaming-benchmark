@@ -27,6 +27,7 @@ public class BenchmarkConfig implements Serializable {
     public final int timeSliceLengthMs;
     public final boolean useLocalEventGenerator;
     public final int numCampaigns;
+    public final int numAdPerCampaign = 10;
 
     // Redis
     public final String redisHost;
