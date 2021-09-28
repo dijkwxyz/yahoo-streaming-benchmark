@@ -211,17 +211,17 @@ public class AdvertisingTopologyFlinkWindows {
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
-                PriorityQueue<Tuple3<String, String, Long>> heap =
-                        new PriorityQueue<>(5, Comparator.comparingLong(a -> a.f2));
+//                PriorityQueue<Tuple3<String, String, Long>> heap =
+//                        new PriorityQueue<>(5, Comparator.comparingLong(a -> a.f2));
                 for (Tuple3<String, String, Long> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
-                    if (heap.size() == 5) {
-                        heap.poll();
-                    }
-                    heap.add(e);
+//                    if (heap.size() == 5) {
+//                        heap.poll();
+//                    }
+//                    heap.add(e);
                 }
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
