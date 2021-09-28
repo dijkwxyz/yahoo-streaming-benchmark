@@ -75,6 +75,7 @@ run_command() {
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
+    remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
   elif [ "START_FLINK" = "$OPERATION" ];
   then
     remote_operation $FLINK_HOST "START_FLINK"
