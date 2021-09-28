@@ -89,13 +89,19 @@ public class AdvertisingTopologyFlinkWindows {
 //        adCount.addSink(new RedisAdCount(config));
 
         //=======================campaign count=========================================
-        //out: (campaign id, event time)
-        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config)); // campaign_id, event_time
+        //out: (campaign id, event time, ad_count, ad_id)
+        DataStream<Tuple4<String, String, Long, String>> joinedAdImpressions = adIdEventTime
+                .flatMap(new RedisJoinBolt(config)) // campaign_id, event_time, ad_id
+                .map(a -> new Tuple4<>(a.f0, a.f1, 1L, a.f2))
+                .keyBy(a -> a.f2)
+                .reduce((a, b) -> new Tuple4<>(
+                        a.f0,
+                        String.valueOf(Math.max(Long.parseLong(a.f1), Long.parseLong(b.f1))),
+                        a.f2 + b.f2,
+                        a.f3));
 
         //out: (campaign id, event time, 1)
-        WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
-                .map(new MapToImpressionCount())
+        WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
@@ -153,7 +159,7 @@ public class AdvertisingTopologyFlinkWindows {
         env.getConfig().setGlobalJobParameters(config.getParameters());
         env.setParallelism(config.parallelism);
         env.setMaxParallelism(config.parallelism);
-        
+
         if (config.checkpointsEnabled) {
             env.enableCheckpointing(config.checkpointInterval);
             env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
@@ -203,25 +209,25 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
-        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
+    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
             @Override
-            public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
-//                PriorityQueue<Tuple3<String, String, Long>> heap =
-//                        new PriorityQueue<>(5, Comparator.comparingLong(a -> a.f2));
-                for (Tuple3<String, String, Long> e : elements) {
+                PriorityQueue<Tuple4<String, String, Long, String>> heap =
+                        new PriorityQueue<>(32, Comparator.comparingLong(a -> a.f2));
+                for (Tuple4<String, String, Long, String> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
-//                    if (heap.size() == 5) {
-//                        heap.poll();
-//                    }
-//                    heap.add(e);
+                    if (heap.size() == 100) {
+                        heap.poll();
+                    }
+                    heap.add(e);
                 }
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
@@ -409,7 +415,7 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Map ad ids to campaigns using cached data from Redis
      */
-    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple2<String, String>> {
+    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple3<String, String, String>> {
 
         private RedisAdCampaignCache redisAdCampaignCache;
         private BenchmarkConfig config;
@@ -428,15 +434,15 @@ public class AdvertisingTopologyFlinkWindows {
         }
 
         @Override
-        public void flatMap(Tuple2<String, String> input, Collector<Tuple2<String, String>> out) throws Exception {
+        public void flatMap(Tuple2<String, String> input, Collector<Tuple3<String, String, String>> out) throws Exception {
             String ad_id = input.f0;
             String campaign_id = this.redisAdCampaignCache.execute(ad_id);
             if (campaign_id == null) {
                 return;
             }
 
-            // campaign_id event_time
-            Tuple2<String, String> tuple = new Tuple2<>(campaign_id, input.f1);
+            // campaign_id event_time ad_id
+            Tuple3<String, String, String> tuple = new Tuple3<>(campaign_id, input.f1, input.f0);
             out.collect(tuple);
         }
     }
@@ -444,10 +450,10 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * (campaign id, event time, 1)
      */
-    private static class MapToImpressionCount implements MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>> {
+    private static class MapToImpressionCount implements MapFunction<Tuple3<String, String, String>, Tuple3<String, String, Long>> {
         @Override
-        public Tuple3<String, String, Long> map(Tuple2<String, String> t2) {
-            return new Tuple3<>(t2.f0, t2.f1, 1L);
+        public Tuple3<String, String, Long> map(Tuple3<String, String, String> t3) {
+            return new Tuple3<>(t3.f0, t3.f1, 1L);
         }
     }
 
