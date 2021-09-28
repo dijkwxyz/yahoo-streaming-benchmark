@@ -290,7 +290,8 @@ public class AnalyzeTool {
 
         String timePattern = ".*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3} \\w{3})";
         //2021-09-07 07:48:14,269 UTC INFO  org.apache.flink.runtime.taskexecutor.TaskExecutor           [] - Un-registering task and sending final execution state CANCELED to JobManager for task Source: Kafka -> (Process, Flat Map -> Filter -> Map -> Projection -> Flat Map -> Timestamps/Watermarks -> Map) (6/8) d2e54e8977271191a9b4c7f5f4e6829c.
-        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state.*");
+//        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Un-registering task and sending final execution state.*");
+        Pattern taskCancelledPattern = Pattern.compile(timePattern + " .*Freeing task resources for.*");
         //2021-09-11 04:24:30,053 UTC INFO  org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - Discovered coordinator kafka1:9092 (id: 2147483647 rack: null) for group c8bb5d4a-bd4e-482d-99a2-24f8c8e4a9ae.
 //        Pattern loadCheckpointCompletePattern = Pattern.compile(timePattern + " .*Discovered coordinator.*");
         //2021-09-16 15:19:05,345 UTC INFO  org.apache.flink.runtime.state.heap.HeapKeyedStateBackend    [] - Initializing keyed state backend with stream factory.
@@ -349,6 +350,13 @@ public class AnalyzeTool {
 //        arr.addAll(newArr);
 //    }
 
+    private static boolean isJmRestoreSignal(Signal signal) {
+        return signal == Signal.noCheckpoint || signal == Signal.restoreFromCheckpoint;
+    }
+
+    private static boolean isTmLoadCpSignal(Signal signal) {
+        return signal == Signal.loadCheckpointComplete || signal == Signal.loadCheckpointFailed;
+    }
     //(timestamp, type, info, matched string)
     public static void parseRestartCost(
             String stateBackendName,
@@ -364,6 +372,13 @@ public class AnalyzeTool {
         ArrayList<Tuple4<Date, Signal, String, String>> taskCancelledSignals = new ArrayList<>();
         ArrayList<Tuple4<Date, Signal, String, String>> loadCheckpointCompleteSignals = new ArrayList<>();
 
+        DescriptiveStatistics failedDS = parseJMForFailureTime(
+                new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
+
+        if (jmSignals.get(0).f1 == Signal.noCheckpoint) {
+            jmSignals.remove(0);
+        }
+
         for (String tmLog : tmLogs) {
             String srcAbsName = new File(srcDir, tmLog).getAbsolutePath();
             try {
@@ -373,133 +388,72 @@ public class AnalyzeTool {
             }
         }
 
-        ArrayList<Tuple4<Date, Signal, String, String>> tmSignals =
-                new ArrayList<>(taskCancelledSignals.size() + loadCheckpointCompleteSignals.size());
-        tmSignals.addAll(taskCancelledSignals);
-        tmSignals.addAll(loadCheckpointCompleteSignals);
-        //sort by timestamp
-//        taskCancelledSignals.sort(Comparator.comparing(a -> a.f0));
-//        loadCheckpointCompleteSignals.sort(Comparator.comparing(a -> a.f0));
-        tmSignals.sort(Comparator.comparing(a -> a.f0));
-        ArrayList<Tuple4<Date, Signal, String, String>> deduplicatedTmSignals = new ArrayList<>();
-        int ct = 1;
+        ArrayList<Tuple4<Date, Signal, String, String>> signals = new ArrayList<>();
+        ArrayList<Tuple4<Date, Signal, String, String>> res = new ArrayList<>();
+        signals.addAll(loadCheckpointCompleteSignals);
+        signals.addAll(jmSignals);
+        signals.sort(Comparator.comparing(a -> a.f0));
+        int numLoadCpSignal = 0;
+        int signalsIdx = 0;
         int NUM_SIGNALS_PER_TASK = config.parallelism;
-        long firstLoadCpTime = 0L;
-        for (int i = 1; i < tmSignals.size(); i++) {
-            Tuple4<Date, Signal, String, String> prevSignal = tmSignals.get(i - 1);
-            if (tmSignals.get(i).f1 != prevSignal.f1) {
-                if (Signal.loadCheckpointComplete == prevSignal.f1) {
-                    prevSignal.f2 = String.valueOf(firstLoadCpTime);
-                    firstLoadCpTime = 0L;
-
-                    if (ct % NUM_SIGNALS_PER_TASK == 0) {
-                        deduplicatedTmSignals.add(prevSignal);
-                    } else {
-                        prevSignal.f1 = Signal.loadCheckpointFailed;
-                        deduplicatedTmSignals.add(prevSignal);
+        while (signalsIdx < signals.size()) {
+            Tuple4<Date, Signal, String, String> loadCpSignal = null;
+            Tuple4<Date, Signal, String, String> failedSignal = null;
+            long firstLoadCpTime = -1L;
+            while (signalsIdx < signals.size() && !isJmRestoreSignal(signals.get(signalsIdx).f1)) {
+                Tuple4<Date, Signal, String, String> curr = signals.get(signalsIdx);
+                if (curr.f1 == Signal.loadCheckpointComplete) {
+                    numLoadCpSignal++;
+                    if (loadCpSignal == null) {
+                        firstLoadCpTime = curr.f0.getTime();
                     }
-                } else if (Signal.taskCancelled == prevSignal.f1) {
-                    firstLoadCpTime = tmSignals.get(i).f0.getTime();
-                    deduplicatedTmSignals.add(prevSignal);
+                    loadCpSignal = curr;
+                } else if (curr.f1 == Signal.taskFailed){
+                    failedSignal = curr;
+                } else {
+                    throw new IllegalStateException("Invalid signal: " + curr.f1.name());
                 }
-                ct = 0;
+                signalsIdx++;
             }
-            ct++;
+            if (loadCpSignal == null) {
+                res.add(new Tuple4<>());
+            }else {
+                if (numLoadCpSignal < NUM_SIGNALS_PER_TASK) {
+                    loadCpSignal.f1 = Signal.loadCheckpointFailed;
+                }
+                loadCpSignal.f2 = String.valueOf(firstLoadCpTime);
+                res.add(loadCpSignal);
+                numLoadCpSignal = 0;
+            }
+            if (failedSignal != null) {
+                res.add(failedSignal);
+            }
+            if (signalsIdx < signals.size() && isJmRestoreSignal(signals.get(signalsIdx).f1)) {
+                res.add(signals.get(signalsIdx));
+            }
+            signalsIdx++;
         }
-        //add last one
-        deduplicatedTmSignals.add(tmSignals.get(tmSignals.size() - 1));
-        //remove first load checkpoint signal on system startup
-        if (deduplicatedTmSignals.get(0).f1 == Signal.loadCheckpointComplete) {
-            deduplicatedTmSignals.remove(0);
+
+        if (isTmLoadCpSignal(res.get(0).f1)) {
+            res.remove(0);
         }
-
-        //consider the same signals within 3 secs as deduplicates
-//        deduplicateWithinTimeDiff(taskCancelledSignals, 3000);
-
-        DescriptiveStatistics failedDS = parseJMForFailureTime(
-                new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
-
         //write results
         FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
         fw.write(String.format("MTTI: %f, total failures: %d\n", failedDS.getMean(), 1 + failedDS.getN()));
         fw.write("checkpointId failedTime RecoveryStartTime firstLoadCheckpointCompleteTime loadCheckpointCompleteTime\n");
 
-        int jmSignalsIdx = 0;
-        int tmSignalsIdx = 0;
-
-        ArrayList<Tuple4<Date, Signal, String, String>> allSignals = new ArrayList<>();
-        while (jmSignalsIdx < jmSignals.size()) {
-            //starts with a taskFailed signal
-            Tuple4<Date, Signal, String, String> signal = jmSignals.get(jmSignalsIdx++);
-            if (signal.f1 != Signal.taskFailed) {
-                continue;
-            }
-
-            Tuple4<Date, Signal, String, String> restoreFrom = new Tuple4<>();
-            Tuple4<Date, Signal, String, String> cancelledSignal = new Tuple4<>();
-            Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal = new Tuple4<>();
-
-            if (jmSignalsIdx < jmSignals.size() &&
-                    (Signal.noCheckpoint == jmSignals.get(jmSignalsIdx).f1 ||
-                            Signal.restoreFromCheckpoint == jmSignals.get(jmSignalsIdx).f1)) {
-                //if no checkpoint to restore, set checkpoint id as -1
-                restoreFrom = jmSignals.get(jmSignalsIdx++);
-
-                cancelledSignal = tmSignalsIdx < deduplicatedTmSignals.size()
-                        ? deduplicatedTmSignals.get(tmSignalsIdx)
-                        : new Tuple4<>();
-                if (cancelledSignal.f0 != null) {
-                    assert Signal.taskCancelled == cancelledSignal.f1;
-                    if (jmSignalsIdx < jmSignals.size()) {
-                        Tuple4<Date, Signal, String, String> nextTaskFailedSignal =
-                                jmSignals.get(jmSignalsIdx);
-                        assert Signal.taskFailed == nextTaskFailedSignal.f1;
-
-                        // if next task failed signal is earlier than the loadCheckpointComplete signal,
-                        // then this failed signal is not recovered. so skip this one.
-                        if (tmSignalsIdx + 1 < deduplicatedTmSignals.size()) {
-                            Tuple4<Date, Signal, String, String> nextLoadCheckpointCompleteSignal =
-                                    deduplicatedTmSignals.get(tmSignalsIdx + 1);
-                            assert nextLoadCheckpointCompleteSignal.f1 == Signal.loadCheckpointComplete ||
-                                    nextLoadCheckpointCompleteSignal.f1 == Signal.loadCheckpointFailed;
-
-                            if (nextTaskFailedSignal.f0.compareTo(nextLoadCheckpointCompleteSignal.f0) < 0) {
-                                addSignals(allSignals, signal, restoreFrom, new Tuple4<>(), new Tuple4<>());
-                                continue;
-                            }
-
-                        }
-//                        assert nextTaskFailedSignal.f0.compareTo(cancelledSignal.f0) > 0;
-                    }
-                    tmSignalsIdx++;
-//                    recoveryStartTimeStr = String.valueOf(cancelledSignal.f0.getTime());
-                }
-                loadCheckpointCompleteSignal = tmSignalsIdx < deduplicatedTmSignals.size()
-                        ? deduplicatedTmSignals.get(tmSignalsIdx++)
-                        : new Tuple4<>();
-                assert loadCheckpointCompleteSignal.f1 == Signal.loadCheckpointComplete ||
-                        loadCheckpointCompleteSignal.f1 == Signal.loadCheckpointFailed;
-            }
-            addSignals(allSignals, signal, restoreFrom, cancelledSignal, loadCheckpointCompleteSignal);
-        }
-
-        for (int i = 0; i < allSignals.size(); i += 4) {
-            Tuple4<Date, Signal, String, String> one = allSignals.get(i);
-            Tuple4<Date, Signal, String, String> two = allSignals.get(i + 1);
-            Tuple4<Date, Signal, String, String> three = allSignals.get(i + 2);
-            Tuple4<Date, Signal, String, String> four = allSignals.get(i + 3);
-            assert Signal.taskFailed == one.f1;
-            assert Signal.restoreFromCheckpoint == two.f1 || Signal.noCheckpoint == two.f1;
-            assert Signal.taskCancelled == three.f1;
-            assert Signal.loadCheckpointFailed == four.f1 || Signal.loadCheckpointComplete == four.f1;
+        for (int i = 0; i < res.size(); i += 3) {
+            Tuple4<Date, Signal, String, String> one = res.get(i);
+            Tuple4<Date, Signal, String, String> two = res.get(i + 1);
+            Tuple4<Date, Signal, String, String> three = res.get(i + 2);
 
             String faildTimeStr = String.valueOf(one.f0.getTime());
             String checkpointId = two.f0 == null || two.f1 == Signal.noCheckpoint ? "-1" : two.f2;
             //use two's time
             String recoveryStartTimeStr = two.f0 == null ? "-1" : String.valueOf(two.f0.getTime());
-            String recoveryEndFirst = four.f0 == null ? "-1" : four.f2;
-            String recoveryEndLast = four.f0 == null || four.f1 == Signal.loadCheckpointFailed ?
-                    "-1" : String.valueOf(four.f0.getTime());
+            String recoveryEndFirst = three.f0 == null ? "-1" : three.f2;
+            String recoveryEndLast = three.f0 == null || three.f1 == Signal.loadCheckpointFailed ?
+                    "-1" : String.valueOf(three.f0.getTime());
 
             fw.write(checkpointId);
             fw.write(' ');
@@ -516,11 +470,11 @@ public class AnalyzeTool {
         fw.close();
     }
 
-    private static void addSignals(ArrayList<Tuple4<Date, Signal, String, String>> allSignals, Tuple4<Date, Signal, String, String> signal, Tuple4<Date, Signal, String, String> restoreFrom, Tuple4<Date, Signal, String, String> cancelledSignal, Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal) {
-        allSignals.add(signal);
-        allSignals.add(restoreFrom);
-        allSignals.add(cancelledSignal);
-        allSignals.add(loadCheckpointCompleteSignal);
+    private static void addSignals(ArrayList<Tuple4<Date, Signal, String, String>> signals, Tuple4<Date, Signal, String, String> signal, Tuple4<Date, Signal, String, String> restoreFrom, Tuple4<Date, Signal, String, String> cancelledSignal, Tuple4<Date, Signal, String, String> loadCheckpointCompleteSignal) {
+        signals.add(signal);
+        signals.add(restoreFrom);
+        signals.add(cancelledSignal);
+        signals.add(loadCheckpointCompleteSignal);
     }
 
     private static class FindLastBeforeSignalParam {
@@ -843,7 +797,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
+        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -893,7 +847,7 @@ public class AnalyzeTool {
                 LatencyResult latencyResult = new LatencyResult();
                 ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
-                    parseGcLogForMemory(srcDir, tmHost+"-gc.log", "gcmem-" + tmHost + ".txt");
+                    parseGcLogForMemory(srcDir, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
                     analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
                 }
 
