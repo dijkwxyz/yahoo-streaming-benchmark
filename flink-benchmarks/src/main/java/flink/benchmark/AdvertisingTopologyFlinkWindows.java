@@ -96,7 +96,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         //out: (campaign id, event time, 1)
         WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
-                .map(a -> new Tuple4<String, String, Long, String>(a.f0, a.f1, 1L, a.f2))
+                .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
@@ -445,10 +445,10 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * (campaign id, event time, 1)
      */
-    private static class MapToImpressionCount implements MapFunction<Tuple3<String, String, String>, Tuple3<String, String, Long>> {
+    private static class MapToImpressionCount implements MapFunction<Tuple3<String, String, String>, Tuple4<String, String, Long, String>> {
         @Override
-        public Tuple3<String, String, Long> map(Tuple3<String, String, String> t3) {
-            return new Tuple3<>(t3.f0, t3.f1, 1L);
+        public Tuple4<String, String, Long, String> map(Tuple3<String, String, String> t3) {
+            return new Tuple4<>(t3.f0, t3.f1, 1L, t3.f2);
         }
     }
 
