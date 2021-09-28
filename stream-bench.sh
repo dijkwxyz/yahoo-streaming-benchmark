@@ -401,7 +401,7 @@ run() {
     done
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
     remote_operation $FLINK_HOST "START_FLINK"
-    sleep 8
+    sleep 30
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     sleep 5
 #    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD" ${KAFKA_HOST_PREFIX}1

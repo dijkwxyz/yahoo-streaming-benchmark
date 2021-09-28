@@ -2,15 +2,18 @@
 # used for stream-bench.sh
 TEST_TIME=${TEST_TIME:-1200}
 LOAD=${LOAD:-15000}
+LOAD_PER_NODE=10000
 FLINK_PARALLELISM=3
 SLOT_PER_NODE=2
+# TM failure interval in seconds
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
+#TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:-255}
 
 # used for conf/benchmarkConf.yaml
+MTTI_MS=${MTTI_MS:-255000}
+#MTTI_MS=${MTTI_MS:--1}
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
-#CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-120000}
-MTTI_MS=${MTTI_MS:-135000}
-#MTTI_MS=${MTTI_MS:-240000}
+#CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
 INJECT_WITH_PROBABILITY=false
 let "FAILURE_START_DELAY_MS=0"
 #let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
@@ -23,7 +26,7 @@ WINDOW_SIZE=${WINDOW_SIZE:-90}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 STREAM_ENDLESS=true
-NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-640}
+NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-3360}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
@@ -118,29 +121,27 @@ done
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 #xdo "sudo /home/ec2-user/wondershaper/wondershaper -a eth0 -u $NET_THRESHOLD -d $NET_THRESHOLD"
 
+FLINK_WORKER_CONF=$BASE_DIR/flink-1.11.2/conf/workers
 
-for (( num=0; num < 2; num += 1 )); do
+for (( num=0; num < 4; num += 1 )); do
     #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
     for (( FLINK_PARALLELISM=4; FLINK_PARALLELISM <= 32; FLINK_PARALLELISM += 4 )); do
-	  LOAD=$(( $FLINK_PARALLELISM * 5000 / $SLOT_PER_NODE ))
+	echo "" > $FLINK_WORKER_CONF
+	for (( tm_num=0; tm_num < $FLINK_PARALLELISM / $SLOT_PER_NODE; tm_num += 1 )); do
+	  echo flink$(( 17 - $tm_num )) >> $FLINK_WORKER_CONF
+	done
+	xsync $FLINK_WORKER_CONF
+	
+	LOAD=$(( $FLINK_PARALLELISM * $LOAD_PER_NODE / $SLOT_PER_NODE ))
 
-	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
-	  make_conf
-	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	  cat $CONF_FILE | grep multilevel.enable
-	  xsync $CONF_FILE
-	  FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	  sleep 60
-
-	  ./clear-data.sh
-	  MULTILEVEL_ENABLE=true
-	  make_conf
-	  echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	  cat $CONF_FILE | grep multilevel.enable
-	  xsync $CONF_FILE
-	  FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	  sleep 60
+	./clear-data.sh
+	MULTILEVEL_ENABLE=true
+	make_conf
+	echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
+	cat $CONF_FILE | grep multilevel.enable
+	xsync $CONF_FILE
+	FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
+	sleep 60
     done
 done
 
