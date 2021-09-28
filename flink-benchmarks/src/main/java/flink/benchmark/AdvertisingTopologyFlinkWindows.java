@@ -43,6 +43,7 @@ import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
@@ -79,20 +80,20 @@ public class AdvertisingTopologyFlinkWindows {
 
         //=======================advertisement count=========================================
 //        //out (ad_id, count)
-        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
-                .map(new MapToImpressionCount())
-                .keyBy(a -> a.f1)
-                .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide))
-                .aggregate(new AdAggregator());
-
-        adCount.addSink(new RedisAdCount(config));
+//        SingleOutputStreamOperator<Tuple3<String, String, Long>> adCount = adIdEventTime
+//                .map(new MapToImpressionCount())
+//                .keyBy(a -> a.f1)
+//                .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide))
+//                .aggregate(new AdAggregator());
+//
+//        adCount.addSink(new RedisAdCount(config));
 
         //=======================campaign count=========================================
-        //out: (campaign id, event time)
+        //out: (campaign id, ad_id)
         DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config)); // campaign_id, event_time
+                .flatMap(new RedisJoinBolt(config));
 
-        //out: (campaign id, event time, 1)
+        //out: (campaign id, ad_id, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0)
@@ -210,12 +211,18 @@ public class AdvertisingTopologyFlinkWindows {
                 Long max = Long.MIN_VALUE;
                 // campaign_id, window-end, count, trigger-time
                 Tuple4<String, String, Long, String> res = new Tuple4<>();
+                HashMap<String, Integer> adCountMap = new HashMap<>();
                 for (Tuple3<String, String, Long> e : elements) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
+                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
                 }
+                List<Map.Entry<String, Integer>> sortedAdCount =
+                        adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+                                .collect(Collectors.toList());
+
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());
@@ -428,8 +435,8 @@ public class AdvertisingTopologyFlinkWindows {
                 return;
             }
 
-            // campaign_id event_time
-            Tuple2<String, String> tuple = new Tuple2<>(campaign_id, input.f1);
+            // campaign_id ad_id
+            Tuple2<String, String> tuple = new Tuple2<>(campaign_id, input.f0);
             out.collect(tuple);
         }
     }
