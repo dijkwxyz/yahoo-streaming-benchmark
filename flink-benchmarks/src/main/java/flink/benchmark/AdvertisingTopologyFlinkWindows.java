@@ -96,7 +96,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         //out: (campaign id, event time, 1)
         WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
-                .map(a -> new Tuple4<>(a.f0, a.f1, 1L, a.f2))
+                .map(a -> new Tuple4<String, String, Long, String>(a.f0, a.f1, 1L, a.f2))
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 

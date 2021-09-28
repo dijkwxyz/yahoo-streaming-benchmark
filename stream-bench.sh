@@ -241,7 +241,9 @@ run() {
     rm -f dump.rdb
   elif [ "START_KAFKA" = "$OPERATION" ];
   then
-    start_if_needed kafka\.Kafka Kafka 10 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
+    start_if_needed kafka\.Kafka Kafka 5 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
+  elif [ "START_KAFKA_TOPIC" = "$OPERATION" ];
+  then
     create_kafka_topic
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
@@ -311,6 +313,7 @@ run() {
     run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
+    run "START_KAFKA_TOPIC"
     run "START_FLINK"
     run "START_FLINK_SINGLELEVEL"
     run "START_LOAD"
@@ -319,6 +322,7 @@ run() {
     run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
+    run "START_KAFKA_TOPIC"
     run "START_FLINK"
     run "START_FLINK_PROCESSING"
     run "START_LOAD"
@@ -335,6 +339,7 @@ run() {
     run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
+    run "START_KAFKA_TOPIC"
     run "START_FLINK"
     run "START_FLINK_PROCESSING"
     run "START_LOAD"
@@ -398,6 +403,7 @@ run() {
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
+    remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
     remote_operation $FLINK_HOST "START_FLINK"
     sleep 8
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
