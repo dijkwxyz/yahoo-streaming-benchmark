@@ -33,6 +33,7 @@ analyze_on_host_tm() {
   scp ec2-user@$host:$FLINK_LOG_DIR/gc.log ec2-user@zk1:$RESULTS_DIR/$host-gc.log
   scp ec2-user@$host:$RESULTS_DIR/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
   scp ec2-user@$host:$RESULTS_DIR/heap.txt ec2-user@zk1:$RESULTS_DIR/heap-$host.txt
+  scp ec2-user@$host:$RESULTS_DIR/heap.txt ec2-user@zk1:$RESULTS_DIR/gcmem-$host.txt
   scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
   scp ec2-user@$host:$RESULTS_DIR/$host.out ec2-user@zk1:$RESULTS_DIR/$host.out
 }

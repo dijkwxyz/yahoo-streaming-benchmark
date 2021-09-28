@@ -395,7 +395,7 @@ public class AnalyzeTool {
         signals.sort(Comparator.comparing(a -> a.f0));
         int numLoadCpSignal = 0;
         int signalsIdx = 0;
-        int NUM_SIGNALS_PER_TASK = config.parallelism * 2;
+        int NUM_SIGNALS_PER_TASK = config.parallelism;
         while (signalsIdx < signals.size()) {
             Tuple4<Date, Signal, String, String> loadCpSignal = null;
             Tuple4<Date, Signal, String, String> failedSignal = null;
@@ -797,7 +797,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
+//        args = "pc C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
