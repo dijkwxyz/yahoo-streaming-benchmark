@@ -42,6 +42,7 @@ import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
@@ -87,12 +88,12 @@ public class AdvertisingTopologyFlinkWindows {
 //        adCount.addSink(new RedisAdCount(config));
 
         //=======================campaign count=========================================
-        //out: (campaign id, event time)
-        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config)); // campaign_id, event_time
+        //out: (campaign id, ad_id, event_time)
+        DataStream<Tuple3<String, String, String>> joinedAdImpressions = adIdEventTime
+                .flatMap(new RedisJoinBolt(config));
 
-        //out: (campaign id, event time, 1)
-        WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
+        //out: (campaign id, ad_id, 1)
+        WindowedStream<Tuple4<String, String, Long, String>, String, TimeWindow> windowStream = joinedAdImpressions
                 .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
@@ -101,7 +102,7 @@ public class AdvertisingTopologyFlinkWindows {
         windowStream.trigger(new EventAndProcessingTimeTrigger());
 
         // campaign_id, window-end, count, trigger-time
-        DataStream<Tuple4<String, String, Long, String>> result =
+        DataStream<Tuple5<String, String, Long, String, String>> result =
                 windowStream.process(sumProcessFunction());
 //        DataStream<Tuple4<String, String, Long, String>> result =
 //                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
@@ -201,27 +202,38 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow> sumProcessFunction() {
-        return new ProcessWindowFunction<Tuple3<String, String, Long>, Tuple4<String, String, Long, String>, String, TimeWindow>() {
+    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple5<String, String, Long, String, String>, String, TimeWindow> sumProcessFunction() {
+        return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple5<String, String, Long, String, String>, String, TimeWindow>() {
             @Override
-            public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple4<String, String, Long, String>> out) throws Exception {
+            public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple5<String, String, Long, String, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
-                // campaign_id, window-end, count, trigger-time
-                ArrayList<Tuple3<String, String, Long>> arr = new ArrayList<>();
+                // campaign_id, window-end, count, trigger-time, ad-rank-info
+                Tuple5<String, String, Long, String, String> res = new Tuple5<>();
+                ArrayList<Tuple4<String, String, Long, String>> arr = new ArrayList<>();
                 elements.forEach(arr::add);
-                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f1)));
+                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
 
-                Tuple4<String, String, Long, String> res = new Tuple4<>();
-                for (Tuple3<String, String, Long> e : arr) {
+                for (Tuple4<String, String, Long, String> e : arr) {
                     if (sum == 0) {
                         res.f0 = e.f0;
                     }
                     sum += e.f2;
                 }
+
+                HashMap<String, Integer> adCountMap = new HashMap<>();
+                for (Tuple4<String, String, Long, String> e : elements) {
+                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
+                }
+                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList());
+                String sortedAdByCount = collect.get(0);
+
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());
+                res.f4 = sortedAdByCount;
                 out.collect(res);
             }
         };
@@ -405,7 +417,7 @@ public class AdvertisingTopologyFlinkWindows {
     /**
      * Map ad ids to campaigns using cached data from Redis
      */
-    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple2<String, String>> {
+    private static final class RedisJoinBolt extends RichFlatMapFunction<Tuple2<String, String>, Tuple3<String, String, String>> {
 
         private RedisAdCampaignCache redisAdCampaignCache;
         private BenchmarkConfig config;
@@ -424,33 +436,32 @@ public class AdvertisingTopologyFlinkWindows {
         }
 
         @Override
-        public void flatMap(Tuple2<String, String> input, Collector<Tuple2<String, String>> out) throws Exception {
+        public void flatMap(Tuple2<String, String> input, Collector<Tuple3<String, String, String>> out) throws Exception {
             String ad_id = input.f0;
             String campaign_id = this.redisAdCampaignCache.execute(ad_id);
             if (campaign_id == null) {
                 return;
             }
 
-            // campaign_id event_time
-            Tuple2<String, String> tuple = new Tuple2<>(campaign_id, input.f1);
-            out.collect(tuple);
+            // campaign_id ad_id event_time
+            out.collect(new Tuple3<>(campaign_id, input.f0, input.f1));
         }
     }
 
     /**
      * (campaign id, event time, 1)
      */
-    private static class MapToImpressionCount implements MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>> {
+    private static class MapToImpressionCount implements MapFunction<Tuple3<String, String, String>, Tuple4<String, String, Long, String>> {
         @Override
-        public Tuple3<String, String, Long> map(Tuple2<String, String> t2) {
-            return new Tuple3<>(t2.f0, t2.f1, 1L);
+        public Tuple4<String, String, Long, String> map(Tuple3<String, String, String> t) {
+            return new Tuple4<>(t.f0, t.f1, 1L, t.f2);
         }
     }
 
     /**
      * Simplified version of Redis data structure
      */
-    private static class RedisResultSinkOptimized extends RichSinkFunction<Tuple4<String, String, Long, String>> {
+    private static class RedisResultSinkOptimized extends RichSinkFunction<Tuple5<String, String, Long, String, String>> {
         private final BenchmarkConfig config;
         private Jedis flushJedis;
 
@@ -466,12 +477,13 @@ public class AdvertisingTopologyFlinkWindows {
         }
 
         @Override
-        public void invoke(Tuple4<String, String, Long, String> result) throws Exception {
+        public void invoke(Tuple5<String, String, Long, String, String> result) throws Exception {
             long currTime = System.currentTimeMillis();
             //currTime - the timestamp that generates the watermark which triggeres this window
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
-            String out = String.format("%d %d %d %d",
-                    result.f2, eventTimeLatency, currTime, getRuntimeContext().getIndexOfThisSubtask() + 1);
+            String out = String.format("%d %d %d %d %s",
+                    result.f2, eventTimeLatency, currTime, getRuntimeContext().getIndexOfThisSubtask() + 1,
+                    result.f4);
 
             flushJedis.hset(result.f0, result.f1, out);
 
