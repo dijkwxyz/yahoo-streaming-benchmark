@@ -222,10 +222,10 @@ public class AdvertisingTopologyFlinkWindows {
                 for (Tuple3<String, String, Long> e : elements) {
                     adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
                 }
-                String sortedAdByCount =
-                        adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
-                                .map(Map.Entry::getKey)
-                                .collect(Collectors.joining("-"));
+                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList());
+                String sortedAdByCount = collect.get(0);
 
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
