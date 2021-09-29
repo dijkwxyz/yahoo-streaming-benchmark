@@ -1,8 +1,8 @@
 #!/bin/bash
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1200}
+TEST_TIME=${TEST_TIME:-480}
 LOAD=${LOAD:-15000}
-LOAD_PER_NODE=10000
+LOAD_PER_NODE=5000
 FLINK_PARALLELISM=3
 SLOT_PER_NODE=2
 # TM failure interval in seconds
@@ -26,7 +26,8 @@ WINDOW_SIZE=${WINDOW_SIZE:-90}
 WINDOW_SLIDE=${WINDOW_SLIDE:-1}
 
 STREAM_ENDLESS=true
-NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-3360}
+NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-640}
+#NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-3360}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
@@ -81,6 +82,7 @@ redis.flush: $REDIS_FLUSH
 # number of events per second
 load.target.hz: $LOAD
 num.campaigns: $NUM_CAMPAIGNS
+num.ad.per.campaigns: 10
 
 # ========== others =============
 # sample roughly every 3 seconds
@@ -123,9 +125,9 @@ done
 
 FLINK_WORKER_CONF=$BASE_DIR/flink-1.11.2/conf/workers
 
-for (( num=0; num < 4; num += 1 )); do
+for (( num=0; num < 1; num += 1 )); do
     #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
-    for (( FLINK_PARALLELISM=4; FLINK_PARALLELISM <= 32; FLINK_PARALLELISM += 4 )); do
+    for (( FLINK_PARALLELISM=32; FLINK_PARALLELISM <= 32; FLINK_PARALLELISM += 4 )); do
 	echo "" > $FLINK_WORKER_CONF
 	for (( tm_num=0; tm_num < $FLINK_PARALLELISM / $SLOT_PER_NODE; tm_num += 1 )); do
 	  echo flink$(( 17 - $tm_num )) >> $FLINK_WORKER_CONF
