@@ -27,7 +27,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
@@ -91,28 +90,12 @@ public class AdvertisingTopologyFlinkWindows {
 
         //=======================campaign count=========================================
         //out: (campaign id, ad_id)
-        DataStream<Tuple3<String, String, Long>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config))
-                .map(new MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>>() {
-                    @Override
-                    public Tuple3<String, String, Long> map(Tuple2<String, String> a) throws Exception {
-                        return new Tuple3<>(a.f0, a.f1, 1L);
-                    }
-                })
-                .keyBy(a -> a.f1)
-                .process(
-                        new KeyedProcessFunction<String, Tuple3<String, String, Long>, Tuple3<String, String, Long>>() {
-                            @Override
-                            public void processElement(Tuple3<String, String, Long> t, Context context, Collector<Tuple3<String, String, Long>> collector) throws Exception {
-                                collector.collect(t);
-                            }
-                        }
-
-                );
+        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
+                .flatMap(new RedisJoinBolt(config));
 
         //out: (campaign id, ad_id, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
-//                .map(new MapToImpressionCount())
+                .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
