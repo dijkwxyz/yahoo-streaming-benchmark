@@ -19,8 +19,8 @@ public class CheckpointJsonParser {
     public static ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws IOException {
-//        String dir = "C:\\Users\\joinp\\Downloads\\results\\";
-        String srcDir = "C:\\Wenzhong\\我的坚果云\\实验\\results\\cp-distribution";
+        String srcDir = "C:\\Users\\joinp\\Downloads\\results\\";
+//        String srcDir = "C:\\Wenzhong\\我的坚果云\\实验\\results\\";
         Files.list(new File(srcDir).toPath()).forEach(dir -> {
             if (dir.toFile().isDirectory()) {
                 System.out.println(dir.toString());
