@@ -223,19 +223,19 @@ public class AdvertisingTopologyFlinkWindows {
                     sum += e.f2;
                 }
 
-                HashMap<String, Integer> adCountMap = new HashMap<>();
-                for (Tuple4<String, String, Long, String> e : elements) {
-                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
-                }
-                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.toList());
-                String sortedAdByCount = collect.get(0);
+//                HashMap<String, Integer> adCountMap = new HashMap<>();
+//                for (Tuple4<String, String, Long, String> e : elements) {
+//                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
+//                }
+//                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+//                        .map(Map.Entry::getKey)
+//                        .collect(Collectors.toList());
+//                String sortedAdByCount = collect.get(0);
 
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());
-                res.f4 = sortedAdByCount;
+                res.f4 = "";
                 out.collect(res);
             }
         };
