@@ -127,12 +127,12 @@ public class KafkaDataGenerator {
      */
     private Map<String, List<String>> generateCampaigns(int numCampaigns) {
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
-        for (int i = 0; i < numCampaigns; i++) {
+        for (int j = 0; j < numAdPerCampaign; j++) {
+            for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
-            String campaign = String.format("%04d", i);
-            ArrayList<String> ads = new ArrayList<>();
-            adsByCampaign.put(campaign, ads);
-            for (int j = 0; j < numAdPerCampaign; j++) {
+                String campaign = String.format("%04d", i);
+                ArrayList<String> ads = new ArrayList<>();
+                adsByCampaign.put(campaign, ads);
 //                ads.add(String.format("%05d", i * numCampaigns + j));
                 ads.add(UUID.randomUUID().toString());
             }
