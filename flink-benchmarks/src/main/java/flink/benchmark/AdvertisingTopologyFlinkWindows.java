@@ -214,6 +214,7 @@ public class AdvertisingTopologyFlinkWindows {
                 Tuple5<String, String, Long, String, String> res = new Tuple5<>();
                 ArrayList<Tuple4<String, String, Long, String>> arr = new ArrayList<>();
                 elements.forEach(arr::add);
+                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
 
                 for (Tuple4<String, String, Long, String> e : arr) {
                     if (sum == 0) {
