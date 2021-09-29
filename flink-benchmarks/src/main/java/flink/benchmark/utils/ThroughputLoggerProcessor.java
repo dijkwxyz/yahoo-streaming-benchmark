@@ -29,10 +29,10 @@ public class ThroughputLoggerProcessor<T> extends ProcessFunction<T, Integer> {
         totalReceived++;
         long now = System.currentTimeMillis();
 
-        if (now - lastLogTimeMs == 1000) {
-            MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-            System.out.println(String.format("MMMMM%d %d %d %d %dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
-        }
+//        if (now - lastLogTimeMs == 1000) {
+//            MemoryUsage heapUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+//            System.out.println(String.format("MMMMM%d %d %d %d %dMMMMM", now, heapUsage.getInit(), heapUsage.getUsed(), heapUsage.getCommitted(), heapUsage.getMax()));
+//        }
 
         if (totalReceived % logfreq == 0) {
             // throughput over entire time
