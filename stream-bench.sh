@@ -397,7 +397,7 @@ run() {
     remote_operation $ZK_HOST "START_ZK"
     remote_operation $REDIS_HOST "START_REDIS"
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
-      remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
+      remote_operation_sync $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
     remote_operation $FLINK_HOST "START_FLINK"
