@@ -8,7 +8,6 @@ import benchmark.common.advertising.RedisAdCampaignCache;
 import com.dijk.multilevel.PatternBasedMultilevelStateBackend;
 import flink.benchmark.generator.EventGeneratorSource;
 import flink.benchmark.generator.KafkaDataGenerator;
-import flink.benchmark.generator.RedisHelper;
 import flink.benchmark.utils.FailureInjectorMap;
 import flink.benchmark.utils.StateBackendFactory;
 import flink.benchmark.utils.ThroughputLoggerProcessor;
@@ -37,14 +36,12 @@ import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
 import org.apache.flink.util.Collector;
-import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * To Run:  flink run -c flink.benchmark.AdvertisingTopologyFlinkWindows flink-benchmarks-0.1.0.jar "benchmarkConf.yaml"
