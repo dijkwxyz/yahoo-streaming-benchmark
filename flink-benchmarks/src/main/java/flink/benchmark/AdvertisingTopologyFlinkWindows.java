@@ -27,6 +27,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
@@ -99,12 +100,15 @@ public class AdvertisingTopologyFlinkWindows {
                     }
                 })
                 .keyBy(a -> a.f1)
-                .reduce(new ReduceFunction<Tuple3<String, String, Long>>() {
-                    @Override
-                    public Tuple3<String, String, Long> reduce(Tuple3<String, String, Long> a, Tuple3<String, String, Long> b) throws Exception {
-                        return new Tuple3<>(a.f0, a.f1, a.f2 + b.f2);
-                    }
-                });
+                .process(
+                        new KeyedProcessFunction<String, Tuple3<String, String, Long>, Tuple3<String, String, Long>>() {
+                            @Override
+                            public void processElement(Tuple3<String, String, Long> t, Context context, Collector<Tuple3<String, String, Long>> collector) throws Exception {
+                                collector.collect(t);
+                            }
+                        }
+
+                );
 
         //out: (campaign id, ad_id, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
