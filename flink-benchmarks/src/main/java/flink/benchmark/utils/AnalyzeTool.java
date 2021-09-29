@@ -798,7 +798,7 @@ public class AnalyzeTool {
         // zk resultDir ...tmFileNames
 //         args = "zk C:\\Users\\joinp\\Downloads\\results 2 17".split(" ");
         // pc
-//        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
+        args = "pc C:\\Users\\joinp\\Downloads\\tofix 2 17".split(" ");
         int argIdx = 0;
         String mode = args[argIdx++];
         String srcDir = args[argIdx++];
@@ -818,6 +818,14 @@ public class AnalyzeTool {
                             parseRestartCost(config.multilevelLevel2Type, absolutePath, "flink1.log", tmLogs, absolutePath, "restart-cost.txt", config);
                             for (String tmHost : tmHosts) {
                                 parseGcLogForMemory(absolutePath, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
+
+                                FileWriter throughputFw = new FileWriter(new File(absolutePath, tmHost + ".txt"));
+                                FileWriter latencyFw = new FileWriter(new File(absolutePath, tmHost + "-latency.txt"));
+                                throughputFw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
+                                String tmOutLog = new File(absolutePath, tmHost + ".out").getAbsolutePath();
+                                gatherTmData(tmOutLog, throughputFw, latencyFw);
+                                throughputFw.close();
+                                latencyFw.close();
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -845,11 +853,11 @@ public class AnalyzeTool {
                 //get tm hosts
                 tmHosts = getTmHosts(args, argIdx);
 
-                LatencyResult latencyResult = new LatencyResult();
-                ThroughputResult throughputResult = new ThroughputResult();
+//                LatencyResult latencyResult = new LatencyResult();
+//                ThroughputResult throughputResult = new ThroughputResult();
                 for (String tmHost : tmHosts) {
                     parseGcLogForMemory(outDirAbsPath, tmHost + "-gc.log", "gcmem-" + tmHost + ".txt");
-                    analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
+//                    analyzeThroughput(srcDir, tmHost + ".txt", throughputResult);
                 }
 
                 tmLogs = tmHosts.stream().map(s -> s + ".log").collect(Collectors.toList());

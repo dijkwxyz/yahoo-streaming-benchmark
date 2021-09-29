@@ -32,7 +32,7 @@ analyze_on_host_tm() {
   ssh $host "cat $FLINK_LOG_DIR/flink-*.log* > $RESULTS_DIR/$host.log"
   scp ec2-user@$host:$FLINK_LOG_DIR/gc.log ec2-user@zk1:$RESULTS_DIR/$host-gc.log
   scp ec2-user@$host:$RESULTS_DIR/throughputs.txt ec2-user@zk1:$RESULTS_DIR/$host.txt
-  scp ec2-user@$host:$RESULTS_DIR/latency.txt ec2-user@zk1:$RESULTS_DIR/latency-$host.txt
+  scp ec2-user@$host:$RESULTS_DIR/latency.txt ec2-user@zk1:$RESULTS_DIR/$host-latency.txt
   scp ec2-user@$host:$RESULTS_DIR/$host.log ec2-user@zk1:$RESULTS_DIR/$host.log
   scp ec2-user@$host:$RESULTS_DIR/$host.out ec2-user@zk1:$RESULTS_DIR/$host.out
 }
@@ -131,7 +131,7 @@ run_command() {
   then
     run_command "ANALYZE_FLINK"
     echo "====== collecting latency results from redis"
-    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
+#    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     echo "====== collecting cpu-network data"
     copy_cpu_network_log hadoop1
     copy_cpu_network_log hadoop2
