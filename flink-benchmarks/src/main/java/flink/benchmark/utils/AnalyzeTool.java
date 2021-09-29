@@ -28,26 +28,26 @@ public class AnalyzeTool {
         Map<String, DescriptiveStatistics> perHostThr = new HashMap<>();
     }
 
-    public static void gatherThroughputData(String logFileName, FileWriter throughputFw, FileWriter heapFw) throws IOException {
+    public static void gatherTmData(String logFileName, FileWriter throughputFw, FileWriter latencyFw) throws IOException {
         File file = new File(logFileName);
         if (!file.exists()) {
             return;
         }
         Scanner sc = new Scanner(file);
         Pattern dataPattern = Pattern.compile(".*#####(.+)&&&&&.*");
-        Pattern heapPattern = Pattern.compile(".*MMMMM(.+)MMMMM.*");
+        Pattern latencyPattern = Pattern.compile(".*LLL(.+)LLL.*");
         while (sc.hasNextLine()) {
 //            From 1618917151330 to 1618917160712 (9382 ms), we received 1000000 elements. That's 106587.08164570454 elements/second/core. 24.395846934289064 MB/sec/core. GB received 0
 //            "- #####1618917151330,1618917160712,9382,1000000,106587.08164570454,24.395846934289064,0&&&&&"
             String l = sc.nextLine();
             Matcher tpMatcher = dataPattern.matcher(l);
-            Matcher heapMatcher = heapPattern.matcher(l);
+            Matcher latencyMatcher = latencyPattern.matcher(l);
             if (tpMatcher.matches()) {
                 throughputFw.write(tpMatcher.group(1));
                 throughputFw.write('\n');
-            } else if (heapMatcher.matches()) {
-                heapFw.write(heapMatcher.group(1));
-                heapFw.write('\n');
+            } else if (latencyMatcher.matches()) {
+                latencyFw.write(latencyMatcher.group(1));
+                latencyFw.write('\n');
             }
         }
         sc.close();
@@ -867,15 +867,15 @@ public class AnalyzeTool {
             case "tm":
                 // tm outputDir ...logFilePaths
                 FileWriter throughputFw = new FileWriter(new File(srcDir, "throughputs.txt"));
-                FileWriter heapFw = new FileWriter(new File(srcDir, "heap.txt"));
+                FileWriter latencyFw = new FileWriter(new File(srcDir, "latency.txt"));
                 throughputFw.write("start,end,duration,numElements,elements/second/core,MB/sec/core,GbReceived,subtask\n");
-                heapFw.write("timestamp init used committed max\n");
+//                latencyFw.write("timestamp init used committed max\n");
                 for (int i = argIdx; i < args.length; i++) {
                     fileName = args[argIdx++];
-                    gatherThroughputData(fileName, throughputFw, heapFw);
+                    gatherTmData(fileName, throughputFw, latencyFw);
                 }
                 throughputFw.close();
-                heapFw.close();
+                latencyFw.close();
                 break;
             default:
                 break;
