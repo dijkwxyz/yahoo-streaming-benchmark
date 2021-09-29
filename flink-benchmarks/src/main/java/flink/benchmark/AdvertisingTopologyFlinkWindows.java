@@ -481,7 +481,7 @@ public class AdvertisingTopologyFlinkWindows {
             long currTime = System.currentTimeMillis();
             //currTime - the timestamp that generates the watermark which triggeres this window
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
-            String out = String.format("%d %d %d %d %s",
+            String out = String.format("%d %d %d %d -",
                     result.f2, eventTimeLatency, currTime, getRuntimeContext().getIndexOfThisSubtask() + 1,
                     result.f4);
 
