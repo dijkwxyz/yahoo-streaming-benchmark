@@ -218,6 +218,7 @@ run() {
   elif [ "STOP_HDFS" = "$OPERATION" ];
   then
     $HADOOP_DIR/sbin/stop-dfs.sh
+    xdo rm /home/ec2-user/yahoo-streaming-benchmark/tmp-hadoop -r
   elif [ "START_YARN" = "$OPERATION" ];
   then
     echo "### this must be called on the node of ResourceManager ###"
