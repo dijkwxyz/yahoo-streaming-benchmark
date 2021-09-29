@@ -221,8 +221,9 @@ public class AdvertisingTopologyFlinkWindows {
                     sum += e.f2;
                 }
 
+                arr.sort(Comparator.comparing(a -> a.f1));
                 HashMap<String, Integer> adCountMap = new HashMap<>();
-                for (Tuple4<String, String, Long, String> e : elements) {
+                for (Tuple4<String, String, Long, String> e : arr) {
                     adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
                 }
                 List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
