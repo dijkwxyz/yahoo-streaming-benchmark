@@ -146,7 +146,7 @@ public class KafkaDataGenerator {
      */
     private List<String> flattenCampaigns() {
         // Flatten campaigns into simple list of ads
-        List<String> ads = new ArrayList<>();
+        List<String> ads = new ArrayList<>(numAdPerCampaign * campaigns.size());
         for (Map.Entry<String, List<String>> entry : campaigns.entrySet()) {
             for (String ad : entry.getValue()) {
                 ads.add(ad);

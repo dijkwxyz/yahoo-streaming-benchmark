@@ -90,12 +90,25 @@ public class AdvertisingTopologyFlinkWindows {
 
         //=======================campaign count=========================================
         //out: (campaign id, ad_id)
-        DataStream<Tuple2<String, String>> joinedAdImpressions = adIdEventTime
-                .flatMap(new RedisJoinBolt(config));
+        DataStream<Tuple3<String, String, Long>> joinedAdImpressions = adIdEventTime
+                .flatMap(new RedisJoinBolt(config))
+                .map(new MapFunction<Tuple2<String, String>, Tuple3<String, String, Long>>() {
+                    @Override
+                    public Tuple3<String, String, Long> map(Tuple2<String, String> a) throws Exception {
+                        return new Tuple3<>(a.f0, a.f1, 1L);
+                    }
+                })
+                .keyBy(a -> a.f1)
+                .reduce(new ReduceFunction<Tuple3<String, String, Long>>() {
+                    @Override
+                    public Tuple3<String, String, Long> reduce(Tuple3<String, String, Long> a, Tuple3<String, String, Long> b) throws Exception {
+                        return new Tuple3<>(a.f0, a.f1, a.f2 + b.f2);
+                    }
+                });
 
         //out: (campaign id, ad_id, 1)
         WindowedStream<Tuple3<String, String, Long>, String, TimeWindow> windowStream = joinedAdImpressions
-                .map(new MapToImpressionCount())
+//                .map(new MapToImpressionCount())
                 .keyBy((a) -> a.f0)
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
@@ -209,7 +222,7 @@ public class AdvertisingTopologyFlinkWindows {
             public void process(String s, Context context, Iterable<Tuple3<String, String, Long>> elements, Collector<Tuple5<String, String, Long, String, String>> out) throws Exception {
                 long sum = 0;
                 Long max = Long.MIN_VALUE;
-                // campaign_id, window-end, count, trigger-time
+                // campaign_id, window-end, count, trigger-time, ad-rank-info
                 Tuple5<String, String, Long, String, String> res = new Tuple5<>();
                 for (Tuple3<String, String, Long> e : elements) {
                     if (sum == 0) {

@@ -27,7 +27,7 @@ public class BenchmarkConfig implements Serializable {
     public final int timeSliceLengthMs;
     public final boolean useLocalEventGenerator;
     public final int numCampaigns;
-    public final int numAdPerCampaign = 10;
+    public final int numAdPerCampaign;
 
     // Redis
     public final String redisHost;
@@ -82,6 +82,7 @@ public class BenchmarkConfig implements Serializable {
         this.timeSliceLengthMs = parameterTool.getInt("load.time.slice.length.ms", 100);
         this.useLocalEventGenerator = parameters.getBoolean("use.local.event.generator", false);
         this.numCampaigns = parameterTool.getInt("num.campaigns", 1_000_000);
+        this.numAdPerCampaign = parameterTool.getInt("num.ad.per.campaigns", 10);
 
         // Kafka
         this.kafkaTopic = parameterTool.getRequired("kafka.topic");
