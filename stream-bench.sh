@@ -396,6 +396,7 @@ run() {
     cp $CONF_FILE $RESULTS_DIR/conf-copy.yaml
     remote_operation $ZK_HOST "START_ZK"
     remote_operation $REDIS_HOST "START_REDIS"
+    sleep 3
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
