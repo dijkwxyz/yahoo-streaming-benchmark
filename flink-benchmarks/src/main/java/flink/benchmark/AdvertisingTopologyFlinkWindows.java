@@ -481,11 +481,12 @@ public class AdvertisingTopologyFlinkWindows {
             long currTime = System.currentTimeMillis();
             //currTime - the timestamp that generates the watermark which triggeres this window
             long eventTimeLatency = currTime - Long.parseLong(result.f1);
-            String out = String.format("%d %d %d %d %s",
+            String out = String.format("%d %d %d %d -",
                     result.f2, eventTimeLatency, currTime, getRuntimeContext().getIndexOfThisSubtask() + 1,
                     result.f4);
 
             flushJedis.hset(result.f0, result.f1, out);
+            System.out.println("LLL" + out + "LLL");
 
 //            StringBuilder sb = new StringBuilder();
 //            sb.append(result.f2); //count
@@ -499,7 +500,6 @@ public class AdvertisingTopologyFlinkWindows {
 //            sb.append(result.f4);
 //            flushJedis.hset(result.f0, result.f1, sb.toString());
 
-            // System.out.println(sb.toString());
         }
 
         @Override
