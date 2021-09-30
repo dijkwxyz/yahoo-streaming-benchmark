@@ -1,6 +1,7 @@
 package flink.benchmark.generator;
 
 import flink.benchmark.BenchmarkConfig;
+import org.apache.flink.util.MathUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.PartitionInfo;
@@ -20,6 +21,7 @@ public class KafkaDataGenerator {
     private List<String> ads;
     private final Map<String, List<String>> campaigns;
 
+    private final BenchmarkConfig config;
     private final boolean isStreamEndless;
     private final long generateDataTimeSec;
     private final long numToGenerate;
@@ -43,6 +45,7 @@ public class KafkaDataGenerator {
      * @param numCampaigns num ber campaign ids generated
      */
     public KafkaDataGenerator(BenchmarkConfig config, String dstHost, int numCampaigns, int loadTargetHz) {
+        this.config = config;
         this.loadTargetHz = loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
         this.isStreamEndless = config.isStreamEndless;
@@ -126,15 +129,20 @@ public class KafkaDataGenerator {
      * Generate a random list of ads and campaigns
      */
     private Map<String, List<String>> generateCampaigns(int numCampaigns) {
+        List<String> campaigns = new ArrayList<>();
+        for (int i = 0; i < numCampaigns / 2; i++) {
+            campaigns.add(UUID.randomUUID().toString());
+        }
+
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int j = 0; j < numAdPerCampaign; j++) {
-            for (int i = 0; i < numCampaigns; i++) {
+            for (int i = 0; i < campaigns.size(); i++) {
 //            String campaign = UUID.randomUUID().toString();
-                String campaign = String.format("%d", i);
+//                String campaign = String.format("%d", i);
                 ArrayList<String> ads = new ArrayList<>();
-                adsByCampaign.put(campaign, ads);
-//                ads.add(String.format("%05d", i * numCampaigns + j));
-                ads.add(UUID.randomUUID().toString());
+                adsByCampaign.put(campaigns.get(i), ads);
+                ads.add(String.format("%05d", i * numCampaigns + j));
+//                ads.add(UUID.randomUUID().toString());
             }
         }
 
