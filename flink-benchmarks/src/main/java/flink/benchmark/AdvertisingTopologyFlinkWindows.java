@@ -202,7 +202,7 @@ public class AdvertisingTopologyFlinkWindows {
         return env;
     }
 
-    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple5<String, String, Long, String, String>, String, TimeWindow> sumProcessFunction() {
+    private static ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple5<String, String, Long, String, String>, String, TimeWindow> sumProcessFunction(BenchmarkConfig config) {
         return new ProcessWindowFunction<Tuple4<String, String, Long, String>, Tuple5<String, String, Long, String, String>, String, TimeWindow>() {
             @Override
             public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple5<String, String, Long, String, String>> out) throws Exception {
@@ -215,15 +215,15 @@ public class AdvertisingTopologyFlinkWindows {
                 elements.forEach(arr::add);
 //                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
 
-                for (Tuple4<String, String, Long, String> e : arr) {
-                    if (sum == 0) {
-                        res.f0 = e.f0;
-                    }
-                    for (Tuple4<String, String, Long, String> ee : arr) {
+                for (int i = 0; i < config.cpuLoadAdjuster; i++) {
+                    for (Tuple4<String, String, Long, String> e : arr) {
+                        if (sum == 0) {
+                            res.f0 = e.f0;
+                        }
                         if (sum < max) {
-                            sum += e.f2 * ee.f2;
+                            sum += i + 1;
                         } else {
-                            sum -= e.f2 * ee.f2;
+                            sum -= i;
                         }
                     }
                 }

@@ -24,6 +24,7 @@ public class BenchmarkConfig implements Serializable {
     public final String groupId;
 
     // Load Generator
+    public final int cpuLoadAdjuster;
     public final int loadTargetHz;
     public final int timeSliceLengthMs;
     public final boolean useLocalEventGenerator;
@@ -81,6 +82,7 @@ public class BenchmarkConfig implements Serializable {
 
         // load generator
         this.loadTargetHz = parameterTool.getInt("load.target.hz", 400_000);
+        this.cpuLoadAdjuster = parameterTool.getInt("cpu.load.adjuster", 1);
         this.timeSliceLengthMs = parameterTool.getInt("load.time.slice.length.ms", 100);
         this.useLocalEventGenerator = parameters.getBoolean("use.local.event.generator", false);
         this.numCampaigns = parameterTool.getInt("num.campaigns", 1_000_000);
