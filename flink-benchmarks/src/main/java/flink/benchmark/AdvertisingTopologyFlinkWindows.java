@@ -210,6 +210,7 @@ public class AdvertisingTopologyFlinkWindows {
                 Long max = Long.MAX_VALUE / 2;
                 // campaign_id, window-end, count, trigger-time, ad-rank-info
                 Tuple5<String, String, Long, String, String> res = new Tuple5<>();
+                res.f0 = "0";
                 ArrayList<Tuple4<String, String, Long, String>> arr = new ArrayList<>();
                 elements.forEach(arr::add);
 //                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
