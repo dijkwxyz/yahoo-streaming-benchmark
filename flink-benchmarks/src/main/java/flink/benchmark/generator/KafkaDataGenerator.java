@@ -49,7 +49,7 @@ public class KafkaDataGenerator {
         this.loadTargetHz = loadTargetHz;
         this.timeSliceLengthMs = config.timeSliceLengthMs;
         this.isStreamEndless = config.isStreamEndless;
-        this.generateDataTimeSec = config.testTimeSeconds * 2 / 3;
+        this.generateDataTimeSec = config.generateDataTimeSeconds;
         this.numToGenerate = generateDataTimeSec * loadTargetHz;
         this.numAdPerCampaign = config.numAdPerCampaign;
         this.campaigns = generateCampaigns(numCampaigns);
