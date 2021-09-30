@@ -133,7 +133,7 @@ public class KafkaDataGenerator {
         for (int j = 0; j < numAdPerCampaign; j++) {
             for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
-                String campaign = String.format("%04d", i);
+                String campaign = String.format("%05d", i * 3);
                 ArrayList<String> ads = new ArrayList<>();
                 adsByCampaign.put(campaign, ads);
 //                ads.add(String.format("%05d", i * numCampaigns + j));
@@ -243,17 +243,24 @@ public class KafkaDataGenerator {
                 config.loadTargetHz / numBrokers);
         k.run();
 
-
-//        new Thread(() -> {
-//            KafkaDataGenerator k = new KafkaDataGenerator(config);
-//            try {
-//                k.run();
-//                Thread.sleep(10_000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            k.stop();
-//        }).start();
+//        int parallelism = 28;
+//        int[] ct = new int[parallelism];
+//        for (int i = 0; i < ct.length * 100; i++) {
+//            String campaign = String.format("%05d", i * 3);
+////            String campaign = UUID.randomUUID().toString();
+//            int val = MathUtils.murmurHash(campaign.hashCode()) % parallelism;
+//            ct[val]++;
+//        }
+//
+//        int min = Integer.MAX_VALUE;
+//        int max = Integer.MIN_VALUE;
+//        for (int i = 0; i < ct.length; i++) {
+//            min = Math.min(min, ct[i]);
+//            max = Math.max(max, ct[i]);
+//        }
+//
+//        System.out.println(min);
+//        System.out.println(max);
 
 
     }
