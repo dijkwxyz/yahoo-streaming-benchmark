@@ -130,7 +130,7 @@ public class KafkaDataGenerator {
         for (int j = 0; j < numAdPerCampaign; j++) {
             for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
-                String campaign = String.format("%04d", i);
+                String campaign = String.format("%d", i);
                 ArrayList<String> ads = new ArrayList<>();
                 adsByCampaign.put(campaign, ads);
 //                ads.add(String.format("%05d", i * numCampaigns + j));
