@@ -103,7 +103,7 @@ public class AdvertisingTopologyFlinkWindows {
 
         // campaign_id, window-end, count, trigger-time
         DataStream<Tuple5<String, String, Long, String, String>> result =
-                windowStream.process(sumProcessFunction());
+                windowStream.process(sumProcessFunction(config));
 //        DataStream<Tuple4<String, String, Long, String>> result =
 //                windowStream.reduce(sumReduceFunction(), sumWindowFunction());
 
