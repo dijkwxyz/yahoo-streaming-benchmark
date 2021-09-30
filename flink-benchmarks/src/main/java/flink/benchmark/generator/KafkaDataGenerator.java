@@ -129,20 +129,15 @@ public class KafkaDataGenerator {
      * Generate a random list of ads and campaigns
      */
     private Map<String, List<String>> generateCampaigns(int numCampaigns) {
-        List<String> campaigns = new ArrayList<>();
-        for (int i = 0; i < numCampaigns / 2; i++) {
-            campaigns.add(UUID.randomUUID().toString());
-        }
-
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int j = 0; j < numAdPerCampaign; j++) {
-            for (int i = 0; i < campaigns.size(); i++) {
+            for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
-//                String campaign = String.format("%d", i);
+                String campaign = String.format("%04d", i);
                 ArrayList<String> ads = new ArrayList<>();
-                adsByCampaign.put(campaigns.get(i), ads);
-                ads.add(String.format("%05d", i * numCampaigns + j));
-//                ads.add(UUID.randomUUID().toString());
+                adsByCampaign.put(campaign, ads);
+//                ads.add(String.format("%05d", i * numCampaigns + j));
+                ads.add(UUID.randomUUID().toString());
             }
         }
 
