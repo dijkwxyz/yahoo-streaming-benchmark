@@ -207,7 +207,7 @@ public class AdvertisingTopologyFlinkWindows {
             @Override
             public void process(String s, Context context, Iterable<Tuple4<String, String, Long, String>> elements, Collector<Tuple5<String, String, Long, String, String>> out) throws Exception {
                 long sum = 0;
-                Long max = Long.MIN_VALUE;
+                Long max = Long.MAX_VALUE / 2;
                 // campaign_id, window-end, count, trigger-time, ad-rank-info
                 Tuple5<String, String, Long, String, String> res = new Tuple5<>();
                 ArrayList<Tuple4<String, String, Long, String>> arr = new ArrayList<>();
