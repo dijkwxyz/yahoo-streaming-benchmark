@@ -212,29 +212,42 @@ public class AdvertisingTopologyFlinkWindows {
                 Tuple5<String, String, Long, String, String> res = new Tuple5<>();
                 ArrayList<Tuple4<String, String, Long, String>> arr = new ArrayList<>();
                 elements.forEach(arr::add);
-                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
+//                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
 
                 for (Tuple4<String, String, Long, String> e : arr) {
-                    if (sum == 0) {
-                        res.f0 = e.f0;
+                    for (Tuple4<String, String, Long, String> ee : arr) {
+                        for (Tuple4<String, String, Long, String> eee : arr) {
+                            for (Tuple4<String, String, Long, String> eeee : arr) {
+                                if (sum < max) {
+                                    sum += e.f2 * ee.f2 * eee.f2 * eeee.f2;
+                                } else {
+                                    sum -= e.f2 * ee.f2 * eee.f2 * eeee.f2;
+                                }
+                            }
+                        }
                     }
-                    sum += e.f2;
                 }
+//                for (Tuple4<String, String, Long, String> e : arr) {
+//                    if (sum == 0) {
+//                        res.f0 = e.f0;
+//                    }
+//                    sum += e.f2;
+//                }
 
-                arr.sort(Comparator.comparing(a -> a.f1));
-                HashMap<String, Integer> adCountMap = new HashMap<>();
-                for (Tuple4<String, String, Long, String> e : arr) {
-                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
-                }
-                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.toList());
-                String sortedAdByCount = collect.get(0);
+//                arr.sort(Comparator.comparing(a -> a.f1));
+//                HashMap<String, Integer> adCountMap = new HashMap<>();
+//                for (Tuple4<String, String, Long, String> e : arr) {
+//                    adCountMap.put(e.f1, adCountMap.getOrDefault(e.f1, 0) + 1);
+//                }
+//                List<String> collect = adCountMap.entrySet().stream().sorted(Comparator.comparing(a -> -a.getValue()))
+//                        .map(Map.Entry::getKey)
+//                        .collect(Collectors.toList());
+//                String sortedAdByCount = collect.get(0);
 
                 res.f1 = String.valueOf(context.window().getEnd());
                 res.f2 = sum;
                 res.f3 = String.valueOf(System.currentTimeMillis());
-                res.f4 = sortedAdByCount;
+                res.f4 = "-";
                 out.collect(res);
             }
         };
