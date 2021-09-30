@@ -52,8 +52,8 @@ public class KafkaDataGenerator {
         this.generateDataTimeSec = config.generateDataTimeSeconds;
         this.numToGenerate = generateDataTimeSec * loadTargetHz;
         this.numAdPerCampaign = config.numAdPerCampaign;
-        this.campaigns = generateCampaigns(numCampaigns);
-        this.ads = flattenCampaigns();
+        this.campaigns = generateCampaigns(numCampaigns, numAdPerCampaign);
+        this.ads = flattenCampaigns(campaigns);
         this.topic = config.kafkaTopic;
 
         //kafka producer
@@ -128,16 +128,17 @@ public class KafkaDataGenerator {
     /**
      * Generate a random list of ads and campaigns
      */
-    private Map<String, List<String>> generateCampaigns(int numCampaigns) {
+    private static Map<String, List<String>> generateCampaigns(int numCampaigns, int numAdPerCampaign) {
         Map<String, List<String>> adsByCampaign = new LinkedHashMap<>();
         for (int j = 0; j < numAdPerCampaign; j++) {
             for (int i = 0; i < numCampaigns; i++) {
 //            String campaign = UUID.randomUUID().toString();
                 String campaign = String.format("%05d", i * 3);
-                ArrayList<String> ads = new ArrayList<>();
-                adsByCampaign.put(campaign, ads);
-//                ads.add(String.format("%05d", i * numCampaigns + j));
-                ads.add(UUID.randomUUID().toString());
+                if (!adsByCampaign.containsKey(campaign)) {
+                    adsByCampaign.put(campaign, new ArrayList<>());
+                }
+//                adsByCampaign.get(campaign).add(String.format("%05d", i * numCampaigns + j));
+                adsByCampaign.get(campaign).add(UUID.randomUUID().toString());
             }
         }
 
@@ -147,10 +148,10 @@ public class KafkaDataGenerator {
     /**
      * Flatten into just ads
      */
-    private List<String> flattenCampaigns() {
+    private static List<String> flattenCampaigns(Map<String, List<String>> campaignsMap) {
         // Flatten campaigns into simple list of ads
-        List<String> ads = new ArrayList<>(numAdPerCampaign * campaigns.size());
-        for (Map.Entry<String, List<String>> entry : campaigns.entrySet()) {
+        List<String> ads = new ArrayList<>(campaignsMap.size() * 10);
+        for (Map.Entry<String, List<String>> entry : campaignsMap.entrySet()) {
             for (String ad : entry.getValue()) {
                 ads.add(ad);
             }
@@ -244,6 +245,21 @@ public class KafkaDataGenerator {
         k.run();
 
 //        int parallelism = 28;
+//        Map<String, List<String>> campaigns = generateCampaigns(parallelism * 100, 10);
+//        HashMap<String, String> adCamp = new HashMap<>(campaigns.size() * 10);
+//        for (Map.Entry<String, List<String>> entry : campaigns.entrySet()) {
+//            for (String s : entry.getValue()) {
+//                adCamp.put(s, entry.getKey());
+//            }
+//        }
+//
+//        int[] ct = new int[parallelism];
+//        List<String> ads = flattenCampaigns(campaigns);
+//        for (String ad : ads) {
+//            int val = MathUtils.murmurHash(adCamp.get(ad).hashCode()) % parallelism;
+//            ct[val]++;
+//        }
+
 //        int[] ct = new int[parallelism];
 //        for (int i = 0; i < ct.length * 100; i++) {
 //            String campaign = String.format("%05d", i * 3);
