@@ -1,6 +1,7 @@
 package flink.benchmark.utils;
 
 import flink.benchmark.BenchmarkConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import redis.clients.jedis.Jedis;
@@ -9,9 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 public class KafkaDataGetter {
 
@@ -29,37 +28,41 @@ public class KafkaDataGetter {
         consumer.subscribe(Collections.singletonList(config.kafkaSinkTopic));
     }
 
-    public void execute() throws IOException {
-        FileWriter fileWriter = new FileWriter("count-latency.txt");
-        final int giveUp = 10000;   int noRecordsCount = 0;
-
+    public void execute(String outputFile) throws IOException, InterruptedException {
+        FileWriter fw = new FileWriter(outputFile);
+        long start = System.currentTimeMillis();
         while (true) {
-            final ConsumerRecords<Long, String> consumerRecords =
-                    consumer.poll(1000);
+            if (System.currentTimeMillis() - start > config.testTimeSeconds * 1000) {
+                break;
+            }
+            final ConsumerRecords<String, String> consumerRecords =
+                    consumer.poll(100);
 
-            if (consumerRecords.count()==0) {
-                noRecordsCount++;
-                if (noRecordsCount > giveUp) { break; }
-                else continue;
+            if (consumerRecords.count() == 0) {
+                Thread.sleep(500);
             }
 
-            consumerRecords.forEach(record -> {
-                System.out.printf("Consumer Record:(%d, %s, %d, %d)\n",
-                        record.key(), record.value(),
-                        record.partition(), record.offset());
-            });
+            for (ConsumerRecord record : consumerRecords) {
+                try {
+                    fw.write(String.format("%s, %d\n",
+                            record.key(), System.currentTimeMillis()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             consumer.commitAsync();
         }
-        consumer.close();
-        System.out.println("DONE");
 
-        fileWriter.close();
+        consumer.close();
+        fw.close();
+
+        System.out.println("Kafka Sink Consumer DONE");
     }
 
-    public static void main(String[] args) throws IOException {
-        RedisDataGetter redisDataGetter = new RedisDataGetter(args[0]);
-//        RedisDataGetter redisDataGetter = new RedisDataGetter("conf/benchmarkConf.yaml");
-        redisDataGetter.execute();
+    public static void main(String[] args) throws IOException, InterruptedException {
+        KafkaDataGetter kafkaDataGetter = new KafkaDataGetter(args[0]);
+//        KafkaDataGetter kafkaDataGetter = new KafkaDataGetter("conf/benchmarkConf.yaml");
+        kafkaDataGetter.execute(args[1]);
     }
 }

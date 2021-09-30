@@ -45,6 +45,7 @@ REDIS_HOST="redis1"
 
 FLINK_PARALLELISM=${FLINK_PARALLELISM:-4}
 TOPIC=${TOPIC:-"ad-events"}
+SINK_TOPIC=sink
 PARTITIONS=$FLINK_PARALLELISM
 LOAD=${LOAD:-5000000}
 CONF_FILE=conf/benchmarkConf.yaml
@@ -139,12 +140,13 @@ fetch_untar_file() {
 }
 
 create_kafka_topic() {
-    local count=`$KAFKA_DIR/bin/kafka-topics.sh --describe --zookeeper "$ZK_CONNECTIONS" --topic $TOPIC 2>/dev/null | grep -c $TOPIC`
+    local topic=$1
+    local count=`$KAFKA_DIR/bin/kafka-topics.sh --describe --zookeeper "$ZK_CONNECTIONS" --topic $topic 2>/dev/null | grep -c $topic`
     if [[ "$count" = "0" ]];
     then
-        $KAFKA_DIR/bin/kafka-topics.sh --create --zookeeper "$ZK_CONNECTIONS" --replication-factor 1 --partitions $PARTITIONS --topic $TOPIC
+        $KAFKA_DIR/bin/kafka-topics.sh --create --zookeeper "$ZK_CONNECTIONS" --replication-factor 1 --partitions $PARTITIONS --topic $topic
     else
-        echo "Kafka topic $TOPIC already exists"
+        echo "Kafka topic $topic already exists"
     fi
 }
 
@@ -229,9 +231,7 @@ run() {
   elif [ "START_REDIS" = "$OPERATION" ];
   then
     start_if_needed redis-server Redis 1 "$REDIS_DIR/src/redis-server" --protected-mode no
-#    cd data
-#    $LEIN run -n --configPath ../conf/benchmarkConf.yaml
-#    cd ..
+#    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.KafkaDataGetter $BASE_DIR/$CONF_FILE $RESULTS_DIR/count-latency.txt
   elif [ "STOP_REDIS" = "$OPERATION" ];
   then
     # get results before stopping Redis
@@ -245,7 +245,8 @@ run() {
     start_if_needed kafka\.Kafka Kafka 5 "$KAFKA_DIR/bin/kafka-server-start.sh" "$KAFKA_DIR/config/server.properties"
   elif [ "START_KAFKA_TOPIC" = "$OPERATION" ];
   then
-    create_kafka_topic
+    create_kafka_topic $TOPIC
+    create_kafka_topic $SINK_TOPIC
   elif [ "STOP_KAFKA" = "$OPERATION" ];
   then
     $KAFKA_DIR/bin/kafka-server-stop.sh
