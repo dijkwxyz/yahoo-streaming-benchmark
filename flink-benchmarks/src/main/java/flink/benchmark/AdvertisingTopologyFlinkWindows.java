@@ -220,12 +220,10 @@ public class AdvertisingTopologyFlinkWindows {
                         res.f0 = e.f0;
                     }
                     for (Tuple4<String, String, Long, String> ee : arr) {
-                        for (Tuple4<String, String, Long, String> eee : arr) {
-                            for (Tuple4<String, String, Long, String> eeee : arr) {
                                 if (sum < max) {
-                                    sum += e.f2 * ee.f2 * eee.f2 * eeee.f2;
+                                    sum += e.f2 * ee.f2;
                                 } else {
-                                    sum -= e.f2 * ee.f2 * eee.f2 * eeee.f2;
+                                    sum -= e.f2 * ee.f2;
                                 }
                             }
                         }
