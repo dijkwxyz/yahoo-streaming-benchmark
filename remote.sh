@@ -75,6 +75,7 @@ run_command() {
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
       remote_operation $KAFKA_HOST_PREFIX$num "START_KAFKA"
     done
+    sleep 5
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
   elif [ "START_FLINK" = "$OPERATION" ];
   then
@@ -127,11 +128,15 @@ run_command() {
     for ((num=2; num<=17; num++)); do
       analyze_on_host_tm "flink$num"
     done
+  elif [ "ZK" = "$OPERATION" ];
+  then
+    java -cp $JAR_PATH $ANALYZE_MAIN_CLASS zk $RESULTS_DIR/ 2 17
+
   elif [ "ANALYZE" = "$OPERATION" ];
   then
     run_command "ANALYZE_FLINK"
     echo "====== collecting latency results from redis"
-#    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
+    scp ec2-user@$REDIS_HOST:$RESULTS_DIR/count-latency.txt ec2-user@zk1:$RESULTS_DIR/
     echo "====== collecting cpu-network data"
     copy_cpu_network_log hadoop1
     copy_cpu_network_log hadoop2
