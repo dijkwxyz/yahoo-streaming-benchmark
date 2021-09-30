@@ -215,6 +215,9 @@ public class AdvertisingTopologyFlinkWindows {
 //                arr.sort(Comparator.comparing(a -> Long.valueOf(a.f3)));
 
                 for (Tuple4<String, String, Long, String> e : arr) {
+                    if (sum == 0) {
+                        res.f0 = e.f0;
+                    }
                     for (Tuple4<String, String, Long, String> ee : arr) {
                         for (Tuple4<String, String, Long, String> eee : arr) {
                             for (Tuple4<String, String, Long, String> eeee : arr) {
