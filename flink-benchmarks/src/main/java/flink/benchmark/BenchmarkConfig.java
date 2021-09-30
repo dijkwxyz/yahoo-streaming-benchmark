@@ -18,6 +18,7 @@ public class BenchmarkConfig implements Serializable {
 
     // Kafka
     public final String kafkaTopic;
+    public final String kafkaSinkTopic;
 //    public final int kafkaPartition;
     public final String bootstrapServers;
     public final String groupId;
@@ -45,6 +46,7 @@ public class BenchmarkConfig implements Serializable {
     public final long failureStartTimeDelayMs;
     public final boolean isStreamEndless;
     public final long testTimeSeconds;
+    public final long generateDataTimeSeconds;
 
     // Flink
     public final long checkpointInterval;
@@ -86,6 +88,7 @@ public class BenchmarkConfig implements Serializable {
 
         // Kafka
         this.kafkaTopic = parameterTool.getRequired("kafka.topic");
+        this.kafkaSinkTopic = parameterTool.get("kafka.sink.topic", "sink");
 //        this.kafkaPartition = parameterTool.getInt("kafka.partitions", 1);
         this.bootstrapServers = parameterTool.getRequired("bootstrap.servers");
         this.groupId = parameterTool.getRequired("group.id");
@@ -106,6 +109,7 @@ public class BenchmarkConfig implements Serializable {
         this.failureStartTimeDelayMs = parameterTool.getLong("failure.start.delay.ms", 0);
         this.isStreamEndless = parameterTool.getBoolean("stream.endless", true);
         this.testTimeSeconds = parameterTool.getLong("test.time.seconds", 0);
+        this.generateDataTimeSeconds = parameterTool.getLong("generate.data.time.seconds", testTimeSeconds);
 
         // Flink
         this.checkpointInterval = parameterTool.getLong("flink.checkpoint.interval", 0);
