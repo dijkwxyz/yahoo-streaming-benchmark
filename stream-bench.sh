@@ -171,7 +171,7 @@ run() {
   then
 
     #$MVN clean package -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
-    xdo "rm ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar"
+    xdo-par "rm ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar"
     $MVN clean package
     xsync ~/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar
 
@@ -405,7 +405,7 @@ run() {
     sleep 10
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
     remote_operation $FLINK_HOST "START_FLINK"
-    sleep 30
+    sleep 15
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     sleep 5
 #    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD" ${KAFKA_HOST_PREFIX}1
