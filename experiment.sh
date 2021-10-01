@@ -31,6 +31,9 @@ NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-640}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
+KAFKA_ISOLATION=read_uncommitted
+#KAFKA_ISOLATION=read_committed
+
 #1024*1024 = 1048576
 #NET_THRESHOLD=${NET_THRESHOLD:-209600}
 NET_THRESHOLD=${NET_THRESHOLD:-1048576}
@@ -54,6 +57,7 @@ kafka.brokers:
     - \"kafka2\"
 kafka.port: 9092
 kafka.topic: \"ad-events\"
+kafka.isolation.level: $KAFKA_ISOLATION
 #consumer group
 group.id: \"flink_yahoo_benchmark\"
 #parallelism of kafka consumer
