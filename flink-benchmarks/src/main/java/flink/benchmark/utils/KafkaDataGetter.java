@@ -4,7 +4,6 @@ import flink.benchmark.BenchmarkConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import redis.clients.jedis.Jedis;
 
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -25,7 +24,6 @@ public class KafkaDataGetter {
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"); //value 序列化
         properties.put("group.id", "result");
         properties.put("isolation.level", config.kafkaConsumerIsolationLevel);
-        properties.put("transaction.timeout.ms", 900_000);
         consumer = new KafkaConsumer(properties);
         consumer.subscribe(Collections.singletonList(config.kafkaSinkTopic));
     }

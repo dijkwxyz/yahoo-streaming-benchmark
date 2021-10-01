@@ -120,7 +120,7 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
 //            result.addSink(new RedisResultSink(config));
 //        }
 
-        env.execute("AdvertisingTopologyFlinkWindows");
+        env.execute("AdvertisingTopologyFlinkWindowsKafkaSink");
 //        env.execute("AdvertisingTopologyFlinkWindows " + config.parameters.toMap().toString());
     }
 
@@ -517,7 +517,8 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
             Properties properties = new Properties();
             properties.setProperty("bootstrap.servers", config.bootstrapServers);
             properties.setProperty("group.id", config.groupId);
-            return new FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>>(
+            properties.put("transaction.timeout.ms", "900000");
+        return new FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>>(
                     config.kafkaSinkTopic,
                     new KeyedSerializationSchema<Tuple5<String, String, Long, String, String>>() {
 
