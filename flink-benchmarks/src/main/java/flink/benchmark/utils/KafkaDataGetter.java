@@ -25,6 +25,7 @@ public class KafkaDataGetter {
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"); //value 序列化
         properties.put("group.id", "result");
         properties.put("isolation.level", config.kafkaConsumerIsolationLevel);
+        properties.put("transaction.timeout.ms", 900_000);
         consumer = new KafkaConsumer(properties);
         consumer.subscribe(Collections.singletonList(config.kafkaSinkTopic));
     }
