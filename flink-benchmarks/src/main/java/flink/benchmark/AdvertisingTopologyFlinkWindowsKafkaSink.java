@@ -534,7 +534,7 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
                         @Override
                         public byte[] serializeKey(Tuple5<String, String, Long, String, String> t) {
                             //campaignID + window end
-                            return (t.f0 + t.f1).getBytes();
+                            return (t.f0 + " " + t.f1).getBytes();
                         }
 
                         @Override
