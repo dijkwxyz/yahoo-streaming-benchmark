@@ -19,6 +19,7 @@ public class BenchmarkConfig implements Serializable {
     // Kafka
     public final String kafkaTopic;
     public final String kafkaSinkTopic;
+    public final String kafkaConsumerIsolationLevel;
 //    public final int kafkaPartition;
     public final String bootstrapServers;
     public final String groupId;
@@ -91,6 +92,8 @@ public class BenchmarkConfig implements Serializable {
         // Kafka
         this.kafkaTopic = parameterTool.getRequired("kafka.topic");
         this.kafkaSinkTopic = parameterTool.get("kafka.sink.topic", "sink");
+        //read_uncommitted or read_committed
+        this.kafkaConsumerIsolationLevel = parameterTool.get("kafka.isolation.level", "read_uncommitted");
 //        this.kafkaPartition = parameterTool.getInt("kafka.partitions", 1);
         this.bootstrapServers = parameterTool.getRequired("bootstrap.servers");
         this.groupId = parameterTool.getRequired("group.id");

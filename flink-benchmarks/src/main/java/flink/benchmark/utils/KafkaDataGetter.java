@@ -24,7 +24,7 @@ public class KafkaDataGetter {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //key 序列化
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //value 序列化
         properties.put("group.id", "result");
-        properties.put("isolation.level", "read_committed");
+        properties.put("isolation.level", config.kafkaConsumerIsolationLevel);
         consumer = new KafkaConsumer(properties);
         consumer.subscribe(Collections.singletonList(config.kafkaSinkTopic));
     }
