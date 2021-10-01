@@ -62,8 +62,8 @@ public class KafkaDataGetter {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+//        args = "conf/benchmarkConf.yaml target/count-latency.txt".split(" ");
         KafkaDataGetter kafkaDataGetter = new KafkaDataGetter(args[0]);
-//        KafkaDataGetter kafkaDataGetter = new KafkaDataGetter("conf/benchmarkConf.yaml");
         kafkaDataGetter.execute(args[1]);
     }
 }
