@@ -1,11 +1,11 @@
 #!/bin/bash
 # used for stream-bench.sh
-TEST_TIME=${TEST_TIME:-1800}
+TEST_TIME=${TEST_TIME:-1200}
 CPU_LOAD_ADJUSTER=3000
 #LOAD=${LOAD:-15000}
 LOAD_PER_NODE=5000
 
-FLINK_PARALLELISM=3
+FLINK_PARALLELISM=28
 SLOT_PER_NODE=2
 # TM failure interval in seconds
 TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
@@ -13,8 +13,7 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 
 # used for conf/benchmarkConf.yaml
 MTTI_MS=${MTTI_MS:-225000}
-#MTTI_MS=${MTTI_MS:-345000}
-MTTI_MS=-1
+#MTTI_MS=-1
 #CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-30000}
 CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
 INJECT_WITH_PROBABILITY=false
@@ -130,8 +129,8 @@ FLINK_WORKER_CONF=$BASE_DIR/flink-1.11.2/conf/workers
 
 for (( num=0; num < 1; num += 1 )); do
     #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
-#    for (( FLINK_PARALLELISM=4; FLINK_PARALLELISM <= 28; FLINK_PARALLELISM += 4 )); do
-    for (( FLINK_PARALLELISM=28; FLINK_PARALLELISM <= 28; FLINK_PARALLELISM += 4 )); do
+    for (( MTTI_MS=125000; MTTI_MS<= 365000; MTTI_MS+= 60 )); do
+#    for (( FLINK_PARALLELISM=28; FLINK_PARALLELISM <= 28; FLINK_PARALLELISM += 4 )); do
 	./clear-data.sh
 
 	echo "" > $FLINK_WORKER_CONF
@@ -142,7 +141,7 @@ for (( num=0; num < 1; num += 1 )); do
 	NUM_CAMPAIGNS=$(( $FLINK_PARALLELISM * 100 ))	
 	LOAD=$(( $FLINK_PARALLELISM * $LOAD_PER_NODE / $SLOT_PER_NODE ))
 
-	MULTILEVEL_ENABLE=true
+	MULTILEVEL_ENABLE=false
 	make_conf
 	echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
 	cat $CONF_FILE | grep multilevel.enable
@@ -152,9 +151,6 @@ for (( num=0; num < 1; num += 1 )); do
 
     done
 done
-
-
-
 
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 

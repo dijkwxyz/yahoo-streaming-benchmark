@@ -231,12 +231,12 @@ run() {
   elif [ "START_REDIS" = "$OPERATION" ];
   then
     start_if_needed redis-server Redis 1 "$REDIS_DIR/src/redis-server" --protected-mode no
-#    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.KafkaDataGetter $BASE_DIR/$CONF_FILE $RESULTS_DIR/count-latency.txt
+    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.KafkaDataGetter $BASE_DIR/$CONF_FILE $RESULTS_DIR/count-latency.txt
   elif [ "STOP_REDIS" = "$OPERATION" ];
   then
     # get results before stopping Redis
     cd results
-    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
+#    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
     cd ..
     stop_if_needed redis-server Redis
     rm -f dump.rdb
@@ -288,7 +288,8 @@ run() {
   elif [ "START_FLINK_PROCESSING" = "$OPERATION" ];
   then
 #    "$FLINK_DIR/bin/flink" run -p $FLINK_PARALLELISM -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
-    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+#    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindows ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
+    "$FLINK_DIR/bin/flink" run -c flink.benchmark.AdvertisingTopologyFlinkWindowsKafkaSink ./flink-benchmarks/target/flink-benchmarks-0.1.0.jar $CONF_FILE &
     sleep 3
   elif [ "START_FLINK_SINGLELEVEL" = "$OPERATION" ];
   then
