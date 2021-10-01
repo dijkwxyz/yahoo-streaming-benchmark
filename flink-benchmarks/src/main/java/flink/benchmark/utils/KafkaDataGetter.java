@@ -21,8 +21,8 @@ public class KafkaDataGetter {
         this.config = new BenchmarkConfig(yamlFile);
         Properties properties = new Properties();
         properties.setProperty("bootstrap.servers", config.bootstrapServers);
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //key 序列化
-        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //value 序列化
+        properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"); //key 序列化
+        properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer"); //value 序列化
         properties.put("group.id", "result");
         properties.put("isolation.level", config.kafkaConsumerIsolationLevel);
         consumer = new KafkaConsumer(properties);
