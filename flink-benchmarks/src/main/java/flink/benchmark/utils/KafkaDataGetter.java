@@ -44,7 +44,7 @@ public class KafkaDataGetter {
 
             for (ConsumerRecord record : consumerRecords) {
                 try {
-                    fw.write(String.format("%s, %d\n",
+                    fw.write(String.format("%s %d\n",
                             record.key(), System.currentTimeMillis()));
                 } catch (IOException e) {
                     e.printStackTrace();
