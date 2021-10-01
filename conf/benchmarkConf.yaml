@@ -2,9 +2,9 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 # ====== experiment.sh config ======
-# TEST_TIME=1200
-# TM_FAILURE_INTERVAL=435
-# FLINK_PARALLELISM=32
+# TEST_TIME=360
+# TM_FAILURE_INTERVAL=-1
+# FLINK_PARALLELISM=28
 # NET_THRESHOLD=1048576
 # ============ kafka ============
 kafka.brokers:
@@ -12,6 +12,7 @@ kafka.brokers:
     - "kafka2"
 kafka.port: 9092
 kafka.topic: "ad-events"
+kafka.isolation.level: read_uncommitted
 #consumer group
 group.id: "flink_yahoo_benchmark"
 #parallelism of kafka consumer
@@ -28,9 +29,9 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 90
+window.size: 30
 window.slide: 1
-test.parallelism: 32
+test.parallelism: 28
 
 # ============ java load generator ============
 # set if running the EventGenerator directly rather than reading from Kafka
@@ -38,25 +39,27 @@ use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second
-load.target.hz: 160000
-num.campaigns: 640
+load.target.hz: 250000
+cpu.load.adjuster: 3000
+num.campaigns: 2800
 num.ad.per.campaigns: 10
 
 # ========== others =============
 # sample roughly every 3 seconds
-throughput.log.freq: 15000
+throughput.log.freq: 8928
 
 # ========== experiment parameters =============
-mtti.ms: -1
-failure.inject.useProbability: false
+mtti.ms: 200000
+failure.inject.useProbability: true
 failure.start.delay.ms: 0
-stream.endless: true
-test.time.seconds: 1200
+stream.endless: false
+test.time.seconds: 360
+generate.data.time.seconds: 60
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 30000
 flink.checkpoint.min-pause: 30000
-multilevel.enable: true
+multilevel.enable: false
 #multilevel.level0.statebackend: "memory"
 #multilevel.level0.path: ""
 multilevel.level0.statebackend: "fs"
