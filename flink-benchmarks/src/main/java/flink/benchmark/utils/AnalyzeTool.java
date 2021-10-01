@@ -375,7 +375,12 @@ public class AnalyzeTool {
 
         DescriptiveStatistics failedDS = parseJMForFailureTime(
                 new File(srcDir, JmLog).getAbsolutePath(), jmSignals);
-
+        if (jmSignals.size() == 0) {
+            FileWriter fw = new FileWriter(new File(dstDir, dstFileName));
+            fw.write("MTTI: -1, total failures: 0\n");
+            fw.write("checkpointId failedTime RecoveryStartTime firstLoadCheckpointCompleteTime loadCheckpointCompleteTime\n");
+            fw.close();
+        }
         if (jmSignals.get(0).f1 == Signal.noCheckpoint) {
             jmSignals.remove(0);
         }
