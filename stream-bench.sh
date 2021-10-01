@@ -238,6 +238,7 @@ run() {
     cd results
 #    java -cp /home/ec2-user/yahoo-streaming-benchmark/flink-benchmarks/target/flink-benchmarks-0.1.0.jar flink.benchmark.utils.RedisDataGetter $BASE_DIR/$CONF_FILE
     cd ..
+    stop_if_needed KafkaDataGetter KafkaDataGetter
     stop_if_needed redis-server Redis
     rm -f dump.rdb
   elif [ "START_KAFKA" = "$OPERATION" ];
