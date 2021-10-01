@@ -115,7 +115,7 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
         // write result to redis
 //        if (config.getParameters().has("add.result.sink.optimized")) {
         result.addSink(new RedisResultSinkOptimized(config));
-        result.addSink(new KafkaSink(config));
+        result.addSink(kafkaSink(config));
 //        } else {
 //            result.addSink(new RedisResultSink(config));
 //        }
@@ -513,21 +513,11 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
     /**
      * Simplified version of Redis data structure
      */
-    private static class KafkaSink extends RichSinkFunction<Tuple5<String, String, Long, String, String>> {
-        private final BenchmarkConfig config;
-        private FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>> producer;
-
-        public KafkaSink(BenchmarkConfig config) {
-            this.config = config;
-        }
-
-        @Override
-        public void open(Configuration parameters) throws Exception {
-            super.open(parameters);
+    private static FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>> kafkaSink(BenchmarkConfig config) {
             Properties properties = new Properties();
             properties.setProperty("bootstrap.servers", config.bootstrapServers);
             properties.setProperty("group.id", config.groupId);
-            producer = new FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>>(
+            return new FlinkKafkaProducer011<Tuple5<String, String, Long, String, String>>(
                     config.kafkaSinkTopic,
                     new KeyedSerializationSchema<Tuple5<String, String, Long, String, String>>() {
 
@@ -539,7 +529,7 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
 
                         @Override
                         public byte[] serializeValue(Tuple5<String, String, Long, String, String> t) {
-                            return strForSink(t,getRuntimeContext().getIndexOfThisSubtask() + 1).getBytes();
+                            return strForSink(t,-1).getBytes();
                         }
 
                         @Override
@@ -550,20 +540,6 @@ public class AdvertisingTopologyFlinkWindowsKafkaSink {
                     properties,
                     FlinkKafkaProducer011.Semantic.EXACTLY_ONCE
             );
-
-        }
-
-        @Override
-        public void invoke(Tuple5<String, String, Long, String, String> result) throws Exception {
-            producer.invoke(result);
-//            System.out.println("LLL" + out + "LLL");
-        }
-
-        @Override
-        public void close() throws Exception {
-            super.close();
-            producer.close();
-        }
     }
 
     public static String strForSink(Tuple5<String, String, Long, String, String> result, int subtask) {

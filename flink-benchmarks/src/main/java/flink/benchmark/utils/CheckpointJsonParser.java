@@ -27,7 +27,7 @@ public class CheckpointJsonParser {
                 try {
                     ArrayNode cpList = mapper.readValue(new File(dir.toFile(), "subtask-cp.json"), ArrayNode.class);
                     FileWriter fw = new FileWriter(new File(dir.toFile(), "subtask-cp.txt"));
-                    fw.write("end_to_end_duration state_size\n");
+                    fw.write("checkpoint_id subtask_id end_to_end_duration state_size\n");
                     for (JsonNode cp : cpList) {
                         if (cp.has("errors")) {
                             continue;
@@ -36,6 +36,8 @@ public class CheckpointJsonParser {
                         ArrayNode subtasks = (ArrayNode) cp.get("subtasks");
                         for (JsonNode node : subtasks) {
                             if ("completed".equals(node.get("status").textValue())) {
+                                fw.write(String.valueOf(cp.get("id").intValue()));
+                                fw.write(' ');
                                 fw.write(node.get("index").asText());
                                 fw.write(' ');
                                 fw.write(node.get("end_to_end_duration").asText());

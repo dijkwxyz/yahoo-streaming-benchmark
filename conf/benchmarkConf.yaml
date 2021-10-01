@@ -47,7 +47,7 @@ num.ad.per.campaigns: 10
 throughput.log.freq: 15000
 
 # ========== experiment parameters =============
-mtti.ms: 
+mtti.ms: -1
 failure.inject.useProbability: false
 failure.start.delay.ms: 0
 stream.endless: true
