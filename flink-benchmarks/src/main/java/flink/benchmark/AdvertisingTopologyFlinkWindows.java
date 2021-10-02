@@ -31,6 +31,7 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.triggers.EventTimeTrigger;
 import org.apache.flink.streaming.api.windowing.triggers.Trigger;
 import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
@@ -99,6 +100,7 @@ public class AdvertisingTopologyFlinkWindows {
                 .timeWindow(Time.seconds(config.windowSize), Time.seconds(config.windowSlide));
 
         // set a custom trigger
+        windowStream.trigger(EventTimeTrigger.create());
         windowStream.trigger(new EventAndProcessingTimeTrigger());
 
         // campaign_id, window-end, count, trigger-time
