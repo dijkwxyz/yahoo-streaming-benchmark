@@ -35,7 +35,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         this.parallelism = parallelism;
         this.globalMttiMilliSeconds = globalMttiMs;
         this.injectWithProbability = injectWithProbability;
-        if (!injectWithProbability) {
+        if (!injectWithProbability && (int)globalMttiMilliSeconds > 0) {
             this.globalMttiMilliSeconds = new Random().nextInt((int)globalMttiMilliSeconds);
         }
         this.localFailureRatePerSec = 1000.0 / globalMttiMs / parallelism;
