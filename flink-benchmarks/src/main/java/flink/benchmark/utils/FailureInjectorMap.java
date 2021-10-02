@@ -48,7 +48,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
     public static void main(String[] args) throws Exception {
         long prev = System.currentTimeMillis();
         System.out.println(prev);
-        FailureInjectorMap failureInjectorMap = new FailureInjectorMap<Integer>(10000, true, 1, 0L);
+        FailureInjectorMap failureInjectorMap = new FailureInjectorMap<Integer>(300000, true, 1, 0L);
         DescriptiveStatistics ds = new DescriptiveStatistics();
 //        while (true) {
 //            failureInjectorMap.map(1);
@@ -85,7 +85,7 @@ public class FailureInjectorMap<T> extends RichMapFunction<T, T> {
         if (prevTime < 0) {
             prevTime = currTime;
         }
-        if (currTime - prevTime > 100) {
+        if (currTime - prevTime > 1000) {
             double roll = new Random().nextDouble();
             if (roll < (double) ((currTime - prevTime) / 1000) * getLocalFailureRatePerSec()) {
                 startTimeMs = startTimeDelayMs + System.currentTimeMillis();
