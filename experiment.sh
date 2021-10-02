@@ -12,14 +12,14 @@ TM_FAILURE_INTERVAL=${TM_FAILURE_INTERVAL:--1}
 #TM_FAILURE_INTERVAL=525
 
 # used for conf/benchmarkConf.yaml
-MTTI_MS=${MTTI_MS:-300000}
+MTTI_MS=${MTTI_MS:-100000}
 #MTTI_MS=-1
-CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-20000}
+#CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-1000}
 #CHECKPOINT_INTERVAL_MS=${CHECKPOINT_INTERVAL_MS:-60000}
 CHECKPOINT_MIN_PAUSE=$CHECKPOINT_INTERVAL_MS
-INJECT_WITH_PROBABILITY=true
-let "FAILURE_START_DELAY_MS=0"
-#let "FAILURE_START_DELAY_MS=$CHECKPOINT_INTERVAL_MS + 60000"
+INJECT_WITH_PROBABILITY=false
+#let "FAILURE_START_DELAY_MS=0"
+let "FAILURE_START_DELAY_MS=225000"
 
 STATE_BACKEND=fs
 MULTILEVEL_ENABLE=${MULTILEVEL_ENABLE:-true}
@@ -32,8 +32,8 @@ NUM_CAMPAIGNS=${NUM_CAMPAIGNS:-640}
 USE_LOCAL_GENERATOR=${USE_LOCAL_GENERATOR:-false}
 REDIS_FLUSH=${REDIS_FLUSH:-false}
 
-#KAFKA_ISOLATION=read_uncommitted
-KAFKA_ISOLATION=read_committed
+KAFKA_ISOLATION=read_uncommitted
+#KAFKA_ISOLATION=read_committed
 
 #1024*1024 = 1048576
 #NET_THRESHOLD=${NET_THRESHOLD:-209600}
@@ -198,71 +198,5 @@ CHECKPOINT_MIN_PAUSE=0
 done
 
 
-TM_FAILURE_INTERVAL=-1
-MTTI_MS=-1
-
-for (( num=0; num < 1; num += 1 )); do
-    #for (( LOAD=40000; LOAD <= 40000; LOAD += 10000 )); do
-#    for (( MTTI_MS=125000; MTTI_MS<= 365000; MTTI_MS+= 60 )); do
-    for (( FLINK_PARALLELISM=28; FLINK_PARALLELISM <= 28; FLINK_PARALLELISM += 4 )); do
-	./clear-data.sh
-CHECKPOINT_MIN_PAUSE=$CHECKPOINT_INTERVAL_MS
-
-	echo "" > $FLINK_WORKER_CONF
-	for (( tm_num=0; tm_num < $FLINK_PARALLELISM / $SLOT_PER_NODE; tm_num += 1 )); do
-	  echo flink$(( 17 - $tm_num )) >> $FLINK_WORKER_CONF
-	done
-	xsync $FLINK_WORKER_CONF
-	NUM_CAMPAIGNS=$(( $FLINK_PARALLELISM * 100 ))	
-	LOAD=$(( $FLINK_PARALLELISM * $LOAD_PER_NODE / $SLOT_PER_NODE ))
-
-	MULTILEVEL_ENABLE=true
-	make_conf
-	echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	cat $CONF_FILE | grep multilevel.enable
-	xsync $CONF_FILE
-	FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	sleep 60
-
-	./clear-data.sh
-CHECKPOINT_MIN_PAUSE=0
-
-	echo "" > $FLINK_WORKER_CONF
-	for (( tm_num=0; tm_num < $FLINK_PARALLELISM / $SLOT_PER_NODE; tm_num += 1 )); do
-	  echo flink$(( 17 - $tm_num )) >> $FLINK_WORKER_CONF
-	done
-	xsync $FLINK_WORKER_CONF
-	NUM_CAMPAIGNS=$(( $FLINK_PARALLELISM * 100 ))	
-	LOAD=$(( $FLINK_PARALLELISM * $LOAD_PER_NODE / $SLOT_PER_NODE ))
-
-	MULTILEVEL_ENABLE=true
-	make_conf
-	echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	cat $CONF_FILE | grep multilevel.enable
-	xsync $CONF_FILE
-	FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	sleep 60
-
-	./clear-data.sh
-CHECKPOINT_MIN_PAUSE=0
-
-	echo "" > $FLINK_WORKER_CONF
-	for (( tm_num=0; tm_num < $FLINK_PARALLELISM / $SLOT_PER_NODE; tm_num += 1 )); do
-	  echo flink$(( 17 - $tm_num )) >> $FLINK_WORKER_CONF
-	done
-	xsync $FLINK_WORKER_CONF
-	NUM_CAMPAIGNS=$(( $FLINK_PARALLELISM * 100 ))	
-	LOAD=$(( $FLINK_PARALLELISM * $LOAD_PER_NODE / $SLOT_PER_NODE ))
-
-	MULTILEVEL_ENABLE=true
-	make_conf
-	echo "`date`: start experiment with LOAD = $LOAD, TIME = $TEST_TIME"
-	cat $CONF_FILE | grep multilevel.enable
-	xsync $CONF_FILE
-	FLINK_PARALLELISM=$FLINK_PARALLELISM ./stream-bench.sh $TEST_TIME $TM_FAILURE_INTERVAL CLUSTER_TEST
-	sleep 60
-
-    done
-done
 xdo "sudo /home/ec2-user/wondershaper/wondershaper -c -a eth0"
 

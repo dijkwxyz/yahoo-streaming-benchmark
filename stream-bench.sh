@@ -298,12 +298,12 @@ run() {
     sleep 3
   elif [ "STOP_FLINK_PROCESSING" = "$OPERATION" ];
   then
-    FLINK_ID=`"$FLINK_DIR/bin/flink" list | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
-    get_checkpoint_history $FLINK_ID
+    FLINK_ID=`"$FLINK_DIR/bin/flink" list -a | grep 'AdvertisingTopologyFlinkWindows' | awk '{print $4}'; true`
     if [ "$FLINK_ID" == "" ];
 	  then
 	  echo "Could not find streaming job to kill"
     else
+      get_checkpoint_history $FLINK_ID
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
     fi
   elif [ "START_TM" = "$OPERATION" ];
