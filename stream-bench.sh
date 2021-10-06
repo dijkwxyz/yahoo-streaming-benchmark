@@ -393,7 +393,6 @@ run() {
       echo "No Failure Injection"
       sample_resource $TEST_TIME
     fi
-    ./subtask-cp.sh $(( $TEST_TIME / 30 - 4))
     run "CLUSTER_STOP"
   elif [ "CLUSTER_START" = "$OPERATION" ];
   then
@@ -407,7 +406,7 @@ run() {
     sleep 10
     remote_operation ${KAFKA_HOST_PREFIX}1 "START_KAFKA_TOPIC"
     remote_operation $FLINK_HOST "START_FLINK"
-    sleep 15
+    sleep 30
     remote_operation $FLINK_HOST "START_FLINK_PROCESSING"
     sleep 5
 #    remote_operation ${KAFKA_HOST_PREFIX}1 "START_LOAD" ${KAFKA_HOST_PREFIX}1
@@ -417,6 +416,7 @@ run() {
   elif [ "CLUSTER_STOP" = "$OPERATION" ];
   then
 #    remote_operation_sync ${KAFKA_HOST_PREFIX}1 "STOP_LOAD"
+    ./subtask-cp.sh 100
     for ((num=1; num <=$KAFKA_HOST_NUM; num++)); do
         remote_operation $KAFKA_HOST_PREFIX$num "STOP_LOAD"
     done

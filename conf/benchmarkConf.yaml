@@ -2,7 +2,7 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 # ====== experiment.sh config ======
-# TEST_TIME=360
+# TEST_TIME=1800
 # TM_FAILURE_INTERVAL=-1
 # FLINK_PARALLELISM=28
 # NET_THRESHOLD=1048576
@@ -29,7 +29,7 @@ zookeeper.port: 2181
 redis.host: "redis1"
 
 # ============ Flink ============
-window.size: 30
+window.size: 90
 window.slide: 1
 test.parallelism: 28
 
@@ -39,22 +39,22 @@ use.local.event.generator: false
 # flush redis before starting load, turn of if using EventGenerator due to parallelism
 redis.flush: false
 # number of events per second
-load.target.hz: 250000
-cpu.load.adjuster: 3000
+load.target.hz: 28000
+cpu.load.adjuster: 1500
 num.campaigns: 2800
 num.ad.per.campaigns: 10
 
 # ========== others =============
 # sample roughly every 3 seconds
-throughput.log.freq: 8928
+throughput.log.freq: 1000
 
 # ========== experiment parameters =============
-mtti.ms: 200000
+mtti.ms: 60000
 failure.inject.useProbability: true
-failure.start.delay.ms: 0
-stream.endless: false
-test.time.seconds: 360
-generate.data.time.seconds: 60
+failure.start.delay.ms: 465000
+stream.endless: true
+test.time.seconds: 1800
+generate.data.time.seconds: 1800
 
 # ============ checkpointing ============
 flink.checkpoint.interval: 30000
